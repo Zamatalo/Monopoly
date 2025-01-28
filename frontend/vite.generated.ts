@@ -12,18 +12,18 @@ import * as net from 'net';
 import {processThemeResources} from './target/plugins/application-theme-plugin/theme-handle.js';
 import {rewriteCssUrls} from './target/plugins/theme-loader/theme-loader-utils.js';
 import {
-  addFunctionComponentSourceLocationBabel
+    addFunctionComponentSourceLocationBabel
 } from './target/plugins/react-function-location-plugin/react-function-location-plugin.js';
 import settings from './target/vaadin-dev-server-settings.json';
 import {
-  AssetInfo,
-  ChunkInfo,
-  defineConfig,
-  mergeConfig,
-  OutputOptions,
-  PluginOption,
-  ResolvedConfig,
-  UserConfigFn
+    AssetInfo,
+    ChunkInfo,
+    defineConfig,
+    mergeConfig,
+    OutputOptions,
+    PluginOption,
+    ResolvedConfig,
+    UserConfigFn
 } from 'vite';
 import {getManifest, type ManifestTransform} from 'workbox-build';
 
@@ -412,7 +412,6 @@ function statsExtracterPlugin(): PluginOption {
         }
     };
 }
-
 function vaadinBundlesPlugin(): PluginOption {
     type ExportInfo =
         | string
@@ -871,12 +870,10 @@ export const vaadinConfig: UserConfigFn = (env) => {
 export const overrideVaadinConfig = (customConfig: UserConfigFn) => {
     return defineConfig((env) => mergeConfig(vaadinConfig(env), customConfig(env)));
 };
-
 function getVersion(module: string): string {
     const packageJson = path.resolve(nodeModulesFolder, module, 'package.json');
     return JSON.parse(readFileSync(packageJson, {encoding: 'utf-8'})).version;
 }
-
 function getCvdlName(module: string): string {
     const packageJson = path.resolve(nodeModulesFolder, module, 'package.json');
     return JSON.parse(readFileSync(packageJson, {encoding: 'utf-8'})).cvdlName;

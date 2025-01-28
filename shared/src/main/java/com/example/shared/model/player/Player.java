@@ -17,17 +17,18 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Player {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     private String name;
 
-    private int balance=10000;
+    private int balance;
 
-    private int position=1;
+    private int position;
 
-    private boolean isInJail=false;
+    private boolean isInJail;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Property> ownedProperties= new ArrayList<>();
