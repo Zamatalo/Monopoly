@@ -5,8 +5,8 @@ import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {Board} from "./Board.js";
 
 class Main {
-    constructor(element) {
-        this.element = element;
+    constructor() {
+        this.container = document.getElementById("GameBoardComponent");
         this.renderer = null;
         this.camera = null;
         this.scene = null;
@@ -20,6 +20,7 @@ class Main {
         ];
         this.board = null;
         this.loader = new GtlfLoader(this.players, this);
+
     }
 
     init() {
@@ -35,25 +36,28 @@ class Main {
         this.board.initializePositions();
         this.board.addHelpers();
         this.animate();
+
+
     }
 
     initRenderer() {
         this.renderer = new THREE.WebGLRenderer({
             antialias: true,
-            canvas: this.element,
             powerPreference: "high-performance",
         });
-        const width = document.body.clientWidth;
-        const height = this.element.offsetHeight;
 
-        this.renderer.setSize(width, height);
+        this.renderer.setSize(
+            this.container.offsetWidth,
+            this.container.offsetHeight
+        );
         this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.container.appendChild(this.renderer.domElement);
     }
 
     initCamera() {
         this.camera = new THREE.PerspectiveCamera(
             70,
-            window.innerWidth / window.innerHeight,
+            this.container.clientWidth / this.container.clientHeight,
             0.01,
             100
         );
@@ -78,21 +82,23 @@ class Main {
 
     handleResize() {
         window.addEventListener('resize', () => {
-            this.camera.aspect = window.innerWidth / window.innerHeight;
+            const width = this.container.clientWidth;
+            const height = this.container.clientHeight;
+
+            this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.renderer.setPixelRatio(window.devicePixelRatio);
+
+            this.renderer.setSize(width, height);
         });
     }
 
     animate() {
-        const animateLoop = () => {
-            requestAnimationFrame(animateLoop);
+        this.renderer.setAnimationLoop(() => {
             this.controls.update();
             this.renderer.render(this.scene, this.camera);
-        };
-        animateLoop();
+        });
     }
+
 
     saveState() {
         var state = this.players.map(player => ({
@@ -110,22 +116,23 @@ class Main {
     loadState(state) {
         state.forEach(savedPlayer => {
             const player = this.players.find(p => p.id === savedPlayer.id);
-            if (player) {
+            if (player && player.model && savedPlayer.coords) {
                 player.model.position.set(
                     savedPlayer.coords.x,
                     savedPlayer.coords.y,
                     savedPlayer.coords.z
                 );
+                player.pos = savedPlayer.pos;
             }
         });
     }
 }
 
 
-window.init = function (element) {
-    const main = new Main(element);
+window.init = function () {
+    const main = new Main();
     main.init();
-    window.movePlayer = (playerId, cellIndex) => main.board.movePlayer(playerId, cellIndex);
+    window.movePlayer = (playerId, button) => main.board.movePlayer(playerId, button);
     window.saveState = () => main.saveState();
     window.loadState = (state) => main.loadState(state);
 
