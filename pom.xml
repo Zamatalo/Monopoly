@@ -1,24 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.example.application</groupId>
-    <artifactId>Monopoly</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
-    <modules>
-        <module>backend</module>
-        <module>frontend</module>
-        <module>shared</module>
-    </modules>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.example.application</groupId>
+  <artifactId>Monopoly</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>Monopoly-Logic</module>
+    <module>Monopoly-Persistence</module>
+    <module>Monopoly-Shared</module>
+    <module>Monopoly-UI</module>
+  </modules>
+
+  <properties>
+    <java.version>23</java.version>
+    <vaadin.version>24.5.5</vaadin.version>
+    <spring.version>3.3.5</spring.version>
+    <postgresql.version>42.7.4</postgresql.version>
+    <lombok.version>1.18.36</lombok.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+  </properties>
 
 
-    <properties>
-        <java.version>23</java.version>
-        <vaadin.version>24.5.5</vaadin.version>
-        <spring.version>3.3.5</spring.version>
-        <postgresql.version>42.7.4</postgresql.version>
-        <lombok.version>1.18.36</lombok.version>
-    </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+  </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>1.6.3</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
