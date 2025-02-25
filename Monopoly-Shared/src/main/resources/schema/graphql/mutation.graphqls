@@ -1,0 +1,4 @@
+type Mutation {
+    ##startGame(playerNames: [String!]!): Game
+    saveGame(game:GameInput!):Boolean
+}

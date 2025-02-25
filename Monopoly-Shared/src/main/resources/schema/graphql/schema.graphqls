@@ -1,0 +1,48 @@
+enum GameState {
+    STARTED
+    IN_PROGRESS
+    FINISHED
+}
+
+enum PlayerNames {
+    PLAYER_RED,
+    PLAYER_BLUE,
+    PLAYER_YELLOW,
+    PLAYER_GREEN
+}
+
+enum PropertyNames{
+    SHOULD_BE_ADDED
+}
+
+type Game {
+    gameId: ID
+    players: [Player]
+    currentPlayerIndex: Int
+    gameState: GameState
+}
+
+type Player {
+    playerId: ID
+    name: PlayerNames
+    balance: Int
+    position: Int
+    ownedProperties: [Property]
+}
+
+type Property{
+    propertyName:PropertyNames
+    cost: Int
+    rent:Int
+    upgradable: Boolean
+}
+
+type Position{
+    x: Float
+    y: Float
+    z: Float
+}
+
+type Subscription {
+    gameUpdated(gameId: ID!): Game
+}

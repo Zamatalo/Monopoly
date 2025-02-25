@@ -1,0 +1,26 @@
+input GameInput {
+    gameId: ID
+    gameState: GameState!
+    players: [PlayerInput!]!
+    currentPlayerIndex: Int!
+}
+input PlayerInput {
+    playerId: ID
+    name: String!
+    balance: Int
+    position:PositionInput
+    inJail:Boolean
+    ownedProperties:[PropertiesInput]
+}
+
+input PositionInput{
+    x:Float
+    y:Float
+    z:Float
+}
+input PropertiesInput{
+    name:PropertyNames
+    cost:Int
+    rent:Int
+    upgradable:Boolean
+}
