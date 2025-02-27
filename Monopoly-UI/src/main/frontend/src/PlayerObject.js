@@ -15,7 +15,6 @@ export class PlayerObject {
     }
 
     loadPlayerModel(loader, scene) {
-        return new Promise((resolve, reject) => {
             loader.load(
                 `/models/my_monopoly/${this.color}_pawn.glb`,
                 (gltf) => {
@@ -26,16 +25,20 @@ export class PlayerObject {
                     if (this.position === null) {
                         this.position = 0;
                     }
+                    this.model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
                     const coords = positions[this.position];
                     this.model.position.set(coords.x + xOffset, 0.1, coords.z + zOffset);
                     this.model.scale.set(0.75, 0.75, 0.75);
                     scene.add(this.model);
-                    resolve();
                 },
                 undefined,
-                (error) => reject(`Error loading model for ${this.color}: ${error}`)
+                (error) => (`Error loading model for ${this.color}: ${error}`)
             );
-        });
     }
 
 
@@ -86,14 +89,14 @@ export class PlayerObject {
                 gsap.to(this.model.position, {
                     x: nextPosition.x + xOffset,
                     z: nextPosition.z + zOffset,
-                    y: 0.7,
+                    y: 1.25,
                     duration: duration / 2,
                     ease: "power1.inOut",
                     onComplete: () => {
                         gsap.to(this.model.position, {
                             y: 0.2,
                             duration: duration / 2,
-                            ease: "power1.inOut",
+                            ease: "power2.inOut",
                             onComplete: () => {
                                 step++;
                                 moveNext();

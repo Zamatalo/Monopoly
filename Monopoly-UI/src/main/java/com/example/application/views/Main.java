@@ -37,6 +37,11 @@ public class Main extends VerticalLayout {
         FormLayout formLayout = new FormLayout();
         TextField gameIdField = new TextField("Game ID");
 
+
+        gameIdField.setValue("550e8400-e29b-41d4-a716-446655440000"); //for debug purposes
+
+
+
         Button connect = new Button("Connect", _ -> {
             String gameId = gameIdField.getValue();
             if (!gameId.isEmpty()) {

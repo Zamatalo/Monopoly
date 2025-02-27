@@ -19,10 +19,10 @@ import java.util.UUID;
 @Route("game")
 @AccessDeniedErrorRouter(rerouteToError = NotFoundException.class)
 @PreserveOnRefresh
-public class GameView extends VerticalLayout implements HasUrlParameter<String> {
+public class GameView extends VerticalLayout implements HasUrlParameter<String>, BeforeEnterObserver {
     private final GameService gameService;
     private final GameBoardComponent component = new GameBoardComponent();
-    private GameDTO dto = new GameDTO();
+    private UUID gameId;
 
     public GameView(GameService gameService) {
         setSizeFull();
@@ -32,15 +32,10 @@ public class GameView extends VerticalLayout implements HasUrlParameter<String> 
     }
 
     @Override
-    @SneakyThrows
     public void setParameter(BeforeEvent event, String parameter) {
         if (parameter != null && !parameter.isEmpty()) {
-            UUID gameId = UUID.fromString(parameter);
-            dto = gameService.findGameById(gameId);
-            component.setComponentState(new ObjectMapper().writeValueAsString(dto));
-            component.loadGameState();
-        } else {
-            throw new NotFoundException("Game ID is required.");
+            gameId = UUID.fromString(parameter);
+            // loadGame(gameId);
         }
     }
 
@@ -56,6 +51,7 @@ public class GameView extends VerticalLayout implements HasUrlParameter<String> 
         save.addThemeVariants(ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_TERTIARY);
 
         Button load = new Button("Load Game", _ -> {
+            loadGame(gameId);
             component.loadGameState();
         });
         load.addClassName("controlsButton");
@@ -89,9 +85,21 @@ public class GameView extends VerticalLayout implements HasUrlParameter<String> 
         add(controls);
     }
 
-    public void movePlayer(String name, Button button) {
+    private void movePlayer(String name, Button button) {
         this.component.movePlayer(name, button);
 
+    }
+
+    @SneakyThrows
+    private void loadGame(UUID gameId) {
+        GameDTO dto = gameService.findGameById(gameId); //refetch dto(later should be subscription(
+        component.setComponentState(new ObjectMapper().writeValueAsString(dto));
+        component.loadGameState();
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        loadGame(gameId);
     }
 }
 
