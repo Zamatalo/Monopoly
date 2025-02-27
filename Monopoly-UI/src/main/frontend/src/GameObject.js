@@ -11,7 +11,6 @@ export class GameObject {
     }
 
     loadBoardModel(loader, scene) {
-        return new Promise((resolve, reject) => {
             const boardPath = `/models/my_monopoly/monopolyBoard.glb`;
             loader.load(
                 boardPath,
@@ -19,19 +18,18 @@ export class GameObject {
                     this.model = gltf.scene;
                     console.log('Board model loaded');
                     this.model.position.set(0, 0, 0);
-                    this.model.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
+                    // this.model.traverse((child) => {
+                    //     if (child.isMesh) {
+                    //         child.castShadow = true;
+                    //         child.receiveShadow = true;
+                    //     }
+                    // });
+                    this.model.receiveShadow = true;
                     scene.add(this.model);
-                    resolve(this);
                 },
                 undefined,
-                (error) => reject(`Error loading model : ${error}`)
+                (error) => (`Error loading model : ${error}`)
             );
-        })
     };
 
     addHelpers(scene) {

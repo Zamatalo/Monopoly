@@ -6,7 +6,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {PlayerColor} from "./globalVars.js";
 
 class Main {
-    constructor() {
+    constructor(GameObject) {
         this.container = document.getElementById("GameBoardComponent");
         this.scene = this.initScene();
         this.renderer = this.initRenderer();
@@ -14,35 +14,17 @@ class Main {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.loader = new GLTFLoader();
         this.handleResize();
+        this.loadState(GameObject);
+        this.loadModels()
         this.animate();
     }
 
-    createNewGame() {
-        this.players = [
-            new PlayerObject(1, PlayerColor.PLAYER_RED, 1500, 0, false, null, null),
-            new PlayerObject(2, PlayerColor.PLAYER_GREEN, 1500, 0, false, null, null),
-            new PlayerObject(3, PlayerColor.PLAYER_BLUE, 1500, 0, false, null, null),
-            new PlayerObject(4, PlayerColor.PLAYER_YELLOW, 1500, 0, false, null, null),
-        ];
-        this.game = new GameObject(1, "STARTED", this.players, 0);
-    }
+    loadModels() {
+        this.game.players.map(player => {
+            player.loadPlayerModel(this.loader, this.scene)
+        });
 
-    async initGame() {
-        if (!this.game) {
-            console.warn("Game not found. Creating a new one...");
-            this.createNewGame();
-        }
-
-        await Promise.all(
-            this.game.players.map(player => {
-                player.loadPlayerModel(this.loader, this.scene)
-            })
-        );
-
-        await Promise.all([
-            this.game.loadBoardModel(this.loader, this.scene),
-
-        ]);
+        this.game.loadBoardModel(this.loader, this.scene);
         this.game.addHelpers(this.scene);
     }
 
@@ -51,11 +33,20 @@ class Main {
         scene.background = new THREE.Color(0xa0a0a0);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        ambientLight.position.set(5, 10, 5);
         scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 10, 7.5);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(10, 10, 10);
         scene.add(directionalLight);
+
+        directionalLight.castShadow = true;
+        // directionalLight.shadow.mapSize.width = 512;  // Default: 512
+        // directionalLight.shadow.mapSize.height = 512; // Default: 512
+        // directionalLight.shadow.camera.near = 0.5;    // Default: 0.5
+        // directionalLight.shadow.camera.far = 500;     // Default: 500
+        //
+        //this.renderer.shadowMap.enabled = true;
 
         return scene;
     }
@@ -128,20 +119,10 @@ class Main {
     }
 }
 
-window.init = function () {
-    const main = new Main();
+window.init = function (GameObject) {
+    const main = new Main(GameObject);
+
     window.movePlayer = (button, color) =>
         main.game.players.find(player => player.color === PlayerColor[color]).movePlayer(button);
     window.saveState = () => main.saveState();
-    window.loadState = (state) => {
-        main.scene = main.initScene(); //clear scene
-        main.loadState(state);
-        main.initGame().then(r => console.log("Game loaded"));
-    }
-    window.createNewGame = () => {
-        main.scene = main.initScene();
-        main.createNewGame();
-        main.initGame().then(r => "");
-    }
-
 };
