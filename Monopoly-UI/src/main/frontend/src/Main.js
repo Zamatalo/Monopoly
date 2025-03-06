@@ -3,29 +3,27 @@ import * as THREE from "three";
 import {GameObject} from "./GameObject.js";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
-import {PlayerColor} from "./globalVars.js";
 
 class Main {
-    constructor(GameObject) {
-        this.container = document.getElementById("GameBoardComponent");
+    constructor(container) {
+        this.container = container;
         this.scene = this.initScene();
         this.renderer = this.initRenderer();
         this.camera = this.initCamera();
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.loader = new GLTFLoader();
         this.handleResize();
-        this.loadState(GameObject);
-        this.loadModels()
         this.animate();
     }
 
     loadModels() {
-        this.game.players.map(player => {
-            player.loadPlayerModel(this.loader, this.scene)
-        });
-
-        this.game.loadBoardModel(this.loader, this.scene);
-        this.game.addHelpers(this.scene);
+        if (this.game) {
+            this.game.players.forEach(player => {
+                player.loadPlayerModel(this.loader, this.scene);
+            });
+            this.game.loadBoardModel(this.loader, this.scene);
+            //this.game.addHelpers(this.scene);
+        }
     }
 
     initScene() {
@@ -40,21 +38,13 @@ class Main {
         directionalLight.position.set(10, 10, 10);
         scene.add(directionalLight);
 
-        directionalLight.castShadow = true;
-        // directionalLight.shadow.mapSize.width = 512;  // Default: 512
-        // directionalLight.shadow.mapSize.height = 512; // Default: 512
-        // directionalLight.shadow.camera.near = 0.5;    // Default: 0.5
-        // directionalLight.shadow.camera.far = 500;     // Default: 500
-        //
-        //this.renderer.shadowMap.enabled = true;
-
         return scene;
     }
 
     initRenderer() {
         const renderer = new THREE.WebGLRenderer({
             antialias: true,
-            powerPreference: "high-performance",
+            powerPreference: "high-performance"
         });
         renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -92,37 +82,71 @@ class Main {
         });
     }
 
-    saveState() {
-        console.log(JSON.stringify(this.game));
-        return this.game;
+    updateGameState(updatedGame) {
+        const parsedGame = JSON.parse(updatedGame);
+
+        if (!this.game) {
+            this.game = new GameObject(
+                parsedGame.gameId,
+                parsedGame.gameState,
+                parsedGame.players.map(playerData =>
+                    new PlayerObject(
+                        playerData.playerId,
+                        playerData.color,
+                        playerData.balance,
+                        playerData.position,
+                        playerData.inJail,
+                        playerData.ownedProperties
+                    )
+                ),
+                parsedGame.currentPlayerIndex
+            );
+
+            this.loadModels();
+        } else {
+            this.game.gameState = parsedGame.gameState;
+
+            parsedGame.players.forEach((newPlayerData) => {
+                let player = this.game.players.find(p => p.color === newPlayerData.color);
+                if (player) {
+                    const oldPosition = player.position;
+                    const newPosition = newPlayerData.position;
+
+                    if (oldPosition !== newPosition) {
+                        const playerModel = this.scene.children.find(
+                            obj => obj.userData?.playerId === player.playerId
+                        );
+
+                        if (playerModel) {
+                            player.animatePlayerMovement(newPosition);
+                        } else {
+                            console.error(`model ${playerModel} not found`);
+                        }
+                    }
+                }
+            });
+        }
     }
 
-    loadState(state) {
-        console.log(JSON.stringify(this.game));
-        const parsedGame = JSON.parse(state);
-
-        this.game = new GameObject(
-            parsedGame.gameId,
-            parsedGame.status,
-            parsedGame.players.map(playerData =>
-                new PlayerObject(
-                    playerData.playerId,
-                    PlayerColor[playerData.name],
-                    playerData.balance,
-                    playerData.position,
-                    playerData.inJail,
-                    playerData.ownedProperties,
-                    null
-                )
-            ),
-        );
+    cleanup() {
+        this.renderer.clear();
+        this.scene.clear();
+        this.controls.dispose();
     }
 }
 
-window.init = function (GameObject) {
-    const main = new Main(GameObject);
+window.init = function (container) {
+    window.main = new Main(container);
+};
 
-    window.movePlayer = (button, color) =>
-        main.game.players.find(player => player.color === PlayerColor[color]).movePlayer(button);
-    window.saveState = () => main.saveState();
+window.updateGame = function (updatedGame) {
+    if (window.main) {
+        window.main.updateGameState(updatedGame);
+    }
+};
+
+window.cleanup = function () {
+    if (window.main) {
+        window.main.cleanup();
+    }
 };

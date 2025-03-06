@@ -1,6 +1,5 @@
+import {PlayerColor, positions} from "Frontend/src/globalVars.js";
 import gsap from "gsap";
-import {randInt} from "three/src/math/MathUtils.js";
-import {PlayerColor, positions} from "./globalVars.js";
 
 export class PlayerObject {
     constructor(playerId, color, balance, position = 0, inJail, ownedProperties, model) {
@@ -15,6 +14,7 @@ export class PlayerObject {
     }
 
     loadPlayerModel(loader, scene) {
+        if (!this.model) {
             loader.load(
                 `/models/my_monopoly/${this.color}_pawn.glb`,
                 (gltf) => {
@@ -22,99 +22,71 @@ export class PlayerObject {
                     console.log(`Loaded model for ${this.color} player`);
                     const {xOffset, zOffset} = this.helperSwitch(this.color);
 
-                    if (this.position === null) {
-                        this.position = 0;
-                    }
-                    this.model.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
                     const coords = positions[this.position];
                     this.model.position.set(coords.x + xOffset, 0.1, coords.z + zOffset);
                     this.model.scale.set(0.75, 0.75, 0.75);
+                    this.model.userData = {
+                        isPlayer: true,
+                        playerId: this.playerId,
+                        color: this.color,
+                    };
                     scene.add(this.model);
                 },
                 undefined,
-                (error) => (`Error loading model for ${this.color}: ${error}`)
+                (error) => console.error(`Error loading model for ${this.color}: ${error}`)
             );
+        }
     }
 
-
-    movePlayer(button) {
-        if (this.isAnimating) return;
-
-        this.isAnimating = true;
-        button.disabled = true;
-        button.style.backgroundColor = "red";
-
-        this.randomInt = randInt(1, 5);
-        console.log(`Player ${this.color} rolled ${this.randomInt}`);
-
-        this.animatePlayerMovement(() => {
-            this.isAnimating = false;
-            button.disabled = false;
-            button.style.backgroundColor = "";
-        });
-    }
-
-
-    animatePlayerMovement(callback = () => {
+    animatePlayerMovement(targetPosition, callback = () => {
     }) {
         if (!this.model) {
             console.error("Model not loaded yet!");
             return;
         }
-        if (!positions) {
-            console.error("Game positions are undefined.");
+        if (!positions || targetPosition == null || targetPosition < 0 || targetPosition >= positions.length) {
+            console.error("Game positions are undefined or invalid.");
             return;
         }
-
-        let step = 0;
-        const duration = 0.66;
+        const {xOffset, zOffset} = this.helperSwitch(this.color);
+        let currentStep = this.position;
 
         const moveNext = () => {
-            if (step < this.randomInt) {
-                const nextPosIndex = (this.position + step + 1) % 40;
-                const nextPosition = positions[nextPosIndex];
+            if (currentStep !== targetPosition) {
+                currentStep = (currentStep + 1) % positions.length;
+                const nextPosition = positions[currentStep];
 
                 if (!nextPosition) {
                     console.error("Invalid position data.");
                     return;
                 }
 
-                const {xOffset, zOffset} = this.helperSwitch(this.color);
-
                 gsap.to(this.model.position, {
                     x: nextPosition.x + xOffset,
                     z: nextPosition.z + zOffset,
-                    y: 1.25,
-                    duration: duration / 2,
-                    ease: "power1.inOut",
+                    y: 0.7,
+                    duration: 0.33,
+                    ease: "power1.inOut", 
                     onComplete: () => {
                         gsap.to(this.model.position, {
                             y: 0.2,
-                            duration: duration / 2,
-                            ease: "power2.inOut",
+                            duration: 0.33,
+                            ease: "power1.inOut", 
                             onComplete: () => {
-                                step++;
                                 moveNext();
                             }
                         });
                     }
                 });
             } else {
-                this.position = (this.position + this.randomInt) % 40;
+                this.position = targetPosition;
                 if (typeof callback === "function") {
-                    callback();
+                    callback(); 
                 }
             }
         };
-
         moveNext();
     }
-
 
     helperSwitch(name) {
         const offset = 0.5;
@@ -136,5 +108,4 @@ export class PlayerObject {
         const {model, isAnimating, ...rest} = this;
         return rest;
     }
-
 }

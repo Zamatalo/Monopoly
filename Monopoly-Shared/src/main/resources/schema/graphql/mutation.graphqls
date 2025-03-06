@@ -1,4 +1,4 @@
 type Mutation {
-    ##startGame(playerNames: [String!]!): Game
-    saveGame(game:GameInput!):Boolean
+    saveGame(gameDto: GameDTO!): Boolean
+    rollDice(gameId: ID!):Boolean
 }

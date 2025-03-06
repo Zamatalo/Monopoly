@@ -12,8 +12,8 @@ export const positions = [
 ];
 
 export const PlayerColor = {
-    PLAYER_RED: "red",
-    PLAYER_GREEN: "green",
-    PLAYER_BLUE: "blue",
-    PLAYER_YELLOW: "yellow"
+    PLAYER_RED: "PLAYER_RED",
+    PLAYER_GREEN: "PLAYER_GREEN",
+    PLAYER_BLUE: "PLAYER_BLUE",
+    PLAYER_YELLOW: "PLAYER_YELLOW"
 };

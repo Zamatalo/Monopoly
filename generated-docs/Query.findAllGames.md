@@ -1,15 +1,14 @@
-# Query.findAllGames: [Game]
+# Query.findAllGames: [Game]!
 
 ## Example
-
 ```graphql
 {
-    findAllGames {
-        gameId
-        players
-        currentPlayerIndex
-        gameState
-    }
+  findAllGames {
+    gameId
+    players
+    currentPlayerIndex
+    gameState
+  }
 }
 
 ```

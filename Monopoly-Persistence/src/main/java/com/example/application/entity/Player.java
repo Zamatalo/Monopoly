@@ -1,7 +1,7 @@
 package com.example.application.entity;
 
 
-import com.example.application.PlayerNames;
+import com.example.application.PlayerColors;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,7 +21,7 @@ public class Player {
     private UUID playerId;
 
     @Enumerated(EnumType.STRING)
-    private PlayerNames name;
+    private PlayerColors color;
 
     private int balance = 1500;
     private int position = 0;

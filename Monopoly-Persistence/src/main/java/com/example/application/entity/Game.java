@@ -15,7 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Game {
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID gameId;
@@ -24,10 +23,9 @@ public class Game {
     @Enumerated(EnumType.STRING)
     private GameState gameState;
 
-    /// if game is deleted, players should be deleted too
     @ToString.Exclude
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<Player> players;
 
-    private int currentPlayerIndex;
+    private int currentPlayerIndex = 0;
 }

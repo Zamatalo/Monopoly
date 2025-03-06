@@ -4,7 +4,7 @@ enum GameState {
     FINISHED
 }
 
-enum PlayerNames {
+enum PlayerColors {
     PLAYER_RED,
     PLAYER_BLUE,
     PLAYER_YELLOW,
@@ -16,15 +16,15 @@ enum PropertyNames{
 }
 
 type Game {
-    gameId: ID
+    gameId: ID!
     players: [Player]
-    currentPlayerIndex: Int
+    currentPlayerIndex:Int!
     gameState: GameState
 }
 
 type Player {
     playerId: ID
-    name: PlayerNames
+    color: PlayerColors
     balance: Int
     position: Int
     ownedProperties: [Property]
@@ -35,12 +35,6 @@ type Property{
     cost: Int
     rent:Int
     upgradable: Boolean
-}
-
-type Position{
-    x: Float
-    y: Float
-    z: Float
 }
 
 type Subscription {

@@ -1,7 +1,7 @@
 INSERT INTO game (game_id, game_state, current_player_index)
 VALUES ('550e8400-e29b-41d4-a716-446655440000', 'IN_PROGRESS', 0);
 
-INSERT INTO player (player_id, name, balance, in_jail, position)
+INSERT INTO player (player_id, color, balance, in_jail, position)
 VALUES ('123e4567-e89b-12d3-a456-426614174000', 'PLAYER_RED', 1500, false, 0),
        ('123e4567-e89b-12d3-a456-426614174001', 'PLAYER_GREEN', 1500, false, 0),
        ('123e4567-e89b-12d3-a456-426614174002', 'PLAYER_YELLOW', 1500, false, 0),
