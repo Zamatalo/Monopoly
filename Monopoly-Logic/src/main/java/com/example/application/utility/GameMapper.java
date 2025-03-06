@@ -1,9 +1,10 @@
 package com.example.application.utility;
 
-import com.example.application.dto.GameDTO;
-import com.example.application.dto.PlayerDTO;
+
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
+import com.example.application.types.GameDTO;
+import com.example.application.types.PlayerDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

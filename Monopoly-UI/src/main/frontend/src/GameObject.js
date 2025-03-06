@@ -1,6 +1,3 @@
-import * as THREE from "three";
-import {positions} from "./globalVars.js";
-
 export class GameObject {
     constructor(gameId, gameState, players, currentPlayerIndex, model) {
         this.gameId = gameId;
@@ -18,13 +15,8 @@ export class GameObject {
                     this.model = gltf.scene;
                     console.log('Board model loaded');
                     this.model.position.set(0, 0, 0);
-                    // this.model.traverse((child) => {
-                    //     if (child.isMesh) {
-                    //         child.castShadow = true;
-                    //         child.receiveShadow = true;
-                    //     }
-                    // });
                     this.model.receiveShadow = true;
+                    this.model.userData.isBoard = true;
                     scene.add(this.model);
                 },
                 undefined,
@@ -32,15 +24,15 @@ export class GameObject {
             );
     };
 
-    addHelpers(scene) {
-        const geometry = new THREE.SphereGeometry(0.1, 16, 16);
-        const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-        positions.forEach((pos) => {
-            const helper = new THREE.Mesh(geometry, material);
-            helper.position.set(pos.x, 0.1, pos.z);
-            scene.add(helper);
-        });
-    };
+    // addHelpers(scene) {
+    //     const geometry = new THREE.SphereGeometry(0.1, 16, 16);
+    //     const material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+    //     positions.forEach((pos) => {
+    //         const helper = new THREE.Mesh(geometry, material);
+    //         helper.position.set(pos.x, 0.1, pos.z);
+    //         scene.add(helper);
+    //     });
+    // };
 
     toJSON() {
         const {model, ...rest} = this;
