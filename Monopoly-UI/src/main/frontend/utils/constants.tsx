@@ -11,9 +11,23 @@ export const positions = [
     {x: 9.5, z: 1.85}, {x: 9.5, z: 3.65}, {x: 9.5, z: 5.25}, {x: 9.5, z: 7}
 ];
 
-export const PlayerColor = {
-    PLAYER_RED: "PLAYER_RED",
-    PLAYER_GREEN: "PLAYER_GREEN",
-    PLAYER_BLUE: "PLAYER_BLUE",
-    PLAYER_YELLOW: "PLAYER_YELLOW"
-};
+export enum PlayerColor {
+    PLAYER_RED = 'PLAYER_RED',
+    PLAYER_GREEN = 'PLAYER_GREEN',
+    PLAYER_BLUE = 'PLAYER_BLUE',
+    PLAYER_YELLOW = 'PLAYER_YELLOW',
+}
+
+export enum GameState {
+    STARTED = 'STARTED',
+    IN_PROGRESS = 'IN_PROGRESS',
+    FINISHED = 'FINISHED',
+}
+
+export enum PropertyNames {
+    SHOULD_BE_ADDED = 'SHOULD_BE_ADDED',
+}
+
+
+
+

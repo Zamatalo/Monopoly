@@ -15,28 +15,26 @@ enum PropertyNames{
     SHOULD_BE_ADDED
 }
 
-type Game {
+type GameDTO {
     gameId: ID!
-    players: [Player]
+    players: [PlayerDTO]
     currentPlayerIndex:Int!
     gameState: GameState
 }
 
-type Player {
+type PlayerDTO {
     playerId: ID
     color: PlayerColors
     balance: Int
     position: Int
-    ownedProperties: [Property]
+    ownedProperties: [PropertyDTO]
 }
 
-type Property{
+type PropertyDTO{
     propertyName:PropertyNames
     cost: Int
     rent:Int
     upgradable: Boolean
 }
 
-type Subscription {
-    gameUpdated(gameId: ID!): Game
-}
+
