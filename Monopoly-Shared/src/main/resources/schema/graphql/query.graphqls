@@ -1,5 +1,5 @@
 type Query {
-    findGameById(id: ID!): Game!
-    findAllGames:[Game]!
+    findGameById(id: ID!): GameDTO!
+    findAllGames:[GameDTO]!
 }
 

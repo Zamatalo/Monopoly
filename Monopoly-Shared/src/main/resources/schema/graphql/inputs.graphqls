@@ -1,20 +1,20 @@
-input GameDTO {
+input GameDTOInput {
     gameId: ID
     gameState: GameState!
-    players: [PlayerDTO]!
+    players: [PlayerDTOInput]!
     currentPlayerIndex: Int!
 }
 
-input PlayerDTO {
+input PlayerDTOInput {
     playerId: ID
     color: String
     balance: Int
     position:Int
     inJail:Boolean
-    ownedProperties:[PropertiesDTO]
+    ownedProperties:[PropertiesDTOInput]
 }
 
-input PropertiesDTO{
+input PropertiesDTOInput{
     propertyName:PropertyNames
     cost:Int
     rent:Int

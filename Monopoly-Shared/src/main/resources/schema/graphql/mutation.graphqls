@@ -1,4 +1,8 @@
 type Mutation {
-    saveGame(gameDto: GameDTO!): Boolean
-    rollDice(gameId: ID!):Boolean
+    saveGame(gameDto: GameDTOInput!): Boolean
+    rollDice(gameId: ID!, playerId: ID!): GameDTO
+}
+
+type Subscription {
+    gameUpdated(gameId:ID!):GameDTO
 }
