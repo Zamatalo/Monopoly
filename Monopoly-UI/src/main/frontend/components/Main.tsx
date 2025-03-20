@@ -1,23 +1,31 @@
 import * as THREE from 'three';
+import {Object3D} from 'three';
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import {GameDTO} from "Frontend/components/GameDTO";
+import {World} from "./World";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
+import * as RAPIER from "@dimforge/rapier3d";
 
-let scene = new THREE.Scene();
-let loader = new GLTFLoader();
-
+let game: GameDTO;
+let world = new World();
 export function initThreeJS(container: HTMLDivElement) {
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 5;
-    const renderer = new THREE.WebGLRenderer({antialias: true});
+    camera.position.z = 10;
+    camera.position.y = 15;
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        powerPreference: "high-performance"
+    });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
 
-    scene.background = new THREE.CubeTextureLoader()
+    const controls = new OrbitControls(camera, renderer.domElement);
+    world.scene.background = new THREE.CubeTextureLoader()
         .setPath('/assets/skybox/')
         .load([
             'cubemap_0.png', // Right
@@ -30,8 +38,12 @@ export function initThreeJS(container: HTMLDivElement) {
 
     function animate() {
         requestAnimationFrame(animate);
+
+        if (world.world) {
+            world.update(1 / 60);
+        }
         controls.update();
-        renderer.render(scene, camera);
+        renderer.render(world.scene, camera);
     }
 
     animate();
@@ -44,11 +56,13 @@ export function initThreeJS(container: HTMLDivElement) {
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);
     });
+
+
 }
 
 function setupLighting() {
-    let ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    scene.add(ambientLight);
+    let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    world.scene.add(ambientLight);
 
     const color = 0xFFCC33;
     const intensity2 = 75000;
@@ -58,44 +72,100 @@ function setupLighting() {
     light2.shadow.bias = -0.001;
     light2.shadow.mapSize.width = 4096;
     light2.shadow.mapSize.height = 4096;
-    scene.add(light2);
-
-
+    world.scene.add(light2);
 }
 
-export async function loadState(game: GameDTO): Promise<void> {
-    if (scene.children.length === 0) {
+async function loadDice() {
+    const boardPath = "/assets/models/dice3.glb";
+    const loader = new GLTFLoader();
+    return new Promise<void>((resolve, reject) => {
+        loader.load(
+            boardPath,
+            (gltf: any) => {
+                let model = gltf.scene;
+                model.userData = {isDice: true};
+                model.traverse((obj: any) => {
+                    if (obj.castShadow !== undefined) {
+                        obj.castShadow = true;
+                        obj.receiveShadow = true;
+                    }
+                });
+                world.scene.add(model);
+                const axesHelper = new THREE.AxesHelper(5);
+                model.add(axesHelper);
+
+                const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+                    .setTranslation(0, 10, 0)
+                    .setLinvel(0, 0, 0)
+                    .setAngvel({x: 0, y: 0, z: 0})
+                    .setLinearDamping(0.1)
+                    .setAngularDamping(0.1);
+                const rigidBody = world.world.createRigidBody(rigidBodyDesc);
+                const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
+                    .setTranslation(0, 0, 0)
+                    .setFriction(5.5)
+                    .setRestitution(0.4);
+
+                world.world.createCollider(colliderDesc, rigidBody);
+                world.addBody(model, rigidBody);
+                window["throwDice"] = function throwDice() {
+                    const linvelX = (Math.random() - 0.5) * 0.15;
+                    const linvelY = Math.random() * 0.2;
+                    const linvelZ = (Math.random() - 0.5) * 0.15;
+                    rigidBody.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true);
+
+                    const angvelX = (Math.random() - 0.5) * 0.15;
+                    const angvelY = (Math.random() - 0.5) * 0.15;
+                    const angvelZ = (Math.random() - 0.5) * 0.15;
+                    rigidBody.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true);
+                }
+                window.addEventListener("keydown", ev => {
+                    if (ev.key == " " ||
+                        ev.code == "Space"
+
+                    ) {
+                        rigidBody.setTranslation({x: 0, y: 10, z: 0}, true);
+                    }
+                });
+                resolve();
+                console.log('Dice model loaded');
+            },
+            undefined,
+            (error: any) => {
+                console.error(`Error loading model: ${error}`);
+                reject(error);
+            }
+        );
+    });
+}
+
+
+export async function loadState(newGame: GameDTO): Promise<void> {
+    if (world.scene.children.length === 0) {
         try {
-            await game.loadBoardModel(loader, scene);
+            game = newGame;
+            await game.loadBoardModel(world);
             for (const player of game.players) {
-                await player.loadPlayerModel(loader, scene);
+                await player.loadPlayerModel(world);
             }
 
             setupLighting();
-            console.log(scene);
+            await loadDice();
             console.log('Loaded scene with game state:', game);
         } catch (error) {
             console.error('Error loading game state:', error);
         }
     } else {
-        game.players.forEach((newPlayerData) => {
-            const player = game.players.find((p) => p.color === newPlayerData.color);
-            if (player) {
-                const oldPosition = player.position;
+        newGame.players.forEach((newPlayerData) => {
+            const oldPlayer = game.players.find(p => p.color === newPlayerData.color);
+            if (oldPlayer) {
                 const newPosition = newPlayerData.position;
-
-                if (oldPosition !== newPosition) {
-                    const playerModel = scene.children.find(
-                        (obj) => obj.userData?.playerId === player.playerId
-                    );
-
-                    if (playerModel) {
-                        //player.animatePlayerMovement(newPosition);
-                    } else {
-                        console.error(`Player model for ${player.color} not found`);
-                    }
+                if (oldPlayer.position !== newPosition) {
+                    const playerModel = world.scene.children.find(e => e.userData.color == newPlayerData.color) as Object3D;
+                    oldPlayer.animatePlayerMovement(newPosition, playerModel);
                 }
             }
         });
     }
 }
+
