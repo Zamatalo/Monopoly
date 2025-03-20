@@ -4,8 +4,8 @@ import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
 import {createClient} from 'graphql-ws';
 import {initThreeJS, loadState} from 'Frontend/components/Main';
 import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID} from 'Frontend/utils/queries';
-import {GameDTO} from "Frontend/components/GameDTO";
-import {PlayerDTO} from "Frontend/components/PlayerDTO";
+import {GameDTO} from 'Frontend/components/GameDTO';
+import {PlayerDTO} from 'Frontend/components/PlayerDTO';
 
 const wsLink = new GraphQLWsLink(
     createClient({
@@ -30,12 +30,9 @@ function App() {
 
     return (
         <ApolloProvider client={client}>
-            <GameInitializer gameId={'550e8400-e29b-41d4-a716-446655440000'}/>
+            <GameInitializer gameId="550e8400-e29b-41d4-a716-446655440000"/>
             <GameUpdates/>
-            <div
-                ref={containerRef}
-                style={{width: '100%', height: '100vh'}}
-            />
+            <div ref={containerRef} style={{width: '100%', height: '100vh'}}/>
         </ApolloProvider>
     );
 }
@@ -69,7 +66,8 @@ function GameInitializer({gameId}: { gameId: string }) {
                 players: players,
                 currentPlayerIndex: gameData.currentPlayerIndex,
             } as GameDTO);
-            loadState(game).then(r => "loaded");
+
+            loadState(game).then(() => console.log('Initial game state loaded'));
         }
     }, [data]);
 
@@ -80,7 +78,7 @@ function GameInitializer({gameId}: { gameId: string }) {
 }
 
 function GameUpdates() {
-    const {data, loading, error} = useSubscription(GAME_UPDATED_SUBSCRIPTION);
+    const {data, error} = useSubscription(GAME_UPDATED_SUBSCRIPTION);
 
     useEffect(() => {
         if (data) {
@@ -98,13 +96,14 @@ function GameUpdates() {
                     } as PlayerDTO)
             );
 
-            const game = new GameDTO({
+            const newGame = new GameDTO({
                 gameId: gameData.gameId,
                 gameState: gameData.gameState,
                 players: players,
                 currentPlayerIndex: gameData.currentPlayerIndex,
             } as GameDTO);
-            loadState(game).then(r => "updated");
+
+            loadState(newGame).then(() => console.log('Game state updated'));
         }
     }, [data]);
 
