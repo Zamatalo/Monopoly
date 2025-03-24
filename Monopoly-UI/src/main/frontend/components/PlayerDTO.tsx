@@ -32,8 +32,8 @@ export class PlayerDTO {
                     const model = gltf.scene;
                     const {xOffset, zOffset} = this.helperSwitch(this.color);
                     const coords = positions[this.position];
-                    model.position.set(coords.x + xOffset, 0.2, coords.z + zOffset);
-                    model.scale.set(0.75, 0.75, 0.75);
+                    model.position.set(coords.x + xOffset, 0.13, coords.z + zOffset);
+                    model.scale.set(2.5, 2.5, 2.5);
 
                     model.userData = {
                         isPlayer: true,
@@ -96,7 +96,7 @@ export class PlayerDTO {
                     ease: 'power1.inOut',
                     onComplete: () => {
                         gsap.to(model.position, {
-                            y: 0.2,
+                            y: 0.13,
                             duration: 0.33,
                             ease: 'power1.inOut',
                             onComplete: moveNext,
@@ -113,7 +113,7 @@ export class PlayerDTO {
     }
 
     private helperSwitch(name: string): { xOffset: number; zOffset: number } {
-        const offset = 0.5;
+        const offset = 0.4;
         switch (name) {
             case PlayerColor.PLAYER_RED:
                 return {xOffset: offset, zOffset: offset};

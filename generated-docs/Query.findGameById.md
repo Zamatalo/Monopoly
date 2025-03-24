@@ -8,12 +8,7 @@
 ## Example
 ```graphql
 {
-  findGameById(id: "random12345") {
-    gameId
-    players
-    currentPlayerIndex
-    gameState
-  }
+  findGameById(id: "random12345")
 }
 
 ```
