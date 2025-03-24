@@ -3,12 +3,7 @@
 ## Example
 ```graphql
 {
-  findAllGames {
-    gameId
-    players
-    currentPlayerIndex
-    gameState
-  }
+  findAllGames
 }
 
 ```

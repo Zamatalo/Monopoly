@@ -56,8 +56,6 @@ export function initThreeJS(container: HTMLDivElement) {
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);
     });
-
-
 }
 
 function setupLighting() {
@@ -73,6 +71,25 @@ function setupLighting() {
     light2.shadow.mapSize.width = 4096;
     light2.shadow.mapSize.height = 4096;
     world.scene.add(light2);
+}
+
+function createInboundBox() {
+    const wallThickness = 0.2;
+    const boxSize = 5;
+    const rigidBodyForBox = RAPIER.RigidBodyDesc.fixed();
+    const rigidBodyBox = world.world.createRigidBody(rigidBodyForBox);
+    const floorDesc = RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, -boxSize, 0);
+    world.world.createCollider(floorDesc, rigidBodyBox);
+    const topDesc = RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, boxSize, 0);
+    world.world.createCollider(topDesc, rigidBodyBox);
+    const leftDesc = RAPIER.ColliderDesc.cuboid(wallThickness, boxSize, boxSize).setTranslation(-boxSize, 0, 0);
+    world.world.createCollider(leftDesc, rigidBodyBox);
+    const rightDesc = RAPIER.ColliderDesc.cuboid(wallThickness, boxSize, boxSize).setTranslation(boxSize, 0, 0);
+    world.world.createCollider(rightDesc, rigidBodyBox);
+    const frontDesc = RAPIER.ColliderDesc.cuboid(boxSize, boxSize, wallThickness).setTranslation(0, 0, -boxSize);
+    world.world.createCollider(frontDesc, rigidBodyBox);
+    const backDesc = RAPIER.ColliderDesc.cuboid(boxSize, boxSize, wallThickness).setTranslation(0, 0, boxSize);
+    world.world.createCollider(backDesc, rigidBodyBox);
 }
 
 async function loadDice() {
@@ -91,42 +108,21 @@ async function loadDice() {
                     }
                 });
                 world.scene.add(model);
+
                 const axesHelper = new THREE.AxesHelper(5);
                 model.add(axesHelper);
 
                 const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-                    .setTranslation(0, 10, 0)
-                    .setLinvel(0, 0, 0)
-                    .setAngvel({x: 0, y: 0, z: 0})
-                    .setLinearDamping(0.1)
-                    .setAngularDamping(0.1);
+                    .setTranslation(0, 4, 2)
+                    .setUserData("isDice");
                 const rigidBody = world.world.createRigidBody(rigidBodyDesc);
                 const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
                     .setTranslation(0, 0, 0)
-                    .setFriction(5.5)
+                    .setFriction(7)
                     .setRestitution(0.4);
-
                 world.world.createCollider(colliderDesc, rigidBody);
                 world.addBody(model, rigidBody);
-                window["throwDice"] = function throwDice() {
-                    const linvelX = (Math.random() - 0.5) * 0.15;
-                    const linvelY = Math.random() * 0.2;
-                    const linvelZ = (Math.random() - 0.5) * 0.15;
-                    rigidBody.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true);
-
-                    const angvelX = (Math.random() - 0.5) * 0.15;
-                    const angvelY = (Math.random() - 0.5) * 0.15;
-                    const angvelZ = (Math.random() - 0.5) * 0.15;
-                    rigidBody.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true);
-                }
-                window.addEventListener("keydown", ev => {
-                    if (ev.key == " " ||
-                        ev.code == "Space"
-
-                    ) {
-                        rigidBody.setTranslation({x: 0, y: 10, z: 0}, true);
-                    }
-                });
+                createInboundBox();
                 resolve();
                 console.log('Dice model loaded');
             },
@@ -139,7 +135,57 @@ async function loadDice() {
     });
 }
 
+window.addEventListener("keydown", ev => {
+    var rigidBody = world.bodies.filter(e => e.userData === "isDice");
 
+    if ((ev.key == "r" || ev.key == "R") && rigidBody.every(e => !e.isMoving())) {
+        const linvelX = (Math.random() - 0.5) * 0.15;
+        const linvelY = Math.random() * 0.2;
+        const linvelZ = (Math.random() - 0.5) * 0.15;
+        rigidBody.forEach(e => e.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true));
+
+        const angvelX = (Math.random() - 0.5) * 0.15;
+        const angvelY = (Math.random() - 0.5) * 0.15;
+        const angvelZ = (Math.random() - 0.5) * 0.15;
+        rigidBody.forEach(e => e.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true));
+
+
+    }
+    if (ev.key == " " || ev.code == "Space") {
+        rigidBody.forEach(e => e.setTranslation({x: 0, y: 4, z: 0}, true));
+    }
+    if (ev.key == "q" || ev.key == "Q") {
+        let result: number = 0;
+        rigidBody.forEach(e => result += getDiceTopFace(e.rotation()));
+        console.log("Current top result:", result);
+    }
+});
+
+function getDiceTopFace(rotation: any): number {
+    const faceNormals = [
+        new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(1, 0, 0),
+        new THREE.Vector3(0, 1, 0),
+        new THREE.Vector3(0, -1, 0),
+        new THREE.Vector3(-1, 0, 0),
+        new THREE.Vector3(0, 0, 1)
+    ];
+    const diceQuaternion = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+    const worldUp = new THREE.Vector3(0, 1, 0);
+
+    let maxDot = -Infinity;
+    let topFace = 0;
+    for (let i = 0; i < faceNormals.length; i++) {
+        const normal = faceNormals[i].clone();
+        normal.applyQuaternion(diceQuaternion);
+        const dot = normal.dot(worldUp);
+        if (dot > maxDot) {
+            maxDot = dot;
+            topFace = i + 1;
+        }
+    }
+    return topFace;
+}
 export async function loadState(newGame: GameDTO): Promise<void> {
     if (world.scene.children.length === 0) {
         try {
@@ -150,6 +196,7 @@ export async function loadState(newGame: GameDTO): Promise<void> {
             }
 
             setupLighting();
+            await loadDice();
             await loadDice();
             console.log('Loaded scene with game state:', game);
         } catch (error) {
