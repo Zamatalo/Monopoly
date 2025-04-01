@@ -1,4 +1,4 @@
-# Query.findGameById: Game!
+# Query.findGameById: GameDTO!
 
 ## Arguments
 | Name | Description | Required | Type |
@@ -8,7 +8,13 @@
 ## Example
 ```graphql
 {
-  findGameById(id: "random12345")
+  findGameById(id: "random12345") {
+    gameId
+    players
+    currentPlayerIndex
+    gameState
+    diceFactor
+  }
 }
 
 ```

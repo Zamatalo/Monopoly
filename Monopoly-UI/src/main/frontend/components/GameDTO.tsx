@@ -3,7 +3,6 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {World} from "./World";
 import {GameState} from "Frontend/utils/constants";
 import * as RAPIER from '@dimforge/rapier3d';
-import * as THREE from "three";
 
 export class GameDTO {
     gameId: string;
@@ -16,10 +15,11 @@ export class GameDTO {
         this.gameState = gameState;
         this.players = players;
         this.currentPlayerIndex = currentPlayerIndex;
+
     }
 
     async loadBoardModel(world: World): Promise<void> {
-        const boardPath = '/assets/models/monopolyBoard.glb';
+        const boardPath = '/assets/models/monopolyBoard2.glb';
         const loader = new GLTFLoader();
 
         return new Promise((resolve, reject) => {
@@ -36,8 +36,6 @@ export class GameDTO {
                         }
                     });
                     world.addToScene(model);
-                    const axesHelper = new THREE.AxesHelper(5);
-                    model.add(axesHelper);
 
                     const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
                     const rigidBody = world.world.createRigidBody(rigidBodyDesc);

@@ -75,7 +75,7 @@ function setupLighting() {
 
 function createInboundBox() {
     const wallThickness = 0.2;
-    const boxSize = 5;
+    const boxSize = 10;
     const rigidBodyForBox = RAPIER.RigidBodyDesc.fixed();
     const rigidBodyBox = world.world.createRigidBody(rigidBodyForBox);
     const floorDesc = RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, -boxSize, 0);
@@ -109,11 +109,8 @@ async function loadDice() {
                 });
                 world.scene.add(model);
 
-                const axesHelper = new THREE.AxesHelper(5);
-                model.add(axesHelper);
-
                 const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-                    .setTranslation(0, 4, 2)
+                    .setTranslation(0, 0.2, 0)
                     .setUserData("isDice");
                 const rigidBody = world.world.createRigidBody(rigidBodyDesc);
                 const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
@@ -121,8 +118,9 @@ async function loadDice() {
                     .setFriction(7)
                     .setRestitution(0.4);
                 world.world.createCollider(colliderDesc, rigidBody);
-                world.addBody(model, rigidBody);
+
                 createInboundBox();
+                world.addBody(model, rigidBody);
                 resolve();
                 console.log('Dice model loaded');
             },
@@ -135,9 +133,29 @@ async function loadDice() {
     });
 }
 
+async function animDice(diceFactor: number) {
+    var rigidBody = world.bodies.filter(e => e.userData === "isDice");
+    rigidBody.forEach(e => {
+        e.resetForces(true);
+        e.setRotation({x: 0, y: 0, z: 0, w: 0}, true)
+        e.resetTorques(true);
+        e.setTranslation({x: 0, y: 0.2, z: 0}, true)
+    });
+
+    const linvelX = (1 * 0.001) + 0.012;
+    const linvelY = (1 * 0.001) + 0.013;
+    const linvelZ = (1 * 0.001) + 0.014;
+    console.log(linvelX, linvelY, linvelZ);
+    rigidBody.forEach(e => e.applyTorqueImpulse({x: linvelX, y: linvelY, z: linvelZ}, true));
+
+    // const angvelX = diceFactor*0.01;
+    // const angvelY = diceFactor*0.01;
+    // const angvelZ = diceFactor*0.01;
+    // rigidBody.forEach(e => e.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true));
+}
+
 window.addEventListener("keydown", ev => {
     var rigidBody = world.bodies.filter(e => e.userData === "isDice");
-
     if ((ev.key == "r" || ev.key == "R") && rigidBody.every(e => !e.isMoving())) {
         const linvelX = (Math.random() - 0.5) * 0.15;
         const linvelY = Math.random() * 0.2;
@@ -148,8 +166,6 @@ window.addEventListener("keydown", ev => {
         const angvelY = (Math.random() - 0.5) * 0.15;
         const angvelZ = (Math.random() - 0.5) * 0.15;
         rigidBody.forEach(e => e.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true));
-
-
     }
     if (ev.key == " " || ev.code == "Space") {
         rigidBody.forEach(e => e.setTranslation({x: 0, y: 4, z: 0}, true));
@@ -186,6 +202,7 @@ function getDiceTopFace(rotation: any): number {
     }
     return topFace;
 }
+
 export async function loadState(newGame: GameDTO): Promise<void> {
     if (world.scene.children.length === 0) {
         try {
@@ -197,7 +214,7 @@ export async function loadState(newGame: GameDTO): Promise<void> {
 
             setupLighting();
             await loadDice();
-            await loadDice();
+            //await loadDice();
             console.log('Loaded scene with game state:', game);
         } catch (error) {
             console.error('Error loading game state:', error);
@@ -210,6 +227,7 @@ export async function loadState(newGame: GameDTO): Promise<void> {
                 if (oldPlayer.position !== newPosition) {
                     const playerModel = world.scene.children.find(e => e.userData.color == newPlayerData.color) as Object3D;
                     oldPlayer.animatePlayerMovement(newPosition, playerModel);
+                    //animDice();
                 }
             }
         });

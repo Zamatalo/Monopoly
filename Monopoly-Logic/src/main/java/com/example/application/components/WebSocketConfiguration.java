@@ -18,4 +18,5 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/graphql-ws").setAllowedOrigins("*").withSockJS();
     }
+
 }

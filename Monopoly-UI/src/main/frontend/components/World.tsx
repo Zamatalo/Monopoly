@@ -25,7 +25,6 @@ export class World {
 
     update(deltaTime: number) {
         this.world.step();
-        //this.bodies.forEach(e=>console.log(e.rotation()))
 
         for (let i = 0; i < this.bodies.length; i++) {
             const body = this.bodies[i];

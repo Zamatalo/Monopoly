@@ -1,5 +1,12 @@
 package com.example.application;
 
 public enum PropertyNames {
-    SHOULD_BE_ADDED
+    BROWN_1, BROWN_2,
+    LIGHTBLUE_1, LIGHTBLUE_2, LIGHTBLUE_3,
+    PINK_1, PINK_2, PINK_3,
+    ORANGE_1, ORANGE_2, ORANGE_3,
+    RED_1, RED_2, RED_3,
+    YELLOW_1, YELLOW_2, YELLOW_3,
+    GREEN_1, GREEN_2, GREEN_3,
+    BLUE_1, BLUE_2
 }
