@@ -9,7 +9,6 @@ import com.netflix.graphql.dgs.DgsComponent;
 import com.netflix.graphql.dgs.DgsQuery;
 import com.netflix.graphql.dgs.InputArgument;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,11 +20,9 @@ import java.util.stream.Collectors;
 @DgsComponent
 public class GameController {
     private final GameService gameService;
-    private final SimpMessagingTemplate messagingTemplate;
 
-    public GameController(GameService gameService, SimpMessagingTemplate messagingTemplate) {
+    public GameController(GameService gameService) {
         this.gameService = gameService;
-        this.messagingTemplate = messagingTemplate;
     }
 
     @DgsQuery

@@ -28,7 +28,6 @@ public class GameSubscription {
     private final Random random = new Random();
     private FluxSink<GameDTO> gamesSink;
     private ConnectableFlux<GameDTO> gamesPublisher;
-
     public GameSubscription(GameService gameService) {
         this.gameService = gameService;
     }
@@ -54,12 +53,12 @@ public class GameSubscription {
             log.error("Game with id {} not found", gameId);
         }
 
-        int randomNumber = random.nextInt(1, 7);
+        float randomNumber = random.nextInt(1, 7);
         Game game = gameOptional.get();
         GameDTO gameDto = GameMapper.INSTANCE.GameToGameDTO(game);
 
         int currentPlayerIndex = gameDto.getCurrentPlayerIndex();
-        int newPosition = (gameDto.getPlayers().get(currentPlayerIndex).getPosition() + randomNumber) % 40;
+        int newPosition = (gameDto.getPlayers().get(currentPlayerIndex).getPosition() + Math.round(randomNumber)) % 40;
         gameDto.getPlayers().get(currentPlayerIndex).setPosition(newPosition);
 
         int numberOfPlayers = gameDto.getPlayers().size();
@@ -68,7 +67,6 @@ public class GameSubscription {
         Game updatedGame = GameMapper.INSTANCE.GameDTOtoGame(gameDto);
         gameService.save(updatedGame);
         gamesSink.next(gameDto);
-        // messagingTemplate.convertAndSend("/topic/game/" + gameId, updatedGame);
         return game;
     }
 }

@@ -32,7 +32,7 @@ function App() {
         <ApolloProvider client={client}>
             <GameInitializer gameId="550e8400-e29b-41d4-a716-446655440000"/>
             <GameUpdates/>
-            <div ref={containerRef} style={{width: '100%', height: '100vh'}}/>
+            <div ref={containerRef} style={{width: '100%', height: '100%'}}/>
         </ApolloProvider>
     );
 }
@@ -100,9 +100,9 @@ function GameUpdates() {
                 gameId: gameData.gameId,
                 gameState: gameData.gameState,
                 players: players,
-                currentPlayerIndex: gameData.currentPlayerIndex,
+                currentPlayerIndex: gameData.currentPlayerIndex
             } as GameDTO);
-
+            console.log(gameData);
             loadState(newGame).then(() => console.log('Game state updated'));
         }
     }, [data]);

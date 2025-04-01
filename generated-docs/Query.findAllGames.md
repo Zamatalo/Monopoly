@@ -1,9 +1,15 @@
-# Query.findAllGames: [Game]!
+# Query.findAllGames: [GameDTO]!
 
 ## Example
 ```graphql
 {
-  findAllGames
+  findAllGames {
+    gameId
+    players
+    currentPlayerIndex
+    gameState
+    diceFactor
+  }
 }
 
 ```

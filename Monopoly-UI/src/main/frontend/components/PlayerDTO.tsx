@@ -78,7 +78,6 @@ export class PlayerDTO {
         let currentStep = this.position;
 
         const moveNext = () => {
-            console.log(currentStep);
             if (currentStep !== targetPosition) {
                 currentStep = (currentStep + 1) % positions.length;
                 const nextPosition = positions[currentStep];
