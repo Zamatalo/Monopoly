@@ -1,5 +1,5 @@
 # Query.findAllGames: [GameDTO]!
-
+            
 ## Example
 ```graphql
 {
@@ -8,7 +8,6 @@
     players
     currentPlayerIndex
     gameState
-    diceFactor
   }
 }
 

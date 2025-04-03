@@ -95,6 +95,7 @@ function createInboundBox() {
 async function loadDice() {
     const boardPath = "/assets/models/dice3.glb";
     const loader = new GLTFLoader();
+    // @ts-ignore
     return new Promise<void>((resolve, reject) => {
         loader.load(
             boardPath,
@@ -203,7 +204,7 @@ function getDiceTopFace(rotation: any): number {
     return topFace;
 }
 
-export async function loadState(newGame: GameDTO): Promise<void> {
+export async function loadState(newGame: GameDTO) {
     if (world.scene.children.length === 0) {
         try {
             game = newGame;

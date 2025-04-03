@@ -1,10 +1,10 @@
 # Query.findGameById: GameDTO!
-
+                 
 ## Arguments
 | Name | Description | Required | Type |
-|:-----|:------------|:--------:|:----:|
-| id   |             |    ✅     | ID!  |
-
+| :--- | :---------- | :------: | :--: |
+| id |  | ✅ | ID! |
+            
 ## Example
 ```graphql
 {
@@ -13,7 +13,6 @@
     players
     currentPlayerIndex
     gameState
-    diceFactor
   }
 }
 
