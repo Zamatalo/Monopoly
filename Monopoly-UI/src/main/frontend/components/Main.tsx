@@ -1,77 +1,79 @@
-import * as THREE from 'three';
 import {Object3D} from 'three';
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import {GameDTO} from "Frontend/components/GameDTO";
 import {World} from "./World";
-import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as RAPIER from "@dimforge/rapier3d";
+import {GUI} from 'three/addons/libs/lil-gui.module.min.js'
+import Stats from 'three/addons/libs/stats.module.js'
+import {Dice} from "Frontend/components/Dice";
+
 
 let game: GameDTO;
-let world = new World();
+let world: World;
+let dice: Dice, stats: Stats, diceState:any;
 export function initThreeJS(container: HTMLDivElement) {
-    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.z = 10;
-    camera.position.y = 15;
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-    const renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        powerPreference: "high-performance"
-    });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    container.appendChild(renderer.domElement);
-
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    world.scene.background = new THREE.CubeTextureLoader()
-        .setPath('/assets/skybox/')
-        .load([
-            'cubemap_0.png', // Right
-            'cubemap_1.png', // Left
-            'cubemap_2.png', // Top
-            'cubemap_3.png', // Bottom
-            'cubemap_4.png', // Back
-            'cubemap_5.png', // Front
-        ]);
+    world = new World(container);
 
     function animate() {
         requestAnimationFrame(animate);
-
         if (world.world) {
             world.update(1 / 60);
         }
-        controls.update();
-        renderer.render(world.scene, camera);
+        if (dice!=null && dice.body) {
+            const pos = dice.body.translation();
+            const rot = dice.body.rotation();
+            // if(!dicebody.isSleeping()) {
+            //     socket.emit('updateDiceState', {position: pos, rotation: rot});
+            // }
+            diceState.position.x = pos.x;
+            diceState.position.y = pos.y;
+            diceState.position.z = pos.z;
+            diceState.rotation.x = rot.x;
+            diceState.rotation.y = rot.y;
+            diceState.rotation.z = rot.z;
+            diceState.rotation.w = rot.w;
+            diceState.isSleeping = dice.body.isSleeping();
+            stats.update();
+        }
+        world.controls.update();
+        world.renderer.render(world.scene, world.camera);
     }
-
     animate();
-
-    window.addEventListener('resize', () => {
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        renderer.setSize(width, height);
-    });
 }
 
-function setupLighting() {
-    let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    world.scene.add(ambientLight);
+function setupGui() {
+    const gui = new GUI();
+    diceState = {
+        position: {x: 0, y: 0, z: 0},
+        rotation: {x: 0, y: 0, z: 0, w: 1},
+        isSleeping: false,
+        isMoving: () => {
+            if (!dice.body) return false;
+            const linvel = dice.body.linvel();
+            const angvel = dice.body.angvel();
+            return !dice.body.isSleeping() ||
+                Math.abs(linvel.x) > 0.01 ||
+                Math.abs(linvel.y) > 0.01 ||
+                Math.abs(linvel.z) > 0.01 ||
+                Math.abs(angvel.x) > 0.01 ||
+                Math.abs(angvel.y) > 0.01 ||
+                Math.abs(angvel.z) > 0.01;
+        },
+        resetDice: () => {
+            if (!dice.body) return;
+            dice.body.setTranslation(new RAPIER.Vector3(0, 5, 0), true);
+            dice.body.setLinvel(new RAPIER.Vector3(0, 0, 0), true);
+            dice.body.setAngvel(new RAPIER.Vector3(0, 0, 0), true);
+        }
+    };
 
-    const color = 0xFFCC33;
-    const intensity2 = 75000;
-    const light2 = new THREE.PointLight(color, intensity2);
-    light2.castShadow = true;
-    light2.position.set(100, 100, -260);
-    light2.shadow.bias = -0.001;
-    light2.shadow.mapSize.width = 4096;
-    light2.shadow.mapSize.height = 4096;
-    world.scene.add(light2);
+    const diceFolder = gui.addFolder('Dice State');
+    diceFolder.add(diceState.position, 'x').name('Pos X').listen();
+    diceFolder.add(diceState.position, 'y').name('Pos Y').listen();
+    diceFolder.add(diceState.position, 'z').name('Pos Z').listen();
+    diceFolder.add(diceState, 'isSleeping').name('Is Sleeping').listen();
+    diceFolder.add(diceState, 'resetDice').name('Reset Dice');
 }
+
 
 function createInboundBox() {
     const wallThickness = 0.2;
@@ -92,47 +94,6 @@ function createInboundBox() {
     world.world.createCollider(backDesc, rigidBodyBox);
 }
 
-async function loadDice() {
-    const boardPath = "/assets/models/dice3.glb";
-    const loader = new GLTFLoader();
-    // @ts-ignore
-    return new Promise<void>((resolve, reject) => {
-        loader.load(
-            boardPath,
-            (gltf: any) => {
-                let model = gltf.scene;
-                model.userData = {isDice: true};
-                model.traverse((obj: any) => {
-                    if (obj.castShadow !== undefined) {
-                        obj.castShadow = true;
-                        obj.receiveShadow = true;
-                    }
-                });
-                world.scene.add(model);
-
-                const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-                    .setTranslation(0, 0.2, 0)
-                    .setUserData("isDice");
-                const rigidBody = world.world.createRigidBody(rigidBodyDesc);
-                const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
-                    .setTranslation(0, 0, 0)
-                    .setFriction(7)
-                    .setRestitution(0.4);
-                world.world.createCollider(colliderDesc, rigidBody);
-
-                createInboundBox();
-                world.addBody(model, rigidBody);
-                resolve();
-                console.log('Dice model loaded');
-            },
-            undefined,
-            (error: any) => {
-                console.error(`Error loading model: ${error}`);
-                reject(error);
-            }
-        );
-    });
-}
 
 async function animDice(diceFactor: number) {
     var rigidBody = world.bodies.filter(e => e.userData === "isDice");
@@ -147,80 +108,48 @@ async function animDice(diceFactor: number) {
     const linvelY = (1 * 0.001) + 0.013;
     const linvelZ = (1 * 0.001) + 0.014;
     console.log(linvelX, linvelY, linvelZ);
-    rigidBody.forEach(e => e.applyTorqueImpulse({x: linvelX, y: linvelY, z: linvelZ}, true));
-
-    // const angvelX = diceFactor*0.01;
-    // const angvelY = diceFactor*0.01;
-    // const angvelZ = diceFactor*0.01;
-    // rigidBody.forEach(e => e.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true));
 }
 
 window.addEventListener("keydown", ev => {
     var rigidBody = world.bodies.filter(e => e.userData === "isDice");
     if ((ev.key == "r" || ev.key == "R") && rigidBody.every(e => !e.isMoving())) {
-        const linvelX = (Math.random() - 0.5) * 0.15;
-        const linvelY = Math.random() * 0.2;
-        const linvelZ = (Math.random() - 0.5) * 0.15;
-        rigidBody.forEach(e => e.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true));
-
-        const angvelX = (Math.random() - 0.5) * 0.15;
-        const angvelY = (Math.random() - 0.5) * 0.15;
-        const angvelZ = (Math.random() - 0.5) * 0.15;
-        rigidBody.forEach(e => e.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true));
+        dice.throwDice()
     }
     if (ev.key == " " || ev.code == "Space") {
-        rigidBody.forEach(e => e.setTranslation({x: 0, y: 4, z: 0}, true));
+        dice.getCurrentDicePos();
     }
     if (ev.key == "q" || ev.key == "Q") {
-        let result: number = 0;
-        rigidBody.forEach(e => result += getDiceTopFace(e.rotation()));
-        console.log("Current top result:", result);
+        console.log("Current top result:", dice.getDiceTopFace());
     }
 });
 
-function getDiceTopFace(rotation: any): number {
-    const faceNormals = [
-        new THREE.Vector3(0, 0, -1),
-        new THREE.Vector3(1, 0, 0),
-        new THREE.Vector3(0, 1, 0),
-        new THREE.Vector3(0, -1, 0),
-        new THREE.Vector3(-1, 0, 0),
-        new THREE.Vector3(0, 0, 1)
-    ];
-    const diceQuaternion = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
-    const worldUp = new THREE.Vector3(0, 1, 0);
 
-    let maxDot = -Infinity;
-    let topFace = 0;
-    for (let i = 0; i < faceNormals.length; i++) {
-        const normal = faceNormals[i].clone();
-        normal.applyQuaternion(diceQuaternion);
-        const dot = normal.dot(worldUp);
-        if (dot > maxDot) {
-            maxDot = dot;
-            topFace = i + 1;
-        }
-    }
-    return topFace;
-}
 
 export async function loadState(newGame: GameDTO) {
-    if (world.scene.children.length === 0) {
+    async function initIfNewDTO() {
         try {
             game = newGame;
             await game.loadBoardModel(world);
             for (const player of game.players) {
                 await player.loadPlayerModel(world);
             }
-
-            setupLighting();
-            await loadDice();
-            //await loadDice();
+            world.setupLighting()
+            dice = new Dice();
+            await dice.loadDice(world);
+            dice.getCurrentDicePos()
+            setupGui()
+            stats = new Stats();
+            document.body.appendChild(stats.dom)
+            createInboundBox()
             console.log('Loaded scene with game state:', game);
         } catch (error) {
             console.error('Error loading game state:', error);
         }
-    } else {
+    }
+
+    if (world.scene.children.length === 0) { //init new
+        await initIfNewDTO();
+    } else {  //update
         newGame.players.forEach((newPlayerData) => {
             const oldPlayer = game.players.find(p => p.color === newPlayerData.color);
             if (oldPlayer) {
@@ -228,7 +157,6 @@ export async function loadState(newGame: GameDTO) {
                 if (oldPlayer.position !== newPosition) {
                     const playerModel = world.scene.children.find(e => e.userData.color == newPlayerData.color) as Object3D;
                     oldPlayer.animatePlayerMovement(newPosition, playerModel);
-                    //animDice();
                 }
             }
         });

@@ -61,9 +61,7 @@ export class PlayerDTO {
         });
     }
 
-    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {
-    }): void {
-        console.log(model);
+    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {}): void {
         if (!model) {
             console.error('Model not loaded yet!');
             return;
