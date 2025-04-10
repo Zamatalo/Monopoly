@@ -19,7 +19,7 @@ export class GameDTO {
     }
 
     async loadBoardModel(world: World): Promise<void> {
-        const boardPath = '/assets/models/monopolyBoard2.glb';
+        const boardPath = '/assets/models/monopolyBoard.glb';
         const loader = new GLTFLoader();
 
         return new Promise((resolve, reject) => {
@@ -37,11 +37,11 @@ export class GameDTO {
                     });
                     world.addToScene(model);
 
-                    const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
-                    const rigidBody = world.world.createRigidBody(rigidBodyDesc);
-                    const colliderDesc = RAPIER.ColliderDesc.cuboid(10, 0.2, 10);
-                    world.world.createCollider(colliderDesc, rigidBody);
-                    world.addBody(model, rigidBody);
+                    // const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
+                    // const rigidBody = world.world.createRigidBody(rigidBodyDesc);
+                    // const colliderDesc = RAPIER.ColliderDesc.cuboid(10, 0.2, 10);
+                    // world.world.createCollider(colliderDesc, rigidBody);
+                    // world.addBody(model, rigidBody);
 
                     resolve();
                     console.log('Board model loaded');

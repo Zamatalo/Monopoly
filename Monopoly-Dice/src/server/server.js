@@ -1,27 +1,42 @@
-import {createServer} from 'http';
-import {Server} from 'socket.io';
+import express from 'express';
+import http from 'http';
+import session from 'express-session';
+import { Server } from 'socket.io';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { v4 as uuidv4 } from 'uuid';
 
 await RAPIER.init();
 const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0);
 const world = new RAPIER.World(gravity);
-let dice;
-const httpServer = createServer();
-let diceStateFromClient = [];
-let prevStateFromClient = [];
-const io = new Server(httpServer, {
-    cors: {
-        origin: "*",
-    },
+
+//TODO for each game should be dedicated simulation, now it uses only one @diceState for all Games
+const app = express();
+const httpServer = http.createServer(app);
+const sessionMiddleware = session({
+    secret: 'your-secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
 });
 
-class someUI {
-    dynamicBodies = [];
+app.use(sessionMiddleware);
 
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*',
+    }
+});
+let games = new Map();
+class someUI {
+    dice;
+    clients = new Set();
     constructor() {
         this.loadBoard();
         this.loadDice();
         this.animate();
+        setInterval(() => {
+            this.animate();
+        }, 10);
     }
 
     loadBoard = () => {
@@ -29,7 +44,6 @@ class someUI {
         const rigidBody = world.createRigidBody(rigidBodyDesc);
         const colliderDesc = RAPIER.ColliderDesc.cuboid(11, 0.1, 11).setTranslation(0, 0.1, 0);
         world.createCollider(colliderDesc, rigidBody);
-        this.dynamicBodies.push(rigidBody);
         console.log("Board model loaded");
     };
 
@@ -37,16 +51,15 @@ class someUI {
         const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(0, 0.1, 0)
             .setUserData("isDice");
-        dice = world.createRigidBody(rigidBodyDesc);
+        this.dice = world.createRigidBody(rigidBodyDesc);
         const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
             .setTranslation(0, 0, 0)
             .setFriction(10)
             .setMass(0.06)
             .setRestitution(0.4);
-        world.createCollider(colliderDesc, dice);
+        world.createCollider(colliderDesc, this.dice);
 
         this.createInboundBox();
-        this.dynamicBodies.push(dice);
         console.log("Dice model loaded");
     };
 
@@ -74,51 +87,76 @@ class someUI {
         const linvelX = (Math.random() - 0.5) * 0.15;
         const linvelY = Math.random() * 0.2;
         const linvelZ = (Math.random() - 0.5) * 0.15;
-        dice.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true);
+        this.dice.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true);
 
         const angvelX = (Math.random() - 0.5) * 0.15;
         const angvelY = (Math.random() - 0.5) * 0.15;
         const angvelZ = (Math.random() - 0.5) * 0.15;
-        dice.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true);
+        this.dice.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true);
     };
 
-    isDiceEmitted = false;
     animate = () => {
         world.step();
-        if (dice) {
-            const pos = dice.translation();
-            const rot = dice.rotation();
-            if (!dice.isSleeping()) {
-                io.emit("diceStateUpdated", {pos: pos, rot: rot});
-            } else if (!this.isDiceEmitted && diceStateFromClient.length > 0) {
-                prevStateFromClient = JSON.parse(JSON.stringify(diceStateFromClient))
-                //io.emit("diceStateUpdated", prevStateFromClient);
-                // diceStateFromClient = [];
-                this.isDiceEmitted = true;
+        if (this.dice) {
+            const pos = this.dice.translation();
+            const rot = this.dice.rotation();
+            if (!this.dice.isSleeping()) {
+                this.clients.forEach((client) => {
+                    io.emit("diceStateUpdated", {pos: pos, rot: rot});
+                })
+            } else { //transmit current top face to backend with gameId
             }
         }
     };
+    addClient = (socket) => {
+        this.clients.add(socket);
+    };
+
+    removeClient = (socket) => {
+        this.clients.delete(socket);
+    };
+
 }
-
-var simulation = new someUI();
-
-setInterval(() => {
-    simulation.animate();
-}, 10);
 
 io.on("connection", (socket) => {
     console.log(`Client connected: ${socket.id}`);
-
     socket.on("throw", (msg, callback) => {
-        if (callback && dice.isSleeping()) {
-            simulation.throwDice();
+        if (callback) {
+            if (games.has(msg)) {
+                if (games.get(msg).dice.isSleeping()) {
+                    console.log(`Throwing dice for already added game: ${msg}`);
+                    games.get(msg).throwDice();
+                } else {
+                    callback(`Dice animation for game ${msg} is still playing`);
+                }
+            }
         }
     });
+
     socket.on("getCurrentDicePos",(msg,callback) => {
         if (callback) {
-            callback({pos:dice.translation(), rot:dice.rotation()});
+            if (msg === null || msg.length === 0 || !isValidUUID(msg)) {
+                callback("Bad uuid")
+            }
+            //check if game exists
+            if (games.has(msg)) {
+                if (games.get(msg).dice.isSleeping()) {
+                    let game = games.get(msg);
+                    callback({pos: game.dice.translation(), rot: game.dice.rotation()});
+                } else {
+                    callback(`Dice animation for game ${msg} is still playing`);
+                }
+            }else {
+                console.log(`Adding new game: ${msg}`);
+                createNewGame(msg);
+                let game = games.get(msg);
+                callback({pos: game.dice.translation(), rot: game.dice.rotation()});
+            }
+            console.log(`Adding new Client ${socket.id} to the game: ${msg}`);
+            games.get(msg).addClient(socket);
         }
     });
+
     socket.on("disconnect", () => {
         socket.disconnect()
     });
@@ -131,3 +169,12 @@ io.on("connection", (socket) => {
 httpServer.listen(3001, () => {
     console.log("Server running on http://localhost:3001");
 });
+
+const createNewGame = (gameId) => {
+    games.set(gameId, new someUI());
+}
+
+function isValidUUID(uuid) {
+    const regex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+    return regex.test(uuid);
+}
