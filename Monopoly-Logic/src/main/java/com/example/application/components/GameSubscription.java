@@ -23,7 +23,6 @@ import java.util.UUID;
 @DgsComponent
 @Slf4j
 public class GameSubscription {
-
     private final GameService gameService;
     private final Random random = new Random();
     private FluxSink<GameDTO> gamesSink;

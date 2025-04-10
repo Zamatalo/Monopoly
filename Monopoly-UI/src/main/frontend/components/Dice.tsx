@@ -1,40 +1,55 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {World} from "./World";
 import * as THREE from "three";
-import {Object3D, Quaternion, Vector3} from "three";
-import * as RAPIER from "@dimforge/rapier3d";
-import { io } from 'socket.io-client';
+import {Object3D} from "three";
+import {io} from 'socket.io-client';
 
-const socket = io('http://localhost:3001');
-
+interface DiceState {
+    pos: { x: number, y: number, z: number };
+    rot: { x: number, y: number, z: number, w: number };
+}
 export class Dice {
+    socket = io('http://localhost:3001');
+
     model!: Object3D;
-    body!:RAPIER.RigidBody;
-    public topFace: number = 0;
+    constructor() {
+        this.socket.off("diceStateUpdated");
+        this.socket.on("diceStateUpdated", (diceState) => {
+            this.model.position.set(diceState.pos.x, diceState.pos.y, diceState.pos.z);
+            this.model.setRotationFromQuaternion(diceState.rot);
+        });
+    }
 
     getDiceTopFace(): number {
         const faceNormals = [
-            new THREE.Vector3(0, 0, -1),
-            new THREE.Vector3(1, 0, 0),
-            new THREE.Vector3(0, 1, 0),
-            new THREE.Vector3(0, -1, 0),
-            new THREE.Vector3(-1, 0, 0),
-            new THREE.Vector3(0, 0, 1)
+            new THREE.Vector3(0, 0, -1),  // 1
+            new THREE.Vector3(1, 0, 0),    // 2
+            new THREE.Vector3(0, 1, 0),    // 3
+            new THREE.Vector3(0, -1, 0),   // 4
+            new THREE.Vector3(-1, 0, 0),   // 5
+            new THREE.Vector3(0, 0, 1)     // 6
         ];
-        const diceQuaternion = new Quaternion(this.body.rotation().x, this.body.rotation().y, this.body.rotation().z, this.body.rotation().w);
-        const worldUp = new Vector3(0, 1, 0);
+
+        const diceRot = new THREE.Quaternion();
+        this.model.getWorldQuaternion(diceRot);
 
         let maxDot = -Infinity;
+        let topFace = 1;
+        const upVector = new THREE.Vector3(0, 1, 0);
+
         for (let i = 0; i < faceNormals.length; i++) {
             const normal = faceNormals[i].clone();
-            normal.applyQuaternion(diceQuaternion);
-            const dot = normal.dot(worldUp);
+            normal.applyQuaternion(diceRot).normalize();
+
+            const dot = normal.dot(upVector);
+
             if (dot > maxDot) {
                 maxDot = dot;
-                this.topFace = i + 1;
+                topFace = i + 1;
             }
         }
-        return this.topFace;
+
+        return topFace;
     }
 
     async loadDice(world: World) {
@@ -44,27 +59,16 @@ export class Dice {
             loader.load(
                 boardPath,
                 (gltf: any) => {
-                    let model = gltf.scene;
-                    model.userData = {isDice: true};
-                    model.traverse((obj: any) => {
+                    this.model = gltf.scene;
+                    this.model.userData = {isDice: true};
+                    this.model.traverse((obj: any) => {
                         if (obj.castShadow !== undefined) {
                             obj.castShadow = true;
                             obj.receiveShadow = true;
                         }
-                    });
-                    world.scene.add(model);
+                    })
+                    world.scene.add(this.model);
 
-                    const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(0, 0.2, 0)
-                        .setUserData("isDice");
-                    const rigidBody = world.world.createRigidBody(rigidBodyDesc);
-                    const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
-                        .setTranslation(0, 0, 0)
-                        .setFriction(10)
-                        .setRestitution(0.4);
-                    world.world.createCollider(colliderDesc, rigidBody);
-                    world.addBody(model, rigidBody);
-                    this.body=rigidBody;
                     resolve();
                     console.log('Dice model loaded');
                 },
@@ -77,26 +81,18 @@ export class Dice {
         });
     }
 
-    throwDice() {
-        socket.emit("throw", "", (ack?: string) => {
+    throwDice(gameId: string) {
+        this.socket.emit("throw", gameId, (ack?: string) => {
             console.log("Throw acknowledged from server", ack);
-        });
-
-        socket.off("diceStateUpdated");
-        socket.on("diceStateUpdated", (diceState) => {
-            //console.log("Dice state received from server:", diceState);
-            this.body.setTranslation(diceState.pos,true);
-            this.body.setRotation(diceState.rot,true);
         });
     }
 
-    getCurrentDicePos(){
-        socket.emit("getCurrentDicePos", "", (ack:any) => {
-            console.log("Throw acknowledged from server", ack);
-            this.body.setTranslation(ack.pos,true);
-            this.body.setRotation(ack.rot,true);
+    getCurrentDicePos(gameId:string){
+        this.socket.emit("getCurrentDicePos", gameId, (diceState?: any) => {
+            console.log("Throw acknowledged from server", diceState);
+            this.model.position.set(diceState.pos.x, diceState.pos.y, diceState.pos.z);
+            this.model.setRotationFromQuaternion(diceState.rot);
         });
-
     }
 
 }

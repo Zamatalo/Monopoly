@@ -1,11 +1,8 @@
-import * as RAPIER from '@dimforge/rapier3d';
 import * as THREE from 'three';
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 
 
 export class World {
-    world: RAPIER.World;
-    bodies: RAPIER.RigidBody[] = [];
     meshes: THREE.Object3D[] = [];
     scene: THREE.Scene;
     renderer: THREE.WebGLRenderer;
@@ -14,7 +11,6 @@ export class World {
     private r: any;
 
     constructor(container: HTMLElement) {
-        this.world = new RAPIER.World({x: 0, y: -9.81, z: 0});
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.CubeTextureLoader()
             .setPath('/assets/skybox/')
@@ -55,32 +51,8 @@ export class World {
         });
     }
 
-    addBody(mesh: THREE.Object3D, body: RAPIER.RigidBody) {
-        this.bodies.push(body);
-        this.meshes.push(mesh);
-    }
-
     addToScene(object: THREE.Object3D) {
         this.scene.add(object);
-    }
-
-    update(deltaTime: number) {
-        this.world.step();
-
-        for (let i = 0; i < this.bodies.length; i++) {
-            const body = this.bodies[i];
-            const mesh = this.meshes[i];
-
-            if (body && mesh) {
-                const position = body.translation();
-                const rotation = body.rotation();
-                if (this.r) {
-                    this.r.update();
-                }
-                mesh.position.set(position.x, position.y, position.z);
-                mesh.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w);
-            }
-        }
     }
 
     setupLighting() {
@@ -97,4 +69,5 @@ export class World {
         light2.shadow.mapSize.height = 4096;
         this.scene.add(light2);
     }
+
 }

@@ -6,6 +6,7 @@ import {initThreeJS, loadState} from 'Frontend/components/Main';
 import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID} from 'Frontend/utils/queries';
 import {GameDTO} from 'Frontend/components/GameDTO';
 import {PlayerDTO} from 'Frontend/components/PlayerDTO';
+import {useParams} from "react-router-dom";
 
 const wsLink = new GraphQLWsLink(
     createClient({
@@ -16,12 +17,11 @@ const wsLink = new GraphQLWsLink(
 
 const client = new ApolloClient({
     link: wsLink,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache()
 });
 
-function App() {
+function GameId() {
     const containerRef = useRef<HTMLDivElement | null>(null);
-
     useEffect(() => {
         if (containerRef.current) {
             initThreeJS(containerRef.current);
@@ -30,16 +30,17 @@ function App() {
 
     return (
         <ApolloProvider client={client}>
-            <GameInitializer gameId="550e8400-e29b-41d4-a716-446655440000"/>
+            <GameInitializer/>
             <GameUpdates/>
             <div ref={containerRef} style={{width: '100%', height: '100%'}}/>
         </ApolloProvider>
     );
 }
 
-function GameInitializer({gameId}: { gameId: string }) {
+function GameInitializer() {
+    const {gameID} = useParams();
     const {data, loading, error} = useQuery(GET_FIND_BY_ID, {
-        variables: {id: gameId},
+        variables: {id: gameID},
     });
 
     useEffect(() => {
@@ -112,4 +113,4 @@ function GameUpdates() {
     return null;
 }
 
-export default App;
+export default GameId;
