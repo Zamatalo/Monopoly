@@ -5,6 +5,7 @@ import com.example.application.GameState;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ public class Game {
 
     @ToString.Exclude
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<Player> players;
+    private List<Player> players = new ArrayList<>();
 
     private int currentPlayerIndex = 0;
 }

@@ -1,180 +1,110 @@
-import express from 'express';
-import http from 'http';
-import session from 'express-session';
-import { Server } from 'socket.io';
-import RAPIER from '@dimforge/rapier3d-compat';
-import { v4 as uuidv4 } from 'uuid';
+import {createClient} from "redis";
 
-await RAPIER.init();
-const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0);
-const world = new RAPIER.World(gravity);
+const RAPIER = await import('@dimforge/rapier3d-compat');
 
-//TODO for each game should be dedicated simulation, now it uses only one @diceState for all Games
-const app = express();
-const httpServer = http.createServer(app);
-const sessionMiddleware = session({
-    secret: 'your-secret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
-});
-
-app.use(sessionMiddleware);
-
-const io = new Server(httpServer, {
-    cors: {
-        origin: '*',
-    }
-});
+await RAPIER.init()
+const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0)
+const world = new RAPIER.World(gravity)
 let games = new Map();
-class someUI {
-    dice;
-    clients = new Set();
-    constructor() {
-        this.loadBoard();
-        this.loadDice();
-        this.animate();
+
+
+const subscriber = createClient();
+const publisher = createClient();
+
+await subscriber.connect();
+await publisher.connect();
+
+subscriber.subscribe('game', event => {
+    const json = JSON.parse(event);
+    if (json.gameId !== null) {
+        var game = new DiceGame(json.gameId);
+        games.set(json.gameId, game);
+    }
+})
+
+class DiceGame {
+    constructor(gameId) {
+        this.gameId = gameId;
+        this.dice = null;
+        this.setupPhysics();
         setInterval(() => {
-            this.animate();
+            this.update();
         }, 10);
+
     }
 
-    loadBoard = () => {
+    setupPhysics() {
         const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
         const rigidBody = world.createRigidBody(rigidBodyDesc);
         const colliderDesc = RAPIER.ColliderDesc.cuboid(11, 0.1, 11).setTranslation(0, 0.1, 0);
         world.createCollider(colliderDesc, rigidBody);
-        console.log("Board model loaded");
-    };
 
-    loadDice = () => {
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic()
-            .setTranslation(0, 0.1, 0)
+        const diceDesc = RAPIER.RigidBodyDesc.dynamic()
+            .setTranslation(0, 0.2, 0)
             .setUserData("isDice");
-        this.dice = world.createRigidBody(rigidBodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
-            .setTranslation(0, 0, 0)
+        this.dice = world.createRigidBody(diceDesc);
+        const diceCollider = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
             .setFriction(10)
             .setMass(0.06)
             .setRestitution(0.4);
-        world.createCollider(colliderDesc, this.dice);
+        world.createCollider(diceCollider, this.dice);
 
         this.createInboundBox();
-        console.log("Dice model loaded");
-    };
+    }
 
-    createInboundBox = () => {
+    createInboundBox() {
         const wallThickness = 0.2;
         const boxSize = 9;
-        const rigidBodyForBox = RAPIER.RigidBodyDesc.fixed();
-        const rigidBodyBox = world.createRigidBody(rigidBodyForBox);
-        const topDesc = RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, boxSize, 0);
-        world.createCollider(topDesc, rigidBodyBox);
+        const rigidBodyBox = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
 
-        const leftDesc = RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(-boxSize, boxSize / 2, 0);
-        world.createCollider(leftDesc, rigidBodyBox);
+        const walls = [
+            RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, boxSize, 0), // Top
+            RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(-boxSize, boxSize / 2, 0), // Left
+            RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(boxSize, boxSize / 2, 0), // Right
+            RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, -boxSize), // Front
+            RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, boxSize) // Back
+        ];
 
-        const rightDesc = RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(boxSize, boxSize / 2, 0);
-        world.createCollider(rightDesc, rigidBodyBox);
+        walls.forEach(desc => world.createCollider(desc, rigidBodyBox));
+    }
 
-        const frontDesc = RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, -boxSize);
-        world.createCollider(frontDesc, rigidBodyBox);
-        const backDesc = RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, boxSize);
-        world.createCollider(backDesc, rigidBodyBox);
-    };
+    throwDice() {
+        this.resultSent = false;
+        const linvel = new RAPIER.Vector3(
+            (Math.random() - 0.5) * 15,
+            Math.random() * 20,
+            (Math.random() - 0.5) * 15
+        );
+        this.dice.setLinvel(linvel, true);
 
-    throwDice = () => {
-        const linvelX = (Math.random() - 0.5) * 0.15;
-        const linvelY = Math.random() * 0.2;
-        const linvelZ = (Math.random() - 0.5) * 0.15;
-        this.dice.applyImpulse({x: linvelX, y: linvelY, z: linvelZ}, true);
+        const angvel = new RAPIER.Vector3(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10
+        );
+        this.dice.setAngvel(angvel, true);
+    }
 
-        const angvelX = (Math.random() - 0.5) * 0.15;
-        const angvelY = (Math.random() - 0.5) * 0.15;
-        const angvelZ = (Math.random() - 0.5) * 0.15;
-        this.dice.applyTorqueImpulse({x: angvelX, y: angvelY, z: angvelZ}, true);
-    };
-
-    animate = () => {
+    update() {
         world.step();
-        if (this.dice) {
+
+        if (!this.dice.isSleeping()) {
             const pos = this.dice.translation();
             const rot = this.dice.rotation();
-            if (!this.dice.isSleeping()) {
-                this.clients.forEach((client) => {
-                    io.emit("diceStateUpdated", {pos: pos, rot: rot});
-                })
-            } else { //transmit current top face to backend with gameId
-            }
+            var a = {pos: pos, rot: rot}
+            publisher.publish('dice_StateUpdated', JSON.stringify(a));
+        } else if (!this.resultSent) {
+            this.sendDiceResult();
+            this.resultSent = true;
         }
-    };
-    addClient = (socket) => {
-        this.clients.add(socket);
-    };
+    }
 
-    removeClient = (socket) => {
-        this.clients.delete(socket);
-    };
-
+    sendDiceResult() {
+        const faces = [1, 2, 3, 4, 5, 6];
+        const result = faces[Math.floor(Math.random() * faces.length)];
+        publisher.publish('dice_TopFace',JSON.stringify({gameId:this.gameId,asd:result}));
+    }
 }
 
-io.on("connection", (socket) => {
-    console.log(`Client connected: ${socket.id}`);
-    socket.on("throw", (msg, callback) => {
-        if (callback) {
-            if (games.has(msg)) {
-                if (games.get(msg).dice.isSleeping()) {
-                    console.log(`Throwing dice for already added game: ${msg}`);
-                    games.get(msg).throwDice();
-                } else {
-                    callback(`Dice animation for game ${msg} is still playing`);
-                }
-            }
-        }
-    });
 
-    socket.on("getCurrentDicePos",(msg,callback) => {
-        if (callback) {
-            if (msg === null || msg.length === 0 || !isValidUUID(msg)) {
-                callback("Bad uuid")
-            }
-            //check if game exists
-            if (games.has(msg)) {
-                if (games.get(msg).dice.isSleeping()) {
-                    let game = games.get(msg);
-                    callback({pos: game.dice.translation(), rot: game.dice.rotation()});
-                } else {
-                    callback(`Dice animation for game ${msg} is still playing`);
-                }
-            }else {
-                console.log(`Adding new game: ${msg}`);
-                createNewGame(msg);
-                let game = games.get(msg);
-                callback({pos: game.dice.translation(), rot: game.dice.rotation()});
-            }
-            console.log(`Adding new Client ${socket.id} to the game: ${msg}`);
-            games.get(msg).addClient(socket);
-        }
-    });
 
-    socket.on("disconnect", () => {
-        socket.disconnect()
-    });
-
-    socket.on("error", (err) => {
-        console.error("Socket error:", err);
-    });
-});
-
-httpServer.listen(3001, () => {
-    console.log("Server running on http://localhost:3001");
-});
-
-const createNewGame = (gameId) => {
-    games.set(gameId, new someUI());
-}
-
-function isValidUUID(uuid) {
-    const regex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-    return regex.test(uuid);
-}

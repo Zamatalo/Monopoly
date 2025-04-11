@@ -1,5 +1,6 @@
 type Mutation {
-    saveGame(gameDto: GameDTOInput!): Boolean
+    createNewGame:GameDTO
+    joinToGame(playerId:String):PlayerDTO
     rollDice(gameId: ID!, playerId: ID!): GameDTO
 }
 
