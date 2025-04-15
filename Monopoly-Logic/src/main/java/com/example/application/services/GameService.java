@@ -39,9 +39,13 @@ public class GameService {
     }
 
     @Transactional
-    public Player addPlayerToGame(Player player, Game game) {
+    public void addPlayerToGame(Player player, Game game) {
         game.getPlayers().add(player);
         var gm = gameRepo.save(game);
-        return gm.getPlayers().stream().filter(e -> e.getPlayerId().equals(player.getPlayerId())).findFirst().orElse(null);
+       // return gm.getPlayers().stream().filter(e -> e.getPlayerId().equals(player.getPlayerId())).findFirst().orElse(null);
+    }
+    @Transactional
+    public Optional<Game> findGameByPlayerId (UUID playerId) {
+        return gameRepo.findGameByPlayerId(playerId);
     }
 }

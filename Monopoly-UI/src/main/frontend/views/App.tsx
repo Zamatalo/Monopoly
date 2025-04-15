@@ -1,3 +1,4 @@
+// App.tsx
 import React, {useEffect, useRef, useState} from 'react';
 import {ApolloClient, ApolloProvider, InMemoryCache, useQuery, useSubscription} from '@apollo/client';
 import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
@@ -30,6 +31,27 @@ function App() {
     const [gameStarted, setGameStarted] = useState(false);
     const [currentGameId, setCurrentGameId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [playerId, setPlayerId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const storedPlayerId = localStorage.getItem('playerId');
+        if (storedPlayerId) {
+            setPlayerId(storedPlayerId);
+        } else {
+            const newPlayerId = generatePlayerId();
+            localStorage.setItem('playerId', newPlayerId);
+            setPlayerId(newPlayerId);
+        }
+    }, []);
+
+    const generatePlayerId = () => {
+        return crypto.randomUUID();
+    };
+
+    const handleReconnect = (gameId: string) => {
+        setCurrentGameId(gameId);
+        setGameStarted(true);
+    };
 
     useEffect(() => {
         if (gameStarted && containerRef.current) {
@@ -41,10 +63,14 @@ function App() {
     if (!gameStarted) {
         return (
             <ApolloProvider client={client}>
-                <GameLobby onGameStart={(gameId: string) => {
-                    setCurrentGameId(gameId);
-                    setGameStarted(true);
-                }} />
+                <GameLobby
+                    onGameStart={(gameId: string) => {
+                        setCurrentGameId(gameId);
+                        setGameStarted(true);
+                    }}
+                    playerId={playerId}
+                    onReconnect={handleReconnect}
+                />
             </ApolloProvider>
         );
     }
