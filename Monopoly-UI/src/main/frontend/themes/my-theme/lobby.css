@@ -155,20 +155,22 @@
 .status {
     padding: 0.2rem 0.5rem;
     border-radius: 12px;
+    font: bold 1rem 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 0.8rem;
     font-weight: 600;
 }
 
 .status.waiting {
-    background-color: #ffeaa7;
-    color: #e17055;
+    background-color: #e17055;
 }
 
 .status.in-progress {
-    background-color: #fab1a0;
-    color: #d63031;
+    background-color: #42ff00;
 }
 
+.status.FINISHED {
+    background-color: #ff0004;
+}
 .join-btn {
     width: 100%;
     margin-top: 1rem;
@@ -185,8 +187,8 @@
     background-color: #2980b9;
 }
 
-.join-btn:disabled {
-    background-color: #bdc3c7;
+.join-btn[disabled] {
+    background-color: rgb(126, 139, 140);
     cursor: not-allowed;
 }
 

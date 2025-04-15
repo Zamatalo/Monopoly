@@ -1,6 +1,6 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {World} from "./World";
-import {Object3D,Vector3,Quaternion} from "three";
+import {World} from "../World";
+import {Object3D, Quaternion, Vector3} from "three";
 
 interface DiceState {
     pos: { x: number, y: number, z: number };

@@ -5,35 +5,37 @@
  * This file will be overwritten on every run. Any custom changes should be made to vite.config.ts
  */
 import path from 'path';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, Stats } from 'fs';
-import { createHash } from 'crypto';
+import {existsSync, mkdirSync, readdirSync, readFileSync, Stats, writeFileSync} from 'fs';
+import {createHash} from 'crypto';
 import * as net from 'net';
 
-import { processThemeResources } from './target/plugins/application-theme-plugin/theme-handle.js';
-import { rewriteCssUrls } from './target/plugins/theme-loader/theme-loader-utils.js';
-import { addFunctionComponentSourceLocationBabel } from './target/plugins/react-function-location-plugin/react-function-location-plugin.js';
+import {processThemeResources} from './target/plugins/application-theme-plugin/theme-handle.js';
+import {rewriteCssUrls} from './target/plugins/theme-loader/theme-loader-utils.js';
+import {
+  addFunctionComponentSourceLocationBabel
+} from './target/plugins/react-function-location-plugin/react-function-location-plugin.js';
 import settings from './target/vaadin-dev-server-settings.json';
 import {
   AssetInfo,
-  ChunkInfo,
   build,
+  ChunkInfo,
   defineConfig,
+  InlineConfig,
   mergeConfig,
   OutputOptions,
   PluginOption,
-  InlineConfig,
   UserConfigFn
 } from 'vite';
-import { getManifest, type ManifestTransform } from 'workbox-build';
+import {getManifest, type ManifestTransform} from 'workbox-build';
 
 import * as rollup from 'rollup';
 import brotli from 'rollup-plugin-brotli';
 import checker from 'vite-plugin-checker';
 import postcssLit from './target/plugins/rollup-plugin-postcss-lit-custom/rollup-plugin-postcss-lit.js';
 
-import { createRequire } from 'module';
+import {createRequire} from 'module';
 
-import { visualizer } from 'rollup-plugin-visualizer';
+import {visualizer} from 'rollup-plugin-visualizer';
 import reactPlugin from '@vitejs/plugin-react';
 
 import vitePluginFileSystemRouter from '@vaadin/hilla-file-router/vite-plugin.js';

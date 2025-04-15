@@ -6,4 +6,5 @@ type Mutation {
 
 type Subscription {
     gameUpdated(gameId:ID!):GameDTO
+    diceUpdated(gameId:ID):Boolean
 }

@@ -1,8 +1,8 @@
 import {Object3D} from 'three';
-import {GameDTO} from "Frontend/components/GameDTO";
+import {GameDTO} from "Frontend/components/objects/GameDTO";
 import {World} from "./World";
 import Stats from 'three/addons/libs/stats.module.js'
-import {Dice} from "Frontend/components/Dice";
+import {Dice} from "Frontend/components/objects/Dice";
 import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
 
 let debug = false;

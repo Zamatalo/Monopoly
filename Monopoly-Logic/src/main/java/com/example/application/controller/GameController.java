@@ -17,7 +17,6 @@ import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -70,8 +69,8 @@ public class GameController {
         return a;
     }
     @QueryMapping
-    public GameDTO findGameById(@Argument("id") String id) {
-        Optional<Game> game = gameService.findById(UUID.fromString(id));
+    public GameDTO findGameById(@Argument("id") UUID id) {
+        var game = gameService.findById(id);
         assert game.isPresent();
         return GameMapper.INSTANCE.GameToGameDTO(game.get());
     }

@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import {gql} from '@apollo/client';
 
 export const GET_ACTIVE_GAMES = gql`
     query GetActiveGames {
@@ -20,8 +20,8 @@ export const GET_ACTIVE_GAMES = gql`
 `;
 
 export const GET_FIND_BY_ID = gql`
-    query FindGameById {
-        findGameById(id: "550e8400-e29b-41d4-a716-446655440000") {
+    query FindGameById($gameId: ID!) {
+        findGameById(id:$gameId ) {
             gameId
             currentPlayerIndex
             gameState
