@@ -1,12 +1,12 @@
-import React, {useEffect, useRef} from 'react';
-import {ApolloClient, ApolloProvider, InMemoryCache, useQuery, useSubscription} from '@apollo/client';
-import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
-import {createClient} from 'graphql-ws';
-import {initThreeJS, loadState} from 'Frontend/components/Main';
+import React, { useEffect, useRef, useState } from 'react';
+import { ApolloClient, ApolloProvider, InMemoryCache, useQuery, useSubscription } from '@apollo/client';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+import { initThreeJS, loadState } from 'Frontend/components/Main';
 import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID} from 'Frontend/utils/queries';
-import {GameDTO} from 'Frontend/components/GameDTO';
-import {PlayerDTO} from 'Frontend/components/PlayerDTO';
-import {useParams} from "react-router-dom";
+import { GameDTO } from 'Frontend/components/GameDTO';
+import { PlayerDTO } from 'Frontend/components/PlayerDTO';
+import GameLobby from "Frontend/views/lobby";
 
 const wsLink = new GraphQLWsLink(
     createClient({
@@ -17,30 +17,52 @@ const wsLink = new GraphQLWsLink(
 
 const client = new ApolloClient({
     link: wsLink,
-    cache: new InMemoryCache()
+    cache: new InMemoryCache(),
+    defaultOptions: {
+        watchQuery: {
+            fetchPolicy: 'cache-and-network',
+        },
+    },
 });
 
-function GameId() {
+function App() {
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [currentGameId, setCurrentGameId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
-        if (containerRef.current) {
+        if (gameStarted && containerRef.current) {
+            setLoading(true);
             initThreeJS(containerRef.current);
         }
-    }, []);
+    }, [gameStarted]);
+
+    if (!gameStarted) {
+        return (
+            <ApolloProvider client={client}>
+                <GameLobby onGameStart={(gameId: string) => {
+                    setCurrentGameId(gameId);
+                    setGameStarted(true);
+                }} />
+            </ApolloProvider>
+        );
+    }
 
     return (
         <ApolloProvider client={client}>
-            <GameInitializer/>
-            <GameUpdates/>
-            <div ref={containerRef} style={{width: '100%', height: '100%'}}/>
+            {loading && <div className="loading-screen">Game loading...</div>}
+            <GameInitializer gameId={currentGameId!} />
+            <GameUpdates />
+            <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
         </ApolloProvider>
     );
 }
 
-function GameInitializer() {
-    const {gameID} = useParams();
+function GameInitializer({gameId}: { gameId: string }) {
+    gameId = "2a8d0182-e5bf-4c3b-8c08-7bd4ff06a2c4";
     const {data, loading, error} = useQuery(GET_FIND_BY_ID, {
-        variables: {id: gameID},
+        variables: {id: gameId},
     });
 
     useEffect(() => {
@@ -113,4 +135,4 @@ function GameUpdates() {
     return null;
 }
 
-export default GameId;
+export default App;

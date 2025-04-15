@@ -1,9 +1,9 @@
 package com.example.application.entity;
 
-
 import com.example.application.PlayerColors;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -15,10 +15,13 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID playerId;
+
+    private String name;
 
     @Enumerated(EnumType.STRING)
     private PlayerColors color;
@@ -28,6 +31,6 @@ public class Player {
     private boolean inJail = false;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<Property> ownedProperties= new ArrayList<>();
+    private List<Property> ownedProperties = new ArrayList<>();
 
 }

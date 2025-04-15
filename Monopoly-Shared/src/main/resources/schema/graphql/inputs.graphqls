@@ -3,6 +3,7 @@ input GameDTOInput {
     gameState: GameState!
     players: [PlayerDTOInput]!
     currentPlayerIndex: Int!
+    createdTime:String!
 }
 
 input PlayerDTOInput {
@@ -10,6 +11,7 @@ input PlayerDTOInput {
     color: String
     balance: Int
     position:Int
+    name:String
     inJail:Boolean
     ownedProperties:[PropertiesDTOInput]
 }

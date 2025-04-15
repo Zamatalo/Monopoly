@@ -23,10 +23,11 @@ enum PropertyNames{
 }
 
 type GameDTO {
-    gameId: ID!
+    gameId: ID
     players: [PlayerDTO]
-    currentPlayerIndex:Int!
-    gameState: GameState!
+    currentPlayerIndex:Int
+    gameState: GameState
+    createdTime: String
 }
 
 type PlayerDTO {
@@ -34,7 +35,9 @@ type PlayerDTO {
     color: PlayerColors
     balance: Int
     position: Int
+    name:String
     ownedProperties: [PropertyDTO]
+    inJail:Boolean
 }
 
 type PropertyDTO{

@@ -2,20 +2,20 @@ import {PlayerDTO} from "./PlayerDTO";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {World} from "./World";
 import {GameState} from "Frontend/utils/constants";
-import * as RAPIER from '@dimforge/rapier3d';
 
 export class GameDTO {
     gameId: string;
     gameState: GameState;
     players: PlayerDTO[];
     currentPlayerIndex: number;
+    createdTime: Date;
 
-    constructor({gameId, gameState, players, currentPlayerIndex}: GameDTO) {
+    constructor({gameId, gameState, players, currentPlayerIndex,createdTime}: GameDTO) {
         this.gameId = gameId;
         this.gameState = gameState;
         this.players = players;
         this.currentPlayerIndex = currentPlayerIndex;
-
+        this.createdTime = createdTime;
     }
 
     async loadBoardModel(world: World): Promise<void> {
@@ -36,12 +36,6 @@ export class GameDTO {
                         }
                     });
                     world.addToScene(model);
-
-                    // const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
-                    // const rigidBody = world.world.createRigidBody(rigidBodyDesc);
-                    // const colliderDesc = RAPIER.ColliderDesc.cuboid(10, 0.2, 10);
-                    // world.world.createCollider(colliderDesc, rigidBody);
-                    // world.addBody(model, rigidBody);
 
                     resolve();
                     console.log('Board model loaded');

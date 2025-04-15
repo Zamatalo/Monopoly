@@ -1,7 +1,7 @@
 type Mutation {
-    createNewGame:GameDTO
-    joinToGame(playerId:String):PlayerDTO
     rollDice(gameId: ID!, playerId: ID!): GameDTO
+    joinToGame(gameId: ID!, playerName: String!,playerColor:PlayerColors!):GameDTO
+    createNewGame:GameDTO
 }
 
 type Subscription {

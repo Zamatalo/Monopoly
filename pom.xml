@@ -13,12 +13,13 @@
     <module>Monopoly-Persistence</module>
     <module>Monopoly-Shared</module>
     <module>Monopoly-UI</module>
+      <module>Monopoly-API-Gateway</module>
   </modules>
 
   <properties>
     <java.version>23</java.version>
-    <vaadin.version>24.5.5</vaadin.version>
-    <spring.version>3.3.5</spring.version>
+    <vaadin.version>24.7.1</vaadin.version>
+    <spring.version>3.4.4</spring.version>
     <postgresql.version>42.7.4</postgresql.version>
     <lombok.version>1.18.36</lombok.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
