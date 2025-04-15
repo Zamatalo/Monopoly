@@ -2,6 +2,7 @@ package com.example.application.services;
 
 
 import com.example.application.entity.Game;
+import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,6 @@ public class GameService {
     public Optional<Game> findById(UUID id) {
         return gameRepo.findById(id);
     }
-
     @Transactional
     public Game save(Game game) {
         return gameRepo.save(game);
@@ -38,4 +38,10 @@ public class GameService {
         gameRepo.deleteById(id);
     }
 
+    @Transactional
+    public Player addPlayerToGame(Player player, Game game) {
+        game.getPlayers().add(player);
+        var gm = gameRepo.save(game);
+        return gm.getPlayers().stream().filter(e -> e.getPlayerId().equals(player.getPlayerId())).findFirst().orElse(null);
+    }
 }

@@ -8,20 +8,27 @@ const world = new RAPIER.World(gravity)
 let games = new Map();
 
 
-const subscriber = createClient();
-const publisher = createClient();
+const redisClient = createClient();
+await redisClient.connect();
 
-await subscriber.connect();
-await publisher.connect();
-
-subscriber.subscribe('game', event => {
-    const json = JSON.parse(event);
-    if (json.gameId !== null) {
-        var game = new DiceGame(json.gameId);
-        games.set(json.gameId, game);
+await redisClient.subscribe('game:game_roll', (message) => {
+    const { gameId } = JSON.parse(message);
+    const game = games.get(gameId) || new DiceGame(gameId);
+    game.throwDice();
+});
+function sendDiceResult(gameId, result) {
+    redisClient.publish('dice_result', JSON.stringify({
+        gameId,
+        value: result
+    }));
+}
+async function validateSession(sessionId, gameId) {
+    const session = await redisClient.hGetAll(`session:${sessionId}`);
+    if (!session || session.gameId !== gameId) {
+        throw new Error("Invalid session");
     }
-})
-
+    await redisClient.hSet(`session:${sessionId}`, "lastActivity", new Date().toISOString());
+}
 class DiceGame {
     constructor(gameId) {
         this.gameId = gameId;

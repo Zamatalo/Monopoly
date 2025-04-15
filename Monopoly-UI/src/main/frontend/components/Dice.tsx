@@ -1,41 +1,32 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {World} from "./World";
-import * as THREE from "three";
-import {Object3D} from "three";
-import {io} from 'socket.io-client';
+import {Object3D,Vector3,Quaternion} from "three";
 
 interface DiceState {
     pos: { x: number, y: number, z: number };
     rot: { x: number, y: number, z: number, w: number };
 }
 export class Dice {
-    socket = io('http://localhost:3001');
-
     model!: Object3D;
     constructor() {
-        this.socket.off("diceStateUpdated");
-        this.socket.on("diceStateUpdated", (diceState) => {
-            this.model.position.set(diceState.pos.x, diceState.pos.y, diceState.pos.z);
-            this.model.setRotationFromQuaternion(diceState.rot);
-        });
     }
 
     getDiceTopFace(): number {
         const faceNormals = [
-            new THREE.Vector3(0, 0, -1),  // 1
-            new THREE.Vector3(1, 0, 0),    // 2
-            new THREE.Vector3(0, 1, 0),    // 3
-            new THREE.Vector3(0, -1, 0),   // 4
-            new THREE.Vector3(-1, 0, 0),   // 5
-            new THREE.Vector3(0, 0, 1)     // 6
+            new Vector3(0, 0, -1),  // 1
+            new Vector3(1, 0, 0),    // 2
+            new Vector3(0, 1, 0),    // 3
+            new Vector3(0, -1, 0),   // 4
+            new Vector3(-1, 0, 0),   // 5
+            new Vector3(0, 0, 1)     // 6
         ];
 
-        const diceRot = new THREE.Quaternion();
+        const diceRot = new Quaternion();
         this.model.getWorldQuaternion(diceRot);
 
         let maxDot = -Infinity;
         let topFace = 1;
-        const upVector = new THREE.Vector3(0, 1, 0);
+        const upVector = new Vector3(0, 1, 0);
 
         for (let i = 0; i < faceNormals.length; i++) {
             const normal = faceNormals[i].clone();
@@ -81,18 +72,18 @@ export class Dice {
         });
     }
 
-    throwDice(gameId: string) {
-        this.socket.emit("throw", gameId, (ack?: string) => {
-            console.log("Throw acknowledged from server", ack);
-        });
-    }
-
-    getCurrentDicePos(gameId:string){
-        this.socket.emit("getCurrentDicePos", gameId, (diceState?: any) => {
-            console.log("Throw acknowledged from server", diceState);
-            this.model.position.set(diceState.pos.x, diceState.pos.y, diceState.pos.z);
-            this.model.setRotationFromQuaternion(diceState.rot);
-        });
-    }
+    // throwDice(gameId: string) {
+    //     this.socket.emit("throw", gameId, (ack?: string) => {
+    //         console.log("Throw acknowledged from server", ack);
+    //     });
+    // }
+    //
+    // getCurrentDicePos(gameId:string){
+    //     this.socket.emit("getCurrentDicePos", gameId, (diceState?: any) => {
+    //         console.log("Throw acknowledged from server", diceState);
+    //         this.model.position.set(diceState.pos.x, diceState.pos.y, diceState.pos.z);
+    //         this.model.setRotationFromQuaternion(diceState.rot);
+    //     });
+    // }
 
 }

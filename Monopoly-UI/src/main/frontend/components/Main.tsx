@@ -63,14 +63,13 @@ export async function loadState(newGame: GameDTO) {
     async function initIfNewDTO() {
         try {
             game = newGame;
-            await game.loadBoardModel(world);
+            game.loadBoardModel(world);
             for (const player of game.players) {
                 await player.loadPlayerModel(world);
             }
             world.setupLighting()
             dice = new Dice();
             await dice.loadDice(world);
-            dice.getCurrentDicePos(game.gameId);
             if (debug) {
                 setupGui(dice)
             }
@@ -102,7 +101,7 @@ export async function loadState(newGame: GameDTO) {
 
 window.addEventListener("keydown", ev => {
     if ((ev.key == "r" || ev.key == "R")) {
-        dice.throwDice(game.gameId)
+        //dice.throwDice(game.gameId)
     }
     if (ev.key == "q" || ev.key == "Q") {
         console.log("Current top result:", dice.getDiceTopFace());

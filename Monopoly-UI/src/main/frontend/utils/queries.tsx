@@ -1,40 +1,20 @@
-import {gql} from '@apollo/client';
+import { gql } from '@apollo/client';
 
-export const GAME_UPDATED_SUBSCRIPTION = gql`
-    subscription GameUpdated {
-        gameUpdated(gameId: "550e8400-e29b-41d4-a716-446655440000") {
+export const GET_ACTIVE_GAMES = gql`
+    query GetActiveGames {
+        getActiveGames {
+            gameId
+            currentPlayerIndex
+            gameState
+            createdTime
             players {
                 playerId
                 color
                 balance
                 position
-                ownedProperties {
-                    propertyName
-                    cost
-                    rent
-                    upgradable
-                }
+                name
+                inJail
             }
-            gameState
-            currentPlayerIndex
-            gameId
-        }
-    }
-
-`;
-
-export const ROLL_DICE_MUTATION = gql`
-    mutation RollDice($gameId: ID!, $playerId: ID!) {
-        rollDice(gameId: $gameId, playerId: $playerId) {
-            gameId
-            players {
-                playerId
-                color
-                balance
-                position
-            }
-            currentPlayerIndex
-            gameState
         }
     }
 `;
@@ -60,3 +40,81 @@ export const GET_FIND_BY_ID = gql`
         }
     }
 `
+
+export const GAME_UPDATED_SUBSCRIPTION = gql`
+    subscription GameUpdated($gameId: ID!) {
+        gameUpdated(gameId: $gameId) {
+            gameId
+            gameState
+            currentPlayerIndex
+            players {
+                playerId
+                color
+                name
+                balance
+                position
+                inJail
+                ownedProperties {
+                    propertyName
+                    cost
+                    rent
+                    upgradable
+                }
+            }
+        }
+    }
+`;
+
+
+export const JOIN_GAME_MUTATION = gql`
+    mutation JoinGame($gameId: ID!, $playerName: String!,$playerColor: PlayerColors!) {
+        joinToGame(gameId: $gameId, playerName: $playerName, playerColor: $playerColor) {
+            gameId
+            gameState
+            currentPlayerIndex
+            createdTime
+            players {
+                playerId
+                color
+                name
+                balance
+                position
+                inJail
+                ownedProperties {
+                    propertyName
+                    cost
+                    rent
+                    upgradable
+                }
+            }
+        }
+    }
+`;
+
+export const CREATE_GAME_MUTATION = gql`
+    mutation CreateGame {
+        createNewGame {
+            gameId
+            gameState
+            currentPlayerIndex
+            createdTime
+            players {
+                playerId
+                color
+                name
+                balance
+                position
+                inJail
+                ownedProperties {
+                    propertyName
+                    cost
+                    rent
+                    upgradable
+                }
+            }
+        }
+    }
+`;
+
+
+
