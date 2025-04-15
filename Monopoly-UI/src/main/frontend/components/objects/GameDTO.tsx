@@ -1,6 +1,6 @@
 import {PlayerDTO} from "./PlayerDTO";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {World} from "./World";
+import {World} from "../World";
 import {GameState} from "Frontend/utils/constants";
 
 export class GameDTO {

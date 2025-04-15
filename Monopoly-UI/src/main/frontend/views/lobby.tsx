@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { CREATE_GAME_MUTATION, JOIN_GAME_MUTATION, GET_ACTIVE_GAMES } from 'Frontend/utils/queries';
-import { PlayerDTO } from "Frontend/components/PlayerDTO";
-import { Button } from "@vaadin/react-components/Button.js";
-import { Icon } from "@vaadin/react-components/Icon.js";
+import {useMutation, useQuery} from '@apollo/client';
+import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, JOIN_GAME_MUTATION} from 'Frontend/utils/queries';
+import {PlayerDTO} from "Frontend/components/objects/PlayerDTO";
+import {Button} from "@vaadin/react-components/Button.js";
+import {Icon} from "@vaadin/react-components/Icon.js";
 import "@vaadin/icons";
 import "../themes/my-theme/lobby.css";
-import {PlayerColor} from "Frontend/utils/constants";
+import {GameState, PlayerColor} from "Frontend/utils/constants";
+import ColorPickerDialog from '../components/ColorPickerDialog';
 
 interface GameLobbyProps {
     onGameStart: (gameId: string) => void;
@@ -26,6 +27,8 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
     const [games, setGames] = useState<GameInfo[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const containerRef = React.useRef<HTMLDivElement | null>(null);
+    const [colorDialogOpen, setColorDialogOpen] = useState(false);
+    const [pendingGameId, setPendingGameId] = useState<string | null>(null);
 
     const { loading: gamesLoading, data, error } = useQuery(GET_ACTIVE_GAMES, {
         pollInterval: 5000
@@ -33,7 +36,6 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
 
     const [createGame] = useMutation(CREATE_GAME_MUTATION);
     const [joinGame, { loading: joiningGame }] = useMutation(JOIN_GAME_MUTATION);
-
     useEffect(() => {
         if (data) {
             setGames(data.getActiveGames);
@@ -52,8 +54,8 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
             try {
                 const { data } = await createGame();
                 if (data) {
-                    const gameId = data.createGame.gameId;
-                    await handleJoinGame(gameId);
+                    const gameId = data.createNewGame.gameId;
+                    await confirmJoinWithColor(gameId);
                 }
             } catch (error: any) {
                 setErrorMessage(`Error creating game: ${error.message}`);
@@ -62,21 +64,21 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
             setErrorMessage('Please enter your name');
         }
     };
-
-    const handleJoinGame = async (gameId: string) => {
-        if (playerName.trim()) {
-            setErrorMessage(null);
-            let playerColor =PlayerColor.PLAYER_RED;
-            try {
-                const { data } = await joinGame({ variables: { gameId, playerName,playerColor} });
-                if (data) {
-                    onGameStart(data.joinToGame.gameId);
-                }
-            } catch (error: any) {
-                setErrorMessage(`Error joining game: ${error.message}`);
+    const confirmJoinWithColor = async (color: PlayerColor) => {
+        if (!pendingGameId || !playerName.trim()) return;
+        setErrorMessage(null);
+        try {
+            const { data } = await joinGame({
+                variables: { gameId: pendingGameId, playerName, playerColor: color },
+            });
+            if (data) {
+                onGameStart(data.joinToGame.gameId);
             }
-        } else {
-            setErrorMessage('Please enter your name');
+        } catch (error: any) {
+            setErrorMessage(`Error joining game: ${error.message}`);
+        } finally {
+            setColorDialogOpen(false);
+            setPendingGameId(null);
         }
     };
 
@@ -142,24 +144,24 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
                                         onClick={() => setSelectedGameId(game.gameId)}
                                     >
                                         <div className="game-info">
-                                            <h3>{game.gameState}</h3>
+                                            <h3 className={`status`}>{game.gameState === GameState.STARTED ? GameState.FINISHED : GameState.IN_PROGRESS}</h3>
                                             <div className="game-meta">
                                                 <span className="players">
                                                     <Icon icon="vaadin:user"/>
                                                     {game.players?.length || 0} players
                                                 </span>
-                                                <span className={`status ${game.gameState}`}>
-                                                    {game.gameState === "STARTED" ? "Waiting" : "In Progress"}
-                                                </span>
                                                 <span className="created">
-                                                    Created: {new Date(game.createdTime || Date.now()).toLocaleString()}
+                                                    Created: {new Date(game.createdTime).toLocaleString() || `UNDEFINED`}
                                                 </span>
                                             </div>
                                         </div>
                                         <Button
                                             theme="primary"
-                                            disabled={game.gameState === "IN_PROGRESS" || !playerName.trim() || joiningGame}
-                                            onClick={() => handleJoinGame(game.gameId)}
+                                            disabled={game.gameState === "IN_PROGRESS" || !playerName.trim() || joiningGame || game.players?.length >= 4}
+                                            onClick={() => {
+                                                setPendingGameId(game.gameId);
+                                                setColorDialogOpen(true);
+                                            }}
                                             className="join-btn"
                                         >
                                             {joiningGame && selectedGameId === game.gameId ? (
@@ -169,7 +171,16 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
                                                 </>
                                             ) : "Join Game"}
                                         </Button>
+                                        <ColorPickerDialog
+                                            opened={colorDialogOpen}
+                                            onClose={() => setColorDialogOpen(false)}
+                                            onSelect={confirmJoinWithColor}
+                                            takenColors={
+                                                games.find(g => g.gameId === pendingGameId)?.players.map(p => p.color) || []
+                                            }
+                                        />
                                     </div>
+
                                 ))}
                             </div>
                         )}

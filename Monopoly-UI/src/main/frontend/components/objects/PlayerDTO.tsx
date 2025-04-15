@@ -1,8 +1,8 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {World} from "./World";
+import {World} from "../World";
 import {PlayerColor, positions} from "Frontend/utils/constants";
 import gsap from "gsap";
-import {PropertyDTO} from "Frontend/components/PropertyDTO";
+import {PropertyDTO} from "Frontend/components/objects/PropertyDTO";
 import {Object3D} from "three";
 
 export class PlayerDTO {
