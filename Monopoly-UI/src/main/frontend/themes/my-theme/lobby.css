@@ -63,7 +63,7 @@
 }
 
 .create-game-btn {
-    background-color: #2ecc71;
+    background-color: #45a049;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -192,6 +192,27 @@
     cursor: not-allowed;
 }
 
+
+.check-reconnect-btn {
+    background-color: #ff8000;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+}
+
+.check-reconnect-btn:hover {
+    background-color: #45a049;
+}
+
+.reconnect-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.reconnect-btn:hover {
+    background-color: #45a049;
+}
 @media (max-width: 768px) {
     .lobby-container {
         padding: 1rem;

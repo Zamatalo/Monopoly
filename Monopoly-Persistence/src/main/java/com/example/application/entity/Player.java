@@ -18,7 +18,7 @@ import java.util.UUID;
 @Builder
 public class Player {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //@GeneratedValue(strategy = GenerationType.AUTO)
     private UUID playerId;
 
     private String name;

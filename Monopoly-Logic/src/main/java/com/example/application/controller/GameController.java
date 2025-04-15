@@ -48,10 +48,12 @@ public class GameController {
     @MutationMapping
     public GameDTO joinToGame(@Argument("gameId") UUID gameId,
                               @Argument("playerName") String playerName,
-                              @Argument("playerColor") PlayerColors playerColor) {
+                              @Argument("playerColor") PlayerColors playerColor,
+                              @Argument("playerId") UUID playerId) {
         Game game = gameService.findById(gameId).orElseThrow();
         Player player = Player.builder()
                 .name(playerName)
+                .playerId(playerId)
                 .color(com.example.application.PlayerColors.valueOf(playerColor.toString()))
                 .build();
         gameService.addPlayerToGame(player, game);
@@ -73,5 +75,10 @@ public class GameController {
         var game = gameService.findById(id);
         assert game.isPresent();
         return GameMapper.INSTANCE.GameToGameDTO(game.get());
+    }
+    @QueryMapping
+    public GameDTO findGameByPlayerId(@Argument("playerId") UUID playerId) {
+        var gm = gameService.findGameByPlayerId(playerId);
+        return gm.map(GameMapper.INSTANCE::GameToGameDTO).orElse(null);
     }
 }

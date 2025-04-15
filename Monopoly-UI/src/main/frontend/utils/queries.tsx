@@ -67,8 +67,8 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
 
 
 export const JOIN_GAME_MUTATION = gql`
-    mutation JoinGame($gameId: ID!, $playerName: String!,$playerColor: PlayerColors!) {
-        joinToGame(gameId: $gameId, playerName: $playerName, playerColor: $playerColor) {
+    mutation JoinGame($gameId: ID!, $playerName: String!,$playerColor: PlayerColors!,$playerId:ID!) {
+        joinToGame(gameId: $gameId, playerName: $playerName, playerColor: $playerColor,playerId:$playerId) {
             gameId
             gameState
             currentPlayerIndex
@@ -116,5 +116,28 @@ export const CREATE_GAME_MUTATION = gql`
     }
 `;
 
-
+export const GET_GAME_BY_PLAYER_ID = gql`
+    query findGameByPlayerId($playerId: ID!) {
+        findGameByPlayerId(playerId:$playerId) {
+            gameId
+            gameState
+            currentPlayerIndex
+            createdTime
+            players {
+                playerId
+                color
+                name
+                balance
+                position
+                inJail
+                ownedProperties {
+                    propertyName
+                    cost
+                    rent
+                    upgradable
+                }
+            }
+        }
+    }
+`;
 

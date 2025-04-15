@@ -1,6 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {useMutation, useQuery} from '@apollo/client';
-import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, JOIN_GAME_MUTATION} from 'Frontend/utils/queries';
+import {useApolloClient, useMutation, useQuery} from '@apollo/client';
+import {
+    CREATE_GAME_MUTATION,
+    GET_ACTIVE_GAMES,
+    GET_GAME_BY_PLAYER_ID,
+    JOIN_GAME_MUTATION
+} from 'Frontend/utils/queries';
 import {PlayerDTO} from "Frontend/components/objects/PlayerDTO";
 import {Button} from "@vaadin/react-components/Button.js";
 import {Icon} from "@vaadin/react-components/Icon.js";
@@ -11,6 +16,8 @@ import ColorPickerDialog from '../components/ColorPickerDialog';
 
 interface GameLobbyProps {
     onGameStart: (gameId: string) => void;
+    playerId?: string | null;
+    onReconnect: (gameId: string) => void;
 }
 
 interface GameInfo {
@@ -21,7 +28,7 @@ interface GameInfo {
     currentPlayerIndex: number;
 }
 
-function GameLobby({ onGameStart }: GameLobbyProps) {
+function GameLobby({onGameStart, playerId}: GameLobbyProps) {
     const [playerName, setPlayerName] = useState('');
     const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
     const [games, setGames] = useState<GameInfo[]>([]);
@@ -29,15 +36,19 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const [colorDialogOpen, setColorDialogOpen] = useState(false);
     const [pendingGameId, setPendingGameId] = useState<string | null>(null);
-
-    const { loading: gamesLoading, data, error } = useQuery(GET_ACTIVE_GAMES, {
+    const [checkReconnectLoading, setCheckReconnectLoading] = useState(false);
+    const [reconnectAvailable, setReconnectAvailable] = useState(false);
+    const [reconnectLoading, setReconnectLoading] = useState(false);
+    const client = useApolloClient();
+    const {loading: gamesLoading, data, error} = useQuery(GET_ACTIVE_GAMES, {
         pollInterval: 5000
     });
 
     const [createGame] = useMutation(CREATE_GAME_MUTATION);
-    const [joinGame, { loading: joiningGame }] = useMutation(JOIN_GAME_MUTATION);
+    const [joinGame, {loading: joiningGame}] = useMutation(JOIN_GAME_MUTATION);
+
     useEffect(() => {
-        if (data) {
+        if (data?.getActiveGames) {
             setGames(data.getActiveGames);
         }
     }, [data]);
@@ -48,11 +59,64 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
         }
     }, [error]);
 
+    const checkForExistingGame = async () => {
+        if (!playerId) return;
+
+        setCheckReconnectLoading(true);
+        setReconnectAvailable(false);
+        setErrorMessage(null);
+
+        try {
+            const {data} = await client.query({
+                query: GET_GAME_BY_PLAYER_ID,
+                variables: {playerId},
+                fetchPolicy: 'network-only'
+            });
+
+            if (data?.findGameByPlayerId) {
+                setReconnectAvailable(true);
+            } else {
+                setErrorMessage("No active game found to reconnect to");
+            }
+        } catch (error: any) {
+            setErrorMessage(`Error checking for existing game: ${error.message}`);
+        } finally {
+            setCheckReconnectLoading(false);
+        }
+    };
+
+    const handleReconnect = async () => {
+        if (!playerId) return;
+
+        setReconnectLoading(true);
+        setErrorMessage(null);
+
+        try {
+            const {data} = await client.query({
+                query: GET_GAME_BY_PLAYER_ID,
+                variables: {playerId},
+                fetchPolicy: 'network-only'
+            });
+
+            if (data?.findGameByPlayerId) {
+                onGameStart(data.findGameByPlayerId.gameId);
+            } else {
+                setErrorMessage("No active game found to reconnect to");
+                setReconnectAvailable(false);
+            }
+        } catch (error: any) {
+            setErrorMessage(`Error reconnecting: ${error.message}`);
+            setReconnectAvailable(false);
+        } finally {
+            setReconnectLoading(false);
+        }
+    };
+
     const handleCreateGame = async () => {
         if (playerName.trim()) {
             setErrorMessage(null);
             try {
-                const { data } = await createGame();
+                const {data} = await createGame();
                 if (data) {
                     const gameId = data.createNewGame.gameId;
                     await confirmJoinWithColor(gameId);
@@ -64,12 +128,13 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
             setErrorMessage('Please enter your name');
         }
     };
+
     const confirmJoinWithColor = async (color: PlayerColor) => {
         if (!pendingGameId || !playerName.trim()) return;
         setErrorMessage(null);
         try {
-            const { data } = await joinGame({
-                variables: { gameId: pendingGameId, playerName, playerColor: color },
+            const {data} = await joinGame({
+                variables: {gameId: pendingGameId, playerName, playerColor: color, playerId: playerId},
             });
             if (data) {
                 onGameStart(data.joinToGame.gameId);
@@ -121,6 +186,46 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
                                 <Icon icon="vaadin:plus" slot="prefix"/>
                                 Create New Game
                             </Button>
+                            {!reconnectAvailable && (
+                                <Button
+                                    theme="secondary"
+                                    onClick={checkForExistingGame}
+                                    className="check-reconnect-btn"
+                                    disabled={checkReconnectLoading || !playerId}
+                                >
+                                    {checkReconnectLoading ? (
+                                        <>
+                                            <Icon icon="vaadin:spinner"/>
+                                            Checking...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon icon="vaadin:circle-thin" slot="prefix"/>
+                                            Check for Existing Game
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                            {reconnectAvailable && (
+                                <Button
+                                    theme="primary"
+                                    onClick={handleReconnect}
+                                    className="reconnect-btn"
+                                    disabled={reconnectLoading}
+                                >
+                                    {reconnectLoading ? (
+                                        <>
+                                            <Icon icon="vaadin:spinner"/>
+                                            Reconnecting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon icon="vaadin:refresh"/>
+                                            Reconnect to Game
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                         </div>
 
                         {games.length === 0 ? (
@@ -180,7 +285,6 @@ function GameLobby({ onGameStart }: GameLobbyProps) {
                                             }
                                         />
                                     </div>
-
                                 ))}
                             </div>
                         )}

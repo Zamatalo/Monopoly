@@ -52,8 +52,8 @@ public class RedisMessageSubscriber implements MessageListener {
             UUID gameId = UUID.fromString(json.get("gameId").asText());
             String playerName = json.get("playerName").asText();
             PlayerColors color = PlayerColors.valueOf(json.get("playerColor").asText());
-
-            gameController.joinToGame(gameId, playerName, color);
+            UUID playerId = UUID.fromString(json.get("playerId").asText());
+            gameController.joinToGame(gameId, playerName, color,playerId);
         } catch (Exception e) {
             log.error("Failed to process JOIN_GAME message", e);
         }
