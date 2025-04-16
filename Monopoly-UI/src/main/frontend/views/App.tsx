@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ApolloClient, ApolloProvider, InMemoryCache, useQuery, useSubscription} from '@apollo/client';
 import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
 import {createClient} from 'graphql-ws';
@@ -75,7 +75,7 @@ function App() {
 
     const handleGameAction = useCallback((action: 'rollDice' | 'endTurn' | 'buyProperty') => {
         console.log(`Handling game action: ${action}`);
-        // TODO: Implement actual game actions
+        //TODO Implement game actions
     }, []);
 
     if (!gameState.gameStarted) {
