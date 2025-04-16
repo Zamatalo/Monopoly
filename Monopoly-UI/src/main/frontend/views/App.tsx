@@ -1,5 +1,4 @@
-// App.tsx
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {ApolloClient, ApolloProvider, InMemoryCache, useQuery, useSubscription} from '@apollo/client';
 import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
 import {createClient} from 'graphql-ws';
@@ -8,6 +7,7 @@ import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID} from 'Frontend/utils/queries'
 import {GameDTO} from 'Frontend/components/objects/GameDTO';
 import {PlayerDTO} from 'Frontend/components/objects/PlayerDTO';
 import GameLobby from "Frontend/views/lobby";
+import GameInterface from "Frontend/components/GameInterface";
 
 const wsLink = new GraphQLWsLink(
     createClient({
@@ -26,50 +26,64 @@ const client = new ApolloClient({
     },
 });
 
+interface GameState {
+    gameStarted: boolean;
+    currentGameId: string | null;
+    playerId: string | null;
+    currentGameState: GameDTO | null;
+    currentPlayer: PlayerDTO | null;
+}
+
 function App() {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const [gameStarted, setGameStarted] = useState(false);
-    const [currentGameId, setCurrentGameId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [playerId, setPlayerId] = useState<string | null>(null);
+    const [gameState, setGameState] = useState<GameState>({
+        gameStarted: false,
+        currentGameId: null,
+        playerId: null,
+        currentGameState: null,
+        currentPlayer: null
+    });
+
+    const updateGameState = useCallback((newState: Partial<GameState>) => {
+        setGameState(prev => ({...prev, ...newState}));
+    }, []);
 
     useEffect(() => {
         const storedPlayerId = localStorage.getItem('playerId');
         if (storedPlayerId) {
-            setPlayerId(storedPlayerId);
+            updateGameState({playerId: storedPlayerId});
         } else {
-            const newPlayerId = generatePlayerId();
+            const newPlayerId = crypto.randomUUID();
             localStorage.setItem('playerId', newPlayerId);
-            setPlayerId(newPlayerId);
+            updateGameState({playerId: newPlayerId});
         }
-    }, []);
-
-    const generatePlayerId = () => {
-        return crypto.randomUUID();
-    };
-
-    const handleReconnect = (gameId: string) => {
-        setCurrentGameId(gameId);
-        setGameStarted(true);
-    };
+    }, [updateGameState]);
 
     useEffect(() => {
-        if (gameStarted && containerRef.current) {
-            setLoading(true);
+        if (gameState.gameStarted && containerRef.current) {
             initThreeJS(containerRef.current);
-        }
-    }, [gameStarted]);
 
-    if (!gameStarted) {
+        }
+    }, [gameState.gameStarted]);
+
+    const handleGameStart = useCallback((gameId: string) => {
+        updateGameState({
+            currentGameId: gameId,
+            gameStarted: true
+        });
+    }, [updateGameState]);
+
+    const handleGameAction = useCallback((action: 'rollDice' | 'endTurn' | 'buyProperty') => {
+        console.log(`Handling game action: ${action}`);
+        // TODO: Implement actual game actions
+    }, []);
+
+    if (!gameState.gameStarted) {
         return (
             <ApolloProvider client={client}>
                 <GameLobby
-                    onGameStart={(gameId: string) => {
-                        setCurrentGameId(gameId);
-                        setGameStarted(true);
-                    }}
-                    playerId={playerId}
-                    onReconnect={handleReconnect}
+                    onGameStart={handleGameStart}
+                    playerId={gameState.playerId}
                 />
             </ApolloProvider>
         );
@@ -77,86 +91,114 @@ function App() {
 
     return (
         <ApolloProvider client={client}>
-            <GameInitializer gameId={currentGameId!} />
-            <GameUpdates gameId={currentGameId!}/>
-            <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+            <GameInitializer
+                gameId={gameState.currentGameId!}
+                onStateUpdate={(game, player) => updateGameState({
+                    currentGameState: game,
+                    currentPlayer: player
+                })}
+            />
+            <GameUpdates
+                gameId={gameState.currentGameId!}
+                onStateUpdate={(game, player) => updateGameState({
+                    currentGameState: game,
+                    currentPlayer: player
+                })}
+            />
+            <div ref={containerRef} style={{width: '100%', height: '100%'}}/>
+            {gameState.currentGameState && gameState.currentPlayer && (
+                <GameInterface
+                    currentGame={gameState.currentGameState}
+                    currentPlayer={gameState.currentPlayer}
+                    onRollDice={() => handleGameAction('rollDice')}
+                    onEndTurn={() => handleGameAction('endTurn')}
+                    onBuyProperty={() => handleGameAction('buyProperty')}
+                />
+            )}
         </ApolloProvider>
     );
 }
 
-function GameInitializer({gameId}: { gameId: string }) {
+interface GameComponentProps {
+    gameId: string;
+    onStateUpdate: (game: GameDTO, player: PlayerDTO) => void;
+}
+
+function GameInitializer({gameId, onStateUpdate}: GameComponentProps) {
     const {data, loading, error} = useQuery(GET_FIND_BY_ID, {
-        variables: {gameId: gameId},
+        variables: {gameId},
+        fetchPolicy: 'network-only',
+        notifyOnNetworkStatusChange: false,
     });
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
-        if (data) {
+        if (data && !initialized) {
             console.log('Fetched initial game state:', data);
+            setInitialized(true);
 
             const gameData = data.findGameById;
-
             const players = gameData.players.map(
-                (player: any) =>
-                    new PlayerDTO({
-                        playerId: player.playerId,
-                        color: player.color,
-                        inJail: player.inJail,
-                        balance: player.balance,
-                        position: player.position,
-                        ownedProperties: player.ownedProperties,
-                    } as PlayerDTO)
+                (player: any) => new PlayerDTO({
+                    playerId: player.playerId,
+                    color: player.color,
+                    inJail: player.inJail,
+                    balance: player.balance,
+                    position: player.position,
+                    ownedProperties: player.ownedProperties,
+                } as PlayerDTO)
             );
 
             const game = new GameDTO({
                 gameId: gameData.gameId,
                 gameState: gameData.gameState,
-                players: players,
+                players,
                 currentPlayerIndex: gameData.currentPlayerIndex,
-                createdTime:gameData.createdTime
+                createdTime: gameData.createdTime
             } as GameDTO);
 
+            onStateUpdate(game, game.players[game.currentPlayerIndex]);
             loadState(game).then(() => console.log('Initial game state loaded'));
         }
-    }, [data]);
+    }, [data, initialized, onStateUpdate]);
 
-    if (loading) return <p>Loading initial game state...</p>;
+    if (loading && !initialized) return <p>Loading initial game state...</p>;
     if (error) return <p>Error fetching initial game state: {error.message}</p>;
 
     return null;
 }
 
-function GameUpdates({gameId}: { gameId: string }) {
+function GameUpdates({gameId, onStateUpdate}: GameComponentProps) {
     const {data, error} = useSubscription(GAME_UPDATED_SUBSCRIPTION, {
-        variables: {gameId: gameId},
+        variables: {gameId},
     });
 
     useEffect(() => {
         if (data) {
             const gameData = data.gameUpdated;
-
             const players = gameData.players.map(
-                (player: any) =>
-                    new PlayerDTO({
-                        playerId: player.playerId,
-                        color: player.color,
-                        inJail: player.inJail,
-                        balance: player.balance,
-                        position: player.position,
-                        ownedProperties: player.ownedProperties,
-                    } as PlayerDTO)
+                (player: any) => new PlayerDTO({
+                    playerId: player.playerId,
+                    color: player.color,
+                    inJail: player.inJail,
+                    balance: player.balance,
+                    position: player.position,
+                    ownedProperties: player.ownedProperties,
+                } as PlayerDTO)
             );
 
             const newGame = new GameDTO({
                 gameId: gameData.gameId,
                 gameState: gameData.gameState,
-                players: players,
+                players,
                 currentPlayerIndex: gameData.currentPlayerIndex,
-                createdTime:gameData.createdTime
+                createdTime: gameData.createdTime
             } as GameDTO);
-            console.log(gameData);
+
+            onStateUpdate(newGame, newGame.players[newGame.currentPlayerIndex]);
             loadState(newGame).then(() => console.log('Game state updated'));
         }
-    }, [data]);
+    }, [data, onStateUpdate]);
 
     if (error) return <p>Error: {error.message}</p>;
 
