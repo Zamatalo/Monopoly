@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {useMutation, useQuery, useApolloClient} from '@apollo/client';
+import {useApolloClient, useMutation, useQuery} from '@apollo/client';
 import {
     CREATE_GAME_MUTATION,
     GET_ACTIVE_GAMES,
@@ -13,6 +13,7 @@ import "@vaadin/icons";
 import "../themes/my-theme/lobby.css";
 import {GameState, PlayerColor} from "Frontend/utils/constants";
 import ColorPickerDialog from '../components/ColorPickerDialog';
+import {Notification} from "@vaadin/react-components";
 
 interface GameLobbyProps {
     onGameStart: (gameId: string) => void;
@@ -30,7 +31,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({onGameStart, playerId}) => {
         loading: false,
         available: false
     });
-
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const client = useApolloClient();
 
@@ -279,6 +279,17 @@ const GameLobby: React.FC<GameLobbyProps> = ({onGameStart, playerId}) => {
         );
     };
 
+    const showNotification = (message: string) => {
+        if (message === "") {
+            return null;
+        }
+        const notification = Notification.show(message, {
+            position: 'top-center',
+            duration: 900,
+            theme: 'error',
+        });
+        return null;
+    }
     return (
         <div className="lobby-container">
             <div className="lobby-header">
@@ -296,9 +307,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({onGameStart, playerId}) => {
                     required
                 />
             </div>
-
-            {errorMessage && <div className="error-message">{errorMessage}</div>}
-
+            {errorMessage!==null && (showNotification(errorMessage?.toString()))}
             <div className="game-list-container">
                 <h2>Available Games</h2>
                 <div className="game-list-header">
