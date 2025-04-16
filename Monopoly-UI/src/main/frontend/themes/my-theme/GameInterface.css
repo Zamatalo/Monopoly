@@ -1,0 +1,64 @@
+/* GameInterface.css */
+.game-interface {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    max-width: 300px;
+    z-index: 100;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.player-color {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    border: 2px solid #333;
+}
+
+.player-details h3 {
+    margin: 0 0 5px 0;
+}
+
+.jail-status {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.game-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.property-info {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.game-log {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.log-entries {
+    font-size: 0.9em;
+}
+
+.log-entries p {
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
