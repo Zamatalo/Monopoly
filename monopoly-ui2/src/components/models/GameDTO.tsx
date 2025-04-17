@@ -1,7 +1,7 @@
 import {PlayerDTO} from "./PlayerDTO";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {World} from "./World";
 import {GameState} from "../utils/constants";
+import {useGameStore} from "../../stores/gameStore";
 
 export class GameDTO {
     gameId: string;
@@ -18,11 +18,12 @@ export class GameDTO {
         this.createdTime = createdTime;
     }
 
-     loadBoardModel(world: World)  {
+    async loadBoardModel() {
         const boardPath = '/assets/models/monopolyBoard.glb';
         const loader = new GLTFLoader();
-
-        return new Promise((resolve, reject) => {
+        const world = useGameStore.getState().world;
+        if (!world) return;
+        return new Promise<void>((resolve, reject) => {
             loader.load(
                 boardPath,
                 (gltf) => {
@@ -35,9 +36,10 @@ export class GameDTO {
                             obj.receiveShadow = true;
                         }
                     });
-                    world.addToScene(model);
 
+                    world.addToScene(model);
                     console.log('Board model loaded');
+                    resolve();
                 },
                 undefined,
                 (error) => {
@@ -47,4 +49,5 @@ export class GameDTO {
             );
         });
     }
+
 }

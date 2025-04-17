@@ -1,59 +1,49 @@
 import { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
-import { GET_FIND_BY_ID } from "../graphql/queries";
-import { useGameActions, useGameStore } from '../stores/gameStore';
+import {GET_ACTIVE_GAMES, GET_PLAYER} from '../graphql/queries';
+import { useGameStore } from '../stores/gameStore';
+import { GameDTO } from '../components/models/GameDTO';
+import { useNavigate } from 'react-router-dom';
+import {Text} from "@react-three/drei";
 
 export const LobbyView = () => {
-    const {
-        game,
-        isLoading,
-        error,
-        debugMode
-    } = useGameStore();
-    const {
-        initializeWorld,
-        loadGameState
-    } = useGameActions();
+    const { data, error, loading } = useQuery(GET_ACTIVE_GAMES, {
+        pollInterval: 5000,
+        fetchPolicy: 'cache-and-network',
 
-    const { data } = useQuery(GET_FIND_BY_ID, {
-        variables: { gameId: "50771991-f21e-4699-a872-bbad8df3811a" }
     });
+    // const {data:playerData,error:getPlayerError,loading:getPlayerLoading} = useQuery(GET_PLAYER, {
+    //     variables:
+    // });
+    const games: GameDTO[] = data?.getActiveGames || [];
+    const { setGame,setCurrentPlayer } = useGameStore();
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        const container = document.getElementById('game-container') as HTMLDivElement;
-        if (container && data?.findGameById) {
-            initializeWorld(container);
-            loadGameState(data.findGameById);
-        }
+    const handleJoinGame = (game: GameDTO) => {
+        setGame(game);
+        navigate(`/game/${game.gameId}`);
+    };
 
-        return () => {
-            // Cleanup handled by store
-        };
-    }, [data, initializeWorld, loadGameState]);
-
-    if (isLoading) return <div className="loading">Initializing game...</div>;
-    if (error) return <div className="error">{error}</div>;
+    if (loading) return <div>Loading games...</div>;
+    if (error) return <div>Error: {error.message}</div>;
 
     return (
-        <div className="lobby-view">
-            <h1>Game Lobby</h1>
-
-            <div id="game-container" className="game-canvas" />
-
-            <div className="game-ui">
-                {game && (
-                    <>
-                        <GameControls />
-                        <PlayerList players={game.players} />
-                    </>
-                )}
-            </div>
-
-            <div className="debug-info">
-                {debugMode && (
-                    <pre>{JSON.stringify(game, null, 2)}</pre>
-                )}
-            </div>
+        <div>
+            <h2>Active Games</h2>
+            {games.length === 0 ? (
+                <p>No active games found.</p>
+            ) : (
+                <ul>
+                    {games.map((game) => (
+                        <li
+                            key={game.gameId}
+                            onClick={() => handleJoinGame(game)}
+                        >
+                            <span>{game.gameId}</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 };

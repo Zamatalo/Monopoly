@@ -36,10 +36,11 @@ export class Dice {
         return topFace;
     }
 
-    async loadDice(world: World) {
+    loadDice(world: World) {
         const boardPath = "/assets/models/dice3.glb";
         const loader = new GLTFLoader();
-        return new Promise<void>((resolve, reject) => {
+
+        return () => {
             loader.load(
                 boardPath,
                 (gltf: any) => {
@@ -53,15 +54,13 @@ export class Dice {
                     })
                     world.scene.add(this.model);
 
-                    resolve();
                     console.log('Dice model loaded');
                 },
                 undefined,
                 (error: any) => {
                     console.error(`Error loading model: ${error}`);
-                    reject(error);
                 }
             );
-        });
+        };
     }
 }

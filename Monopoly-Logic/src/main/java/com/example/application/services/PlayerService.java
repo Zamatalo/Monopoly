@@ -1,12 +1,14 @@
 package com.example.application.services;
 
+
 import com.example.application.PlayerColors;
 import com.example.application.entity.Player;
 import com.example.application.repo.PlayerRepo;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -20,5 +22,9 @@ public class PlayerService {
                 .orElseGet(() -> playerRepository.save(
                         Player.builder().playerId(playerId).color(color).build()
                 ));
+    }
+    @Transactional
+    public Optional<Player> findPlayer(UUID playerId) {
+        return playerRepository.findById(playerId);
     }
 }
