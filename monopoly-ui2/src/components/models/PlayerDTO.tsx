@@ -22,10 +22,11 @@ export class PlayerDTO {
         this.ownedProperties = ownedProperties;
     }
 
-    async loadPlayerModel(world: World): Promise<void> {
+    loadPlayerModel(world: World) {
         const playerPath = `/assets/models/${this.color}_pawn.glb`;
         const loader = new GLTFLoader();
-        return new Promise((resolve, reject) => {
+
+        return () => {
             loader.load(
                 playerPath,
                 (gltf) => {
@@ -48,17 +49,14 @@ export class PlayerDTO {
                         }
                     });
                     world.addToScene(model);
-
-                    resolve();
                     console.log(`Loaded model for ${this.color} player`);
                 },
                 undefined,
                 (error) => {
                     console.error(`Error loading model for ${this.color}: ${error}`);
-                    reject(error);
                 }
             );
-        });
+        };
     }
 
     animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {}): void {

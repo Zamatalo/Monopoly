@@ -29,6 +29,7 @@ async function validateSession(sessionId, gameId) {
     }
     await redisClient.hSet(`session:${sessionId}`, "lastActivity", new Date().toISOString());
 }
+
 class DiceGame {
     constructor(gameId) {
         this.gameId = gameId;

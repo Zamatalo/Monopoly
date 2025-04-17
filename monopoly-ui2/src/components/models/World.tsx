@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
+import {Dice} from "./Dice";
+import GUI from "three/examples/jsm/libs/lil-gui.module.min";
 
 
 export class World {
@@ -47,13 +49,14 @@ export class World {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         });
+
+        this.animate();
         this.setupLighting()
     }
 
     addToScene(object: THREE.Object3D) {
         this.scene.add(object);
     }
-
     private setupLighting() {
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
@@ -68,5 +71,41 @@ export class World {
         light2.shadow.mapSize.height = 4096;
         this.scene.add(light2);
     }
+
+    private setupGui(dice: Dice) {
+        const gui = new GUI();
+
+        let diceState = {
+            position: {x: 0, y: 0, z: 0},
+            rotation: {x: 0, y: 0, z: 0, w: 1},
+            isSleeping: false,
+            topFace: 1,
+            isMoving: () => {
+                if (!dice.model) return false;
+                return false;
+            },
+            resetDice: () => {
+                dice.model.position.set(0, 0, 0);
+                dice.model.rotation.set(0, 0, 0);
+            }
+        };
+
+        const diceFolder = gui.addFolder('Dice State');
+        diceFolder.add(diceState.position, 'x').name('Pos X').listen();
+        diceFolder.add(diceState.position, 'y').name('Pos Y').listen();
+        diceFolder.add(diceState.position, 'z').name('Pos Z').listen();
+        diceFolder.add(diceState, 'isSleeping').name('Is Sleeping').listen();
+        diceFolder.add(diceState, 'topFace').name('Top Face').listen();
+        diceFolder.add(diceState, 'resetDice').name('Reset Dice');
+
+        let stats = new Stats();
+        document.body.appendChild(stats.dom);
+    }
+
+    private animate = () => {
+        requestAnimationFrame(this.animate);
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+    };
 
 }

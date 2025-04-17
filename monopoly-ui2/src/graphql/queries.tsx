@@ -19,6 +19,19 @@ export const GET_ACTIVE_GAMES = gql`
     }
 `;
 
+export const GET_PLAYER = gql`
+    query GetPlayer($playerId: ID!) {
+        getPlayer(playerId: $playerId) {
+            playerId
+            color
+            balance
+            position
+            name
+            inJail
+        }
+    }
+`
+
 export const GET_FIND_BY_ID = gql`
     query FindGameById($gameId: ID!) {
         findGameById(id:$gameId ) {
@@ -64,7 +77,6 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
         }
     }
 `;
-
 
 export const JOIN_GAME_MUTATION = gql`
     mutation JoinGame($gameId: ID!, $playerName: String!,$playerColor: PlayerColors!,$playerId:ID!) {
