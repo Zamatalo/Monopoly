@@ -1,9 +1,9 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {World} from "./World";
 import {PlayerColor, positions} from "../utils/constants";
 import gsap from "gsap";
 import {PropertyDTO} from "./PropertyDTO";
 import {Object3D} from "three";
+import WorldSingleton from "../utils/WorldSingleton";
 
 export class PlayerDTO {
     playerId: string;
@@ -22,11 +22,19 @@ export class PlayerDTO {
         this.ownedProperties = ownedProperties;
     }
 
-    loadPlayerModel(world: World) {
+    static fromRaw(raw: any): PlayerDTO {
+        return new PlayerDTO({
+            ...raw,
+            properties: raw.properties || []
+        });
+    }
+
+    async loadPlayerModel(): Promise<void> {
         const playerPath = `/assets/models/${this.color}_pawn.glb`;
         const loader = new GLTFLoader();
+        const world = WorldSingleton.getInstance();
 
-        return () => {
+        return new Promise((resolve, reject) => {
             loader.load(
                 playerPath,
                 (gltf) => {
@@ -50,16 +58,19 @@ export class PlayerDTO {
                     });
                     world.addToScene(model);
                     console.log(`Loaded model for ${this.color} player`);
+                    resolve();
                 },
                 undefined,
                 (error) => {
                     console.error(`Error loading model for ${this.color}: ${error}`);
+                    reject(error);
                 }
             );
-        };
+        });
     }
 
-    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {}): void {
+    animatePlayerMovement(targetPosition: number,model:Object3D, callback: () => void = () => {
+    }): void {
         if (!model) {
             console.error('Model not loaded yet!');
             return;
@@ -77,7 +88,6 @@ export class PlayerDTO {
             if (currentStep !== targetPosition) {
                 currentStep = (currentStep + 1) % positions.length;
                 const nextPosition = positions[currentStep];
-
                 if (!nextPosition) {
                     console.error('Invalid position data.');
                     return;
@@ -103,7 +113,6 @@ export class PlayerDTO {
                 callback();
             }
         };
-
         moveNext();
     }
 

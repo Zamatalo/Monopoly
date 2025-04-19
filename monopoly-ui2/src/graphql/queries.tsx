@@ -153,3 +153,14 @@ export const GET_GAME_BY_PLAYER_ID = gql`
     }
 `;
 
+export const ROLL_DICE = gql`
+    mutation RollDice($gameId: ID!, $playerId: ID!) {
+        rollDice(gameId: $gameId, playerId: $playerId) {
+            gameId
+            currentPlayerIndex
+            gameState
+            createdTime
+        }
+    }
+`;
+

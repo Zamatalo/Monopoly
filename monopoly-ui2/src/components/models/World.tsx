@@ -3,7 +3,6 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
 import {Dice} from "./Dice";
 import GUI from "three/examples/jsm/libs/lil-gui.module.min";
 
-
 export class World {
     scene: THREE.Scene;
     renderer: THREE.WebGLRenderer;
@@ -49,11 +48,9 @@ export class World {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         });
-
-        this.animate();
         this.setupLighting()
+        this.renderer.setAnimationLoop(this.animate);
     }
-
     addToScene(object: THREE.Object3D) {
         this.scene.add(object);
     }
@@ -102,10 +99,10 @@ export class World {
         document.body.appendChild(stats.dom);
     }
 
-    private animate = () => {
-        requestAnimationFrame(this.animate);
+    animate = () => {
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     };
+
 
 }

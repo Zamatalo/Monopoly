@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap');
+
+:root {
+    --dark-bg: #1a1a1a;
+    --dark-card: #2d2d2d;
+    --dark-text: #f8f9fa;
+    --dark-secondary: #adb5bd;
+    --dark-border: #495057;
+
+    
+    --primary: #4361ee;
+    --primary-hover: #3a56d4;
+    --error: #ef233c;
+    --warning: #f77f00;
+    --success: #4cc9f0;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+
+    
+    --shadow-sm: 0 1px 3px var(--shadow-color);
+    --shadow-md: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+    --shadow-lg: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -2px var(--shadow-color);
+    --shadow-xl: 0 20px 25px -5px var(--shadow-color), 0 10px 10px -5px var(--shadow-color);
+
+    
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    transition: var(--transition);
+}
+
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: var(--dark-bg);
+        --card-color: var(--dark-card);
+        --text-color: var(--dark-text);
+        --secondary-color: var(--dark-secondary);
+        --border-color: var(--dark-border);
+        --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+}
+
+.lobby-container {
+    padding: 2rem 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.lobby-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.025em;
+    background: linear-gradient(90deg, var(--primary), #7209b7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.join-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+.join-button {
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.join-button:hover {
+    background: var(--primary-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.game-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.game-card {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem;
+    background: var(--card-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+}
+
+.game-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+    border-color: var(--primary);
+}
+
+.game-icon {
+    font-size: 1.75rem;
+    margin-right: 1.25rem;
+    color: var(--primary);
+}
+
+.game-info {
+    flex-grow: 1;
+}
+
+.game-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.game-id {
+    font-family: 'Fira Code', monospace;
+    letter-spacing: -0.025em;
+}
+
+.game-players {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid;
+}
+
+.chip.warning {
+    color: var(--warning);
+    border-color: var(--warning);
+    background: rgba(247, 127, 0, 0.1);
+}
+
+.chip.success {
+    color: var(--success);
+    border-color: var(--success);
+    background: rgba(76, 201, 240, 0.1);
+}
+
+.centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid rgba(var(--primary), 0.1);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s linear infinite;
+}
+
+.error-alert {
+    margin: 1rem;
+    padding: 1rem;
+    background: rgba(239, 35, 60, 0.1);
+    color: var(--error);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--error);
+}
+
+.empty-state {
+    padding: 2rem 1.5rem;
+    text-align: center;
+    background: var(--card-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px dashed var(--border-color);
+}
+
+.empty-state p {
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.game-card {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.game-card:nth-child(1) { animation-delay: 0.1s; }
+.game-card:nth-child(2) { animation-delay: 0.2s; }
+.game-card:nth-child(3) { animation-delay: 0.3s; }

@@ -4,6 +4,7 @@
   "type": "module",
   "dependencies": {
     "@apollo/client": "^3.13.7",
+    "@mui/icons-material": "^7.0.2",
     "@polymer/polymer": "3.5.2",
     "@vaadin/bundles": "24.7.1",
     "@vaadin/common-frontend": "0.0.19",

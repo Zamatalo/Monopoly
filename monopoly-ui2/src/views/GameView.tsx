@@ -1,55 +1,81 @@
 import {useEffect, useRef, useState} from 'react';
-import {useGameStore} from '../stores/gameStore';
-import {World} from '../components/models/World';
+import WorldSingleton from '../components/utils/WorldSingleton';
+import {useMutation, useQuery, useSubscription} from "@apollo/client";
+import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, ROLL_DICE} from "../graphql/queries";
+import GameSingleton from "../components/utils/GameSingleton";
+import {updateGame} from "../stores/GameEnvironment";
+import {GameDTO} from "../components/models/GameDTO";
+import UIGameInterfaceProps from "../components/UIGameInterfaceProps";
+import "../styles/gameView.css";
 
 export const GameView = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const {
-        game,
-        world,
-        setWorld,
-        loadBoardModel,
-        loadDiceModel,
-        loadPlayerModels
-    } = useGameStore();
+    const [game, setGame] = useState<GameDTO | null>(null);
+    const [sceneInitialized, setSceneInitialized] = useState(false);
+    const {data: gameData, loading: loadingGame} = useQuery(GET_FIND_BY_ID, {
+        variables: {gameId: game?.gameId ?? ''}
+    });
 
-    const [sceneLoaded, setSceneLoaded] = useState(false);
+    const {data, error} = useSubscription(GAME_UPDATED_SUBSCRIPTION, {
+        variables: {
+            gameId: game?.gameId,
+            playerId: 1,
+
+        },
+        onData: ({data}) => {
+            console.log('Game update received:', data);
+            const updatedGame = data?.data?.gameUpdated;
+            if (updatedGame) {
+                updateGame(GameDTO.fromRaw(updatedGame));
+            }
+        }
+    });
+
+    const [rollDice] = useMutation(ROLL_DICE);
+
+
+    useEffect(() => {
+        const restored = GameSingleton.tryRestore();
+        if (restored) {
+            setGame(restored);
+        } else if (gameData?.getGameById) {
+            const g = GameSingleton.initialize(gameData.getGameById);
+            setGame(g);
+        }
+    }, [gameData]);
+
 
     useEffect(() => {
         const container = containerRef.current;
-        if (!container) return;
-
-        if (!world) {
-            const newWorld = new World(container);
-            setWorld(newWorld);
-        }
-    }, []);
+        if (!container || !game) return;
+        WorldSingleton.getInstance(container);
+    }, [game]);
 
     useEffect(() => {
-        const initializeScene = async () => {
-            if (!game || !world) {
-                console.warn('No selected game or world, can’t load scene yet.');
-                return;
-            }
+        if (!game || !game.players || sceneInitialized) return;
 
-            try {
-                loadBoardModel();
-                loadDiceModel();
-                loadPlayerModels();
-                setSceneLoaded(true);
-            } catch (err) {
-                console.error('Error loading scene:', err);
-            }
+        game.loadBoardModel();
+        game.players.forEach((player) => {
+            player.loadPlayerModel();
+        });
+        setSceneInitialized(true);
+    }, [game, sceneInitialized]);
+
+    useEffect(() => {
+        return () => {
+            console.log("Cleaning up");
+            WorldSingleton.reset();
+            GameSingleton.reset();
         };
-
-        if (game && world && !sceneLoaded) {
-            initializeScene();
-        }
-    }, [game, world]);
+    }, []);
 
     return (
         <div className="game-view">
-            <div ref={containerRef} className="webgl-container" style={{ width: '100%', height: '100vh' }} />
+            <div ref={containerRef} className="canvas"/>
+            {game && (
+                <UIGameInterfaceProps></UIGameInterfaceProps>
+            )}
         </div>
     );
+
 };
