@@ -1,45 +1,65 @@
-import { useEffect } from 'react';
-import { useQuery } from '@apollo/client';
-import {GET_ACTIVE_GAMES, GET_PLAYER} from '../graphql/queries';
-import { useGameStore } from '../stores/gameStore';
-import { GameDTO } from '../components/models/GameDTO';
-import { useNavigate } from 'react-router-dom';
-import {Text} from "@react-three/drei";
+import {useQuery} from '@apollo/client';
+import {GET_ACTIVE_GAMES} from '../graphql/queries';
+import {GameDTO} from '../components/models/GameDTO';
+import {useNavigate} from 'react-router';
+import GameSingleton from "../components/utils/GameSingleton";
+import {useState} from "react";
+import '../styles/lobby.css'
 
 export const LobbyView = () => {
-    const { data, error, loading } = useQuery(GET_ACTIVE_GAMES, {
+    const navigate = useNavigate();
+    const {data, error, loading} = useQuery(GET_ACTIVE_GAMES, {
         pollInterval: 5000,
         fetchPolicy: 'cache-and-network',
-
     });
-    // const {data:playerData,error:getPlayerError,loading:getPlayerLoading} = useQuery(GET_PLAYER, {
-    //     variables:
-    // });
-    const games: GameDTO[] = data?.getActiveGames || [];
-    const { setGame,setCurrentPlayer } = useGameStore();
-    const navigate = useNavigate();
-
+    const [rejoinAvailable, setrejoinAvailable] = useState(false);
     const handleJoinGame = (game: GameDTO) => {
-        setGame(game);
+        GameSingleton.initialize(game);
         navigate(`/game/${game.gameId}`);
     };
 
-    if (loading) return <div>Loading games...</div>;
-    if (error) return <div>Error: {error.message}</div>;
+    const games: GameDTO[] = data?.getActiveGames?.map(GameDTO.fromRaw) || [];
+
+    if (loading) return <div className="centered">
+        <div className="spinner"></div>
+    </div>;
+    if (error) return <div className="error-alert">Error: {error.message}</div>;
 
     return (
-        <div>
-            <h2>Active Games</h2>
-            {games.length === 0 ? (
-                <p>No active games found.</p>
+        <div className="lobby-container">
+            <div className="lobby-header">
+                <h1>Active Games</h1>
+            </div>
+
+            {!games.length ? (
+                <div className="empty-state">
+                    <p>No active games available</p>
+                </div>
             ) : (
-                <ul>
-                    {games.map((game) => (
-                        <li
-                            key={game.gameId}
-                            onClick={() => handleJoinGame(game)}
-                        >
-                            <span>{game.gameId}</span>
+                <ul className="game-list">
+                    {games.map(game => (
+                        <li key={game.gameId} className="game-card" onClick={() => handleJoinGame(game)}>
+                            <div className="game-icon">🎮</div>
+                            <div className="game-info">
+                                <div className="game-title">
+                                    {game.gameId}
+                                    <span className={`chip ${game.gameState === 'WAITING' ? 'warning' : 'success'}`}>
+                                        {game.gameState}
+                                    </span>
+                                </div>
+                                <div className="game-players">
+                                    👥 {game.players.length} player{game.players.length !== 1 ? 's' : ''}
+                                </div>
+                            </div>
+                            <button
+                                className="join-button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleJoinGame(game);
+                                }}
+                            >
+                                Join
+                            </button>
                         </li>
                     ))}
                 </ul>

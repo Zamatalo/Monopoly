@@ -2,10 +2,6 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {World} from "../World";
 import {Object3D, Quaternion, Vector3} from "three";
 
-interface DiceState {
-    pos: { x: number, y: number, z: number };
-    rot: { x: number, y: number, z: number, w: number };
-}
 export class Dice {
     model!: Object3D;
     constructor() {

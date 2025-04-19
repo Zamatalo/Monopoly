@@ -13,14 +13,13 @@
     "@apollo/client": "^3.13.7",
     "@react-three/drei": "^10.0.6",
     "@react-three/fiber": "^9.1.2",
-    "graphql": "^16.10.0",
     "graphql-ws": "^6.0.4",
     "gsap": "^3.12.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.5.0",
+    "react-router": "^7.5.0",
     "three": "^0.175.0",
-    "zustand": "^5.0.3"
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
