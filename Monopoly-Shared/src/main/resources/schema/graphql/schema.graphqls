@@ -32,10 +32,10 @@ type GameDTO {
 
 type PlayerDTO {
     playerId: ID
+    playerName: String
     color: PlayerColors
     balance: Int
     position: Int
-    name:String
     ownedProperties: [PropertyDTO]
     inJail:Boolean
 }

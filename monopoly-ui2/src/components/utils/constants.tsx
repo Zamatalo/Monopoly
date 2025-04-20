@@ -17,6 +17,12 @@ export enum PlayerColor {
     PLAYER_BLUE = 'PLAYER_BLUE',
     PLAYER_YELLOW = 'PLAYER_YELLOW',
 }
+export const ColorHexMap: Record<any,any> = {
+    PLAYER_RED: '#ff4d4d',
+    PLAYER_BLUE: '#4d79ff',
+    PLAYER_GREEN: '#4dff88',
+    PLAYER_YELLOW: '#ffe44d',
+};
 
 export enum GameState {
     STARTED = 'STARTED',

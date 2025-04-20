@@ -1,8 +1,8 @@
 import {PlayerDTO} from "./PlayerDTO";
-import {GameState} from "../utils/constants";
-import {Object3D} from 'three';
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import WorldSingleton from "../utils/WorldSingleton";
+import WorldSingleton from "../../stores/WorldSingleton";
+import {GameState, PlayerColor} from "../utils/constants";
+import {Object3D} from "three";
 
 export class GameDTO {
     gameId: string;
@@ -12,23 +12,34 @@ export class GameDTO {
     createdTime: Date;
     model: Object3D | undefined;
 
-    constructor(data: GameDTO) {
-        this.gameId = data.gameId;
-        this.gameState = data.gameState;
-        this.players = data.players.map(PlayerDTO.fromRaw);
-        this.currentPlayerIndex = data.currentPlayerIndex;
-        this.createdTime = new Date(data.createdTime);
+    constructor({gameId, gameState, players, currentPlayerIndex,createdTime}: GameDTO) {
+        this.gameId = gameId;
+        this.gameState = gameState;
+        this.players = players;
+        this.currentPlayerIndex = currentPlayerIndex;
+        this.createdTime = createdTime;
     }
 
     static fromRaw(raw: any): GameDTO {
         return new GameDTO({
             ...raw,
-            players: raw.players || [],
+            players: raw.players ? raw.players.map((player: any) => PlayerDTO.fromRaw(player)) : [],
             createdTime: raw.createdTime,
         });
     }
 
+    updateFromRaw(raw: any): void {
+        this.gameState = raw.gameState;
+        this.currentPlayerIndex = raw.currentPlayerIndex;
+        this.players = raw.players.map((player: any) => PlayerDTO.fromRaw(player));
+    }
+
     async loadBoardModel(): Promise<void> {
+        if (this.model) {
+            console.log('Board model already loaded');
+            return;
+        }
+
         const boardPath = '/assets/models/monopolyBoard.glb';
         const loader = new GLTFLoader();
         const world = WorldSingleton.getInstance();
@@ -39,15 +50,15 @@ export class GameDTO {
                 (gltf) => {
                     this.model = gltf.scene;
                     this.model.position.set(0, 0, 0);
-                    this.model.userData = {isBoard: true};
+                    this.model.userData = { isBoard: true };
                     this.model.scale.set(1, 1, 1);
-                    this.model.traverse((obj) => {
+                    this.model.traverse((obj:any) => {
                         if (obj.castShadow !== undefined) {
                             obj.receiveShadow = true;
                         }
                     });
-                    world.addToScene(this.model);
 
+                    world.addToScene(this.model);
                     console.log('Board model loaded');
                     resolve();
                 },
@@ -60,5 +71,3 @@ export class GameDTO {
         });
     }
 }
-
-

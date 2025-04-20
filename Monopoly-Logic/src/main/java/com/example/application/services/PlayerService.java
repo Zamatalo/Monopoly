@@ -23,6 +23,7 @@ public class PlayerService {
                         Player.builder().playerId(playerId).color(color).build()
                 ));
     }
+
     @Transactional
     public Optional<Player> findPlayer(UUID playerId) {
         return playerRepository.findById(playerId);

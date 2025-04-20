@@ -1,10 +1,10 @@
 type Mutation {
-    rollDice(gameId: ID!, playerId: ID!): GameDTO
+    rollDice(gameId: ID!, playerId: ID!): Int
     joinToGame(gameId: ID!, playerName: String!,playerColor:PlayerColors!,playerId:ID!):GameDTO
     createNewGame:GameDTO
 }
 
 type Subscription {
     gameUpdated(gameId:ID!):GameDTO
-    diceUpdated(gameId:ID):Boolean
+    diceUpdated(gameId:ID!):Boolean
 }

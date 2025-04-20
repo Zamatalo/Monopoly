@@ -1,14 +1,14 @@
-# Query.findGameById: GameDTO!
+# Query.findGameByPlayerId: GameDTO
                  
 ## Arguments
 | Name | Description | Required | Type |
 | :--- | :---------- | :------: | :--: |
-| gameId |  | ✅ | ID! |
+| playerId |  | ✅ | ID! |
             
 ## Example
 ```graphql
 {
-  findGameById(gameId: "random12345") {
+  findGameByPlayerId(playerId: "random12345") {
     gameId
     players
     currentPlayerIndex

@@ -1,81 +1,89 @@
 import {useEffect, useRef, useState} from 'react';
-import WorldSingleton from '../components/utils/WorldSingleton';
-import {useMutation, useQuery, useSubscription} from "@apollo/client";
-import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, ROLL_DICE} from "../graphql/queries";
-import GameSingleton from "../components/utils/GameSingleton";
-import {updateGame} from "../stores/GameEnvironment";
+import {useQuery, useSubscription} from "@apollo/client";
+import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, GET_PLAYER} from "../graphql/queries";
+import GameSingleton from "../stores/GameSingleton";
 import {GameDTO} from "../components/models/GameDTO";
-import UIGameInterfaceProps from "../components/UIGameInterfaceProps";
+import UIGameInterface from "../components/UIGameInterface";
 import "../styles/gameView.css";
+import {useParams} from "react-router";
+import WorldSingleton from '../stores/WorldSingleton';
+import {resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
+import CurrentPlayerSingleton from "../stores/CurrentPlayerSingleton";
+import {PlayerDTO} from "../components/models/PlayerDTO";
 
 export const GameView = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const [game, setGame] = useState<GameDTO | null>(null);
     const [sceneInitialized, setSceneInitialized] = useState(false);
+    const {gameId} = useParams<{ gameId: string }>();
     const {data: gameData, loading: loadingGame} = useQuery(GET_FIND_BY_ID, {
-        variables: {gameId: game?.gameId ?? ''}
+        variables: {gameId},
+        fetchPolicy: 'cache-and-network',
     });
 
-    const {data, error} = useSubscription(GAME_UPDATED_SUBSCRIPTION, {
+    const {data: findPlayer} = useQuery(GET_PLAYER, {
         variables: {
-            gameId: game?.gameId,
-            playerId: 1,
-
+            playerId: localStorage.getItem('playerId')
         },
+        fetchPolicy: 'cache-and-network',
+    });
+
+    useSubscription(GAME_UPDATED_SUBSCRIPTION, {
+        variables: {gameId},
+        fetchPolicy: 'network-only',
         onData: ({data}) => {
-            console.log('Game update received:', data);
             const updatedGame = data?.data?.gameUpdated;
             if (updatedGame) {
-                updateGame(GameDTO.fromRaw(updatedGame));
+                updateGame(updatedGame);
             }
         }
     });
 
-    const [rollDice] = useMutation(ROLL_DICE);
-
-
     useEffect(() => {
-        const restored = GameSingleton.tryRestore();
-        if (restored) {
-            setGame(restored);
-        } else if (gameData?.getGameById) {
-            const g = GameSingleton.initialize(gameData.getGameById);
-            setGame(g);
+        if (gameData && !sceneInitialized && findPlayer) {
+            const container = containerRef.current;
+            if (!container) return;
+            WorldSingleton.getInstance(container);
+
+            const initializedGame = gameData?.findGameById;
+            GameSingleton.initialize(initializedGame);
+
+            if (findPlayer?.getPlayer) {
+                const currentPlayer = findPlayer.getPlayer;
+                CurrentPlayerSingleton.initialize(currentPlayer);
+            } else {
+                console.error("No player data found in findPlayer", findPlayer);
+            }
+
+            setSceneInitialized(true);
         }
-    }, [gameData]);
+    }, [gameData, findPlayer]);
 
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container || !game) return;
-        WorldSingleton.getInstance(container);
-    }, [game]);
+        if (!sceneInitialized || !findPlayer?.getPlayer) return;
 
-    useEffect(() => {
-        if (!game || !game.players || sceneInitialized) return;
 
+        const game = GameSingleton.getInstance();
         game.loadBoardModel();
-        game.players.forEach((player) => {
-            player.loadPlayerModel();
-        });
-        setSceneInitialized(true);
-    }, [game, sceneInitialized]);
+        game.players.forEach(player => player.loadPlayerModel());
+    }, [sceneInitialized, findPlayer]);
+
 
     useEffect(() => {
         return () => {
             console.log("Cleaning up");
-            WorldSingleton.reset();
-            GameSingleton.reset();
+            const container = containerRef.current;
+            if (container && container.children.length > 0) {
+                container.removeChild(container.children[0]);
+            }
+            resetGameEnvironment();
         };
     }, []);
 
     return (
         <div className="game-view">
             <div ref={containerRef} className="canvas"/>
-            {game && (
-                <UIGameInterfaceProps></UIGameInterfaceProps>
-            )}
+            {sceneInitialized && <UIGameInterface/>}
         </div>
     );
-
 };

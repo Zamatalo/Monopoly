@@ -1,7 +1,7 @@
 type Query {
-    findGameById(id: ID!): GameDTO!
+    findGameById(gameId:ID!): GameDTO!
     getActiveGames:[GameDTO!]!
-    getFreeColorsForGame(id:ID!):[String]
+    getFreeColorsForGame(gameId:ID!):[String]
     findGameByPlayerId(playerId:ID!):GameDTO
     getPlayer(playerId:ID!):PlayerDTO
 }

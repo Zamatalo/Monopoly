@@ -51,9 +51,20 @@ export class World {
         this.setupLighting()
         this.renderer.setAnimationLoop(this.animate);
     }
+
     addToScene(object: THREE.Object3D) {
         this.scene.add(object);
     }
+
+    reattachCanvas(container: HTMLElement) {
+        if (this.renderer.domElement.parentElement !== container) {
+            container.appendChild(this.renderer.domElement);
+            this.renderer.setSize(container.clientWidth, container.clientHeight);
+            this.camera.aspect = container.clientWidth / container.clientHeight;
+            this.camera.updateProjectionMatrix();
+        }
+    }
+
     private setupLighting() {
         let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
@@ -99,10 +110,23 @@ export class World {
         document.body.appendChild(stats.dom);
     }
 
+
+
+
     animate = () => {
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     };
 
-
+    dispose() {
+        while (this.scene.children.length > 0) {
+            const child = this.scene.children[0];
+            this.scene.remove(child);
+            if ((child as any).dispose) {
+                (child as any).dispose();
+            }
+        }
+        this.renderer.dispose();
+        this.controls.dispose();
+    }
 }
