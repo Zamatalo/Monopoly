@@ -68,7 +68,7 @@ public class GameController {
     public GameDTO findGameById(@Argument("gameId") UUID id) {
         return gameService.findById(id)
                 .map(GameMapper.INSTANCE::GameToGameDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+                .orElseThrow(() ->  new IllegalArgumentException("Game not found"));
     }
 
     @QueryMapping

@@ -2,7 +2,7 @@ import {useMutation, useQuery} from '@apollo/client';
 import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, GET_GAME_BY_PLAYER_ID, JOIN_GAME_MUTATION} from '../graphql/queries';
 import {GameDTO} from '../components/models/GameDTO';
 import {useNavigate} from 'react-router';
-import GameSingleton from '../stores/GameSingleton';
+import GameSingleton from '../stores/singletons/GameSingleton';
 import {useEffect, useState} from 'react';
 import '../styles/lobby.css';
 import {PlayerColor} from "../components/utils/constants";
@@ -97,6 +97,10 @@ export const LobbyView = () => {
 
     return (
         <div className="lobby-container">
+            <button onClick={
+                () => localStorage.setItem('playerId', crypto.randomUUID())
+            }style={{width:"fit-content"}}>REGENERATE PLAYERID (DEBUG)
+            </button>
             <div className="lobby-header">
                 <h1>Active Games</h1>
             </div>
@@ -140,7 +144,7 @@ export const LobbyView = () => {
                             <div className="game-icon">🎮</div>
                             <div className="game-info">
                                 <div className="game-title">
-                                    {game.gameId}
+                                    {game.gameId.slice(0,30)}...
                                     <span className={`chip ${game.gameState === 'WAITING' ? 'warning' : 'success'}`}>
                                         {game.gameState}
                                     </span>

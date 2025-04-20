@@ -27,6 +27,7 @@ public class Game {
 
     @ToString.Exclude
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OrderColumn(name = "player_order")
     private List<Player> players = new ArrayList<>();
 
     private int currentPlayerIndex = 0;

@@ -161,3 +161,11 @@ export const ROLL_DICE = gql`
     }
 `;
 
+export const DICE_UPDATED_SUBSCRIPTION = gql`
+    subscription DiceUpdated($gameId: ID!) {
+        diceUpdated(gameId: $gameId) {
+            pos
+            rot
+        }
+    }
+`

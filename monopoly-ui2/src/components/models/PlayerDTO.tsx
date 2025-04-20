@@ -3,7 +3,7 @@ import {PlayerColor, positions} from "../utils/constants";
 import gsap from "gsap";
 import {PropertyDTO} from "./PropertyDTO";
 import {Object3D} from "three";
-import WorldSingleton from "../../stores/WorldSingleton";
+import WorldSingleton from "../../stores/singletons/WorldSingleton";
 
 export class PlayerDTO {
     playerId: string;

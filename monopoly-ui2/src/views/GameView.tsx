@@ -1,15 +1,14 @@
 import {useEffect, useRef, useState} from 'react';
 import {useQuery, useSubscription} from "@apollo/client";
-import {GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, GET_PLAYER} from "../graphql/queries";
-import GameSingleton from "../stores/GameSingleton";
-import {GameDTO} from "../components/models/GameDTO";
-import UIGameInterface from "../components/UIGameInterface";
+import {DICE_UPDATED_SUBSCRIPTION, GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, GET_PLAYER} from "../graphql/queries";
+import GameSingleton from "../stores/singletons/GameSingleton";
+import UIGameInterface from "./UIGameInterface";
 import "../styles/gameView.css";
 import {useParams} from "react-router";
-import WorldSingleton from '../stores/WorldSingleton';
-import {resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
-import CurrentPlayerSingleton from "../stores/CurrentPlayerSingleton";
-import {PlayerDTO} from "../components/models/PlayerDTO";
+import WorldSingleton from '../stores/singletons/WorldSingleton';
+import {diceUpdate, resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
+import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
+import {Dice} from "../components/models/Dice";
 
 export const GameView = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -29,7 +28,7 @@ export const GameView = () => {
 
     useSubscription(GAME_UPDATED_SUBSCRIPTION, {
         variables: {gameId},
-        fetchPolicy: 'network-only',
+        fetchPolicy:"standby",
         onData: ({data}) => {
             const updatedGame = data?.data?.gameUpdated;
             if (updatedGame) {
@@ -38,6 +37,17 @@ export const GameView = () => {
         }
     });
 
+    useSubscription(DICE_UPDATED_SUBSCRIPTION, {
+        variables: {gameId},
+        fetchPolicy: 'network-only',
+        onData: ({data}) => {
+            const updatedGame = data?.data?.diceUpdated;
+            console.log(data)
+            if (updatedGame) {
+                diceUpdate(updatedGame);
+            }
+        }
+    });
     useEffect(() => {
         if (gameData && !sceneInitialized && findPlayer) {
             const container = containerRef.current;
@@ -66,6 +76,8 @@ export const GameView = () => {
         const game = GameSingleton.getInstance();
         game.loadBoardModel();
         game.players.forEach(player => player.loadPlayerModel());
+        const dice = new Dice();
+        dice.loadDice()
     }, [sceneInitialized, findPlayer]);
 
 

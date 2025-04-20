@@ -1,66 +1,37 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {World} from "./World";
-import {Object3D, Quaternion, Vector3} from "three";
+import {Object3D} from "three";
+import WorldSingleton from "../../stores/singletons/WorldSingleton";
+
 
 export class Dice {
-    model!: Object3D;
-
-    getDiceTopFace(): number {
-        const faceNormals = [
-            new Vector3(0, 0, -1),  // 1
-            new Vector3(1, 0, 0),    // 2
-            new Vector3(0, 1, 0),    // 3
-            new Vector3(0, -1, 0),   // 4
-            new Vector3(-1, 0, 0),   // 5
-            new Vector3(0, 0, 1)     // 6
-        ];
-
-        const diceRot = new Quaternion();
-        this.model.getWorldQuaternion(diceRot);
-
-        let maxDot = -Infinity;
-        let topFace = 1;
-        const upVector = new Vector3(0, 1, 0);
-
-        for (let i = 0; i < faceNormals.length; i++) {
-            const normal = faceNormals[i].clone();
-            normal.applyQuaternion(diceRot).normalize();
-
-            const dot = normal.dot(upVector);
-
-            if (dot > maxDot) {
-                maxDot = dot;
-                topFace = i + 1;
-            }
-        }
-        return topFace;
-    }
-
-    loadDice(world: World) {
+    async loadDice(): Promise<void> {
         const boardPath = "/assets/models/dice3.glb";
         const loader = new GLTFLoader();
+        const world = WorldSingleton.getInstance();
 
-        return () => {
+        return new Promise((resolve, reject) => {
             loader.load(
                 boardPath,
                 (gltf: any) => {
-                    this.model = gltf.scene;
-                    this.model.userData = {isDice: true};
-                    this.model.traverse((obj: any) => {
+                    const model = gltf.scene;
+                    model.userData = {isDice: true};
+                    model.position.y = 0.36;
+                    model.traverse((obj: any) => {
                         if (obj.castShadow !== undefined) {
                             obj.castShadow = true;
                             obj.receiveShadow = true;
                         }
                     })
-                    world.scene.add(this.model);
-
+                    world.scene.add(model);
+                    resolve()
                     console.log('Dice model loaded');
                 },
                 undefined,
                 (error: any) => {
                     console.error(`Error loading model: ${error}`);
+                    reject(error);
                 }
             );
-        };
+        });
     }
 }

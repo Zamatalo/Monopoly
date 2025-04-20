@@ -1,6 +1,6 @@
 import {PlayerDTO} from "./PlayerDTO";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import WorldSingleton from "../../stores/WorldSingleton";
+import WorldSingleton from "../../stores/singletons/WorldSingleton";
 import {GameState, PlayerColor} from "../utils/constants";
 import {Object3D} from "three";
 

@@ -1,4 +1,4 @@
-import { World } from "../components/models/World";
+import { World } from "../../components/models/World";
 
 class WorldSingleton {
     private static instance: World | null = null;
