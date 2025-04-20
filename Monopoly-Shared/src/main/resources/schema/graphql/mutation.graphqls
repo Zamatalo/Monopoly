@@ -4,7 +4,3 @@ type Mutation {
     createNewGame:GameDTO
 }
 
-type Subscription {
-    gameUpdated(gameId:ID!):GameDTO
-    diceUpdated(gameId:ID!):Boolean
-}

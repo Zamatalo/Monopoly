@@ -4,12 +4,11 @@ import com.example.application.types.GameDTO;
 import jakarta.annotation.PreDestroy;
 import org.reactivestreams.Publisher;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+/// Publisher for GraphQL subscriptions
 @Component
 public class GamePublisher {
     private final Map<String, Sinks.Many<GameDTO>> sinksMap = new ConcurrentHashMap<>();

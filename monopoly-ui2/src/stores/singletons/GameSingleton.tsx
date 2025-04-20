@@ -1,4 +1,4 @@
-import {GameDTO} from "../components/models/GameDTO";
+import {GameDTO} from "../../components/models/GameDTO";
 
 class GameSingleton {
     private static instance: GameDTO | null = null;

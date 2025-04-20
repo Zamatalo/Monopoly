@@ -1,8 +1,8 @@
-import GameSingleton from "./GameSingleton";
+import GameSingleton from "./singletons/GameSingleton";
 import {GameDTO} from "../components/models/GameDTO";
-import WorldSingleton from "./WorldSingleton";
+import WorldSingleton from "./singletons/WorldSingleton";
 import {Object3D} from "three";
-import CurrentPlayerSingleton from "./CurrentPlayerSingleton";
+import CurrentPlayerSingleton from "./singletons/CurrentPlayerSingleton";
 
 export function updateGame(newGameRaw: GameDTO) {
     const oldGame = GameSingleton.getInstance();
@@ -30,6 +30,19 @@ export function updateGame(newGameRaw: GameDTO) {
     GameSingleton.update(newGame);
     const currentPlayer = newGame.players[newGame.currentPlayerIndex];
     CurrentPlayerSingleton.update(currentPlayer);
+}
+
+export function diceUpdate(dicePosAndRot:any){
+    const world = WorldSingleton.getInstance();
+    const pos = JSON.parse(dicePosAndRot.pos);
+    const rot = JSON.parse(dicePosAndRot.rot);
+
+    world.scene.children.forEach(child => {
+        if (child.userData.isDice) {
+            child.position.set(pos.x, pos.y, pos.z);
+            child.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+        }
+    })
 }
 
 export function resetGameEnvironment() {

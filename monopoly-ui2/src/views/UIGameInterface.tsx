@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ColorHexMap, GameState } from "./utils/constants";
-import GameSingleton from "../stores/GameSingleton";
+import { ColorHexMap, GameState } from "../components/utils/constants";
+import GameSingleton from "../stores/singletons/GameSingleton";
 import "../styles/gameInterface.css";
 import { useMutation } from "@apollo/client";
 import { ROLL_DICE } from "../graphql/queries";
-import CurrentPlayerSingleton from "../stores/CurrentPlayerSingleton";
-import { PlayerDTO } from "./models/PlayerDTO";
+import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
+import { PlayerDTO } from "../components/models/PlayerDTO";
 
 
 const UIGameInterface: React.FC = () => {
@@ -21,8 +21,6 @@ const UIGameInterface: React.FC = () => {
 
     const handleRollDice = async () => {
         if ( !game?.gameId || !currentPlayer?.playerId) return;
-
-
         try {
             const { data } = await rollDice({
                 variables: {

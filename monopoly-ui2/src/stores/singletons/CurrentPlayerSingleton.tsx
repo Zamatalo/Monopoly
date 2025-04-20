@@ -1,5 +1,4 @@
-import {PlayerDTO} from "../components/models/PlayerDTO";
-import {GameDTO} from "../components/models/GameDTO";
+import {PlayerDTO} from "../../components/models/PlayerDTO";
 
 class CurrentPlayerInstance {
     private static instance: PlayerDTO | null = null;

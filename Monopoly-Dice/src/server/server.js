@@ -1,60 +1,47 @@
-import {createClient} from "redis";
+import { createClient } from "redis";
+import * as RAPIER from "@dimforge/rapier3d-compat";
 
-const RAPIER = await import('@dimforge/rapier3d-compat');
+await RAPIER.init();
+const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0);
+const world = new RAPIER.World(gravity);
+const games = new Map();
 
-await RAPIER.init()
-const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0)
-const world = new RAPIER.World(gravity)
-let games = new Map();
+const sub = createClient();
+const pub = createClient();
+await sub.connect();
+await pub.connect();
 
 
-const redisClient = createClient();
-await redisClient.connect();
+await sub.pSubscribe('game:*:dice-roll-action', async (message, channel) => {
+    const match = channel.match(/^game:(.*):dice-roll-action$/);
+    if (!match) return;
+    const gameId = match[1];
 
-await redisClient.subscribe('game:game_roll', (message) => {
-    const { gameId } = JSON.parse(message);
-    const game = games.get(gameId) || new DiceGame(gameId);
+    let game = games.get(gameId);
+    if (!game) {
+        game = new DiceGame(gameId);
+        games.set(gameId, game);
+    }
     game.throwDice();
 });
-function sendDiceResult(gameId, result) {
-    redisClient.publish('dice_result', JSON.stringify({
-        gameId,
-        value: result
-    }));
-}
-async function validateSession(sessionId, gameId) {
-    const session = await redisClient.hGetAll(`session:${sessionId}`);
-    if (!session || session.gameId !== gameId) {
-        throw new Error("Invalid session");
-    }
-    await redisClient.hSet(`session:${sessionId}`, "lastActivity", new Date().toISOString());
-}
 
 class DiceGame {
     constructor(gameId) {
         this.gameId = gameId;
         this.dice = null;
+        this.resultSent = false;
         this.setupPhysics();
-        setInterval(() => {
-            this.update();
-        }, 10);
-
+        setInterval(() => this.update(), 13);
     }
 
     setupPhysics() {
-        const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed();
-        const rigidBody = world.createRigidBody(rigidBodyDesc);
-        const colliderDesc = RAPIER.ColliderDesc.cuboid(11, 0.1, 11).setTranslation(0, 0.1, 0);
-        world.createCollider(colliderDesc, rigidBody);
+        const groundBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+        const groundCollider = RAPIER.ColliderDesc.cuboid(11, 0.1, 11).setTranslation(0, 0.1, 0);
+        world.createCollider(groundCollider, groundBody);
 
-        const diceDesc = RAPIER.RigidBodyDesc.dynamic()
-            .setTranslation(0, 0.2, 0)
-            .setUserData("isDice");
-        this.dice = world.createRigidBody(diceDesc);
+        this.dice = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0.4, 0));
         const diceCollider = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
-            .setFriction(10)
-            .setMass(0.06)
-            .setRestitution(0.4);
+            .setFriction(3).setMass(1).setRestitution(0.3);
         world.createCollider(diceCollider, this.dice);
 
         this.createInboundBox();
@@ -66,31 +53,93 @@ class DiceGame {
         const rigidBodyBox = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
 
         const walls = [
-            RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, boxSize, 0), // Top
-            RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(-boxSize, boxSize / 2, 0), // Left
-            RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(boxSize, boxSize / 2, 0), // Right
-            RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, -boxSize), // Front
-            RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, boxSize) // Back
+            RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, boxSize, 0),
+            RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(-boxSize, boxSize / 2, 0),
+            RAPIER.ColliderDesc.cuboid(wallThickness, boxSize / 2, boxSize).setTranslation(boxSize, boxSize / 2, 0),
+            RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, -boxSize),
+            RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, boxSize)
         ];
 
         walls.forEach(desc => world.createCollider(desc, rigidBodyBox));
     }
 
     throwDice() {
-        this.resultSent = false;
-        const linvel = new RAPIER.Vector3(
-            (Math.random() - 0.5) * 15,
-            Math.random() * 20,
-            (Math.random() - 0.5) * 15
-        );
-        this.dice.setLinvel(linvel, true);
+        if (this.hasThrown && !this.dice.isSleeping()) return;
 
-        const angvel = new RAPIER.Vector3(
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10
+        this.hasThrown = true;
+        this.resultSent = false;
+
+        const throwStrength = 6;
+        const angleVariation = Math.PI / 4;
+
+        const direction = new RAPIER.Vector3(
+            (Math.random() - 0.5) * angleVariation,
+            0.7 + Math.random() * 0.3,
+            (Math.random() - 0.5) * angleVariation
         );
-        this.dice.setAngvel(angvel, true);
+
+        this.dice.setLinvel(
+            new RAPIER.Vector3(
+                direction.x * throwStrength,
+                direction.y * throwStrength,
+                direction.z * throwStrength
+            ),
+            true
+        );
+
+        this.dice.setAngvel(
+            new RAPIER.Vector3(
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 15
+            ),
+            true
+        );
+    }
+
+
+    rotateVectorByQuaternion(vec, quat) {
+        const x = quat.x, y = quat.y, z = quat.z, w = quat.w;
+        const vx = vec.x, vy = vec.y, vz = vec.z;
+
+        const ix =  w * vx + y * vz - z * vy;
+        const iy =  w * vy + z * vx - x * vz;
+        const iz =  w * vz + x * vy - y * vx;
+        const iw = -x * vx - y * vy - z * vz;
+
+        return new RAPIER.Vector3(
+            ix * w + iw * -x + iy * -z - iz * -y,
+            iy * w + iw * -y + iz * -x - ix * -z,
+            iz * w + iw * -z + ix * -y - iy * -x
+        );
+    }
+
+    getTopFaceFromQuaternion(quat) {
+        const faceNormals = [
+            { face: 1, normal: new RAPIER.Vector3(0, 0, -1) },  // 1
+            { face: 2, normal: new RAPIER.Vector3(1, 0, 0) },   // 2
+            { face: 3, normal: new RAPIER.Vector3(0, 1, 0) },   // 3
+            { face: 4, normal: new RAPIER.Vector3(0, -1, 0) },  // 4
+            { face: 5, normal: new RAPIER.Vector3(-1, 0, 0) },  // 5
+            { face: 6, normal: new RAPIER.Vector3(0, 0, 1) },   // 6
+        ];
+
+        const up = new RAPIER.Vector3(0, 1, 0);
+
+        let maxDot = -Infinity;
+        let topFace = 1;
+
+        for (const { face, normal } of faceNormals) {
+            const rotated = this.rotateVectorByQuaternion(normal, quat);
+            const dot = rotated.x * up.x + rotated.y * up.y + rotated.z * up.z;
+
+            if (dot > maxDot) {
+                maxDot = dot;
+                topFace = face;
+            }
+        }
+
+        return topFace;
     }
 
     update() {
@@ -99,20 +148,17 @@ class DiceGame {
         if (!this.dice.isSleeping()) {
             const pos = this.dice.translation();
             const rot = this.dice.rotation();
-            var a = {pos: pos, rot: rot}
-            publisher.publish('dice_StateUpdated', JSON.stringify(a));
+
+            pub.publish(`game:${this.gameId}:dice-update`, JSON.stringify({
+                pos, rot
+            }));
         } else if (!this.resultSent) {
-            this.sendDiceResult();
+            const topFace = this.getTopFaceFromQuaternion(this.dice.rotation());
+            pub.publish(`game:${this.gameId}:dice-topFace`, JSON.stringify({
+                gameId: this.gameId,
+                value: topFace
+            }));
             this.resultSent = true;
         }
     }
-
-    sendDiceResult() {
-        const faces = [1, 2, 3, 4, 5, 6];
-        const result = faces[Math.floor(Math.random() * faces.length)];
-        publisher.publish('dice_TopFace',JSON.stringify({gameId:this.gameId,asd:result}));
-    }
 }
-
-
-

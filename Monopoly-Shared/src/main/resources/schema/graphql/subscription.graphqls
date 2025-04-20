@@ -1,0 +1,9 @@
+type Subscription {
+    gameUpdated(gameId:ID!):GameDTO!
+    diceUpdated(gameId:ID!):DicePosition!
+}
+
+type DicePosition{
+    pos:String,
+    rot:String
+}

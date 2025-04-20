@@ -24,8 +24,13 @@ public class PlayerService {
                 ));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Optional<Player> findPlayer(UUID playerId) {
         return playerRepository.findById(playerId);
+    }
+
+    @Transactional
+    public void savePlayer(Player player) {
+        playerRepository.save(player);
     }
 }
