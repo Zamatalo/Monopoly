@@ -1,34 +1,123 @@
-import {useQuery} from '@apollo/client';
-import {GET_ACTIVE_GAMES} from '../graphql/queries';
+import {useMutation, useQuery} from '@apollo/client';
+import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, GET_GAME_BY_PLAYER_ID, JOIN_GAME_MUTATION} from '../graphql/queries';
 import {GameDTO} from '../components/models/GameDTO';
 import {useNavigate} from 'react-router';
-import GameSingleton from "../components/utils/GameSingleton";
-import {useState} from "react";
-import '../styles/lobby.css'
+import GameSingleton from '../stores/GameSingleton';
+import {useEffect, useState} from 'react';
+import '../styles/lobby.css';
+import {PlayerColor} from "../components/utils/constants";
+import {ColorPickerDialog} from "../components/ColorPickerDialog";
 
 export const LobbyView = () => {
     const navigate = useNavigate();
-    const {data, error, loading} = useQuery(GET_ACTIVE_GAMES, {
-        pollInterval: 5000,
-        fetchPolicy: 'cache-and-network',
+    /**
+     * checking if playerId exist in localstorage, if not -> generating new one
+     **/
+    const [playerId] = useState(() => {
+        let id = localStorage.getItem('playerId');
+        if (!id) {
+            id = crypto.randomUUID();
+            localStorage.setItem('playerId', id);
+        }
+
+        return id;
     });
-    const [rejoinAvailable, setrejoinAvailable] = useState(false);
-    const handleJoinGame = (game: GameDTO) => {
-        GameSingleton.initialize(game);
-        navigate(`/game/${game.gameId}`);
+
+    const [playerName, setPlayerName] = useState('');
+    const isNameEntered = playerName.trim() !== '';
+
+    const [showColorDialog, setShowColorDialog] = useState(false);
+    const [selectedGame, setSelectedGame] = useState<GameDTO | null>(null);
+
+    const [createGame] = useMutation(CREATE_GAME_MUTATION);
+    const [joinGameMutation] = useMutation(JOIN_GAME_MUTATION);
+    const [foundGameForPlayer, setFoundGameForPlayer] = useState<GameDTO | null>(null);
+    const [rejoinAvailable, setRejoinAvailable] = useState(false);
+
+    const {data: allGames, error: gamesError, loading: gamesLoading} = useQuery(GET_ACTIVE_GAMES, {
+        pollInterval: 5000,
+        fetchPolicy: 'cache-and-network'
+    });
+
+    const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
+        variables: {playerId},
+        fetchPolicy: 'cache-and-network',
+        skip: !playerId,
+    });
+
+    const games: GameDTO[] = allGames?.getActiveGames?.map(GameDTO.fromRaw) || [];
+
+    useEffect(() => {
+        if (findGameData?.findGameByPlayerId) {
+            const foundGame = GameDTO.fromRaw(findGameData.findGameByPlayerId);
+            setFoundGameForPlayer(foundGame);
+            setRejoinAvailable(true);
+        }
+    }, [findGameData]);
+
+    const handleColorSelect = (color: PlayerColor) => {
+        if (!selectedGame) return;
+        joinGameMutation({
+            variables: {
+                playerId,
+                gameId: selectedGame.gameId,
+                playerName,
+                playerColor: color,
+            },
+        }).then((response) => {
+            setSelectedGame(response.data.joinToGame);
+            joinGame()
+        });
+        setShowColorDialog(false);
+    };
+    const joinGame = () => {
+        const gameToJoin = rejoinAvailable ? foundGameForPlayer : selectedGame;
+
+        if (!gameToJoin) {
+            console.warn("No game to join.");
+            return;
+        }
+
+        GameSingleton.initialize(gameToJoin);
+        navigate(`/game/${gameToJoin.gameId}`);
     };
 
-    const games: GameDTO[] = data?.getActiveGames?.map(GameDTO.fromRaw) || [];
 
-    if (loading) return <div className="centered">
-        <div className="spinner"></div>
-    </div>;
-    if (error) return <div className="error-alert">Error: {error.message}</div>;
+    if (gamesLoading) {
+        return (
+            <div className="centered">
+                <div className="spinner"></div>
+            </div>
+        );
+    }
+
+    if (gamesError) {
+        return <div className="error-alert">Error: {gamesError.message}</div>;
+    }
 
     return (
         <div className="lobby-container">
             <div className="lobby-header">
                 <h1>Active Games</h1>
+            </div>
+
+            <div className="player-name-input">
+                <label htmlFor="playerName"></label>
+                <input
+                    type="text"
+                    id="playerName"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    placeholder="Enter your name"
+                />
+
+                <button
+                    className="button createButton"
+                    onClick={() => createGame()}
+                    disabled={!isNameEntered}
+                >
+                    Create Game
+                </button>
             </div>
 
             {!games.length ? (
@@ -38,7 +127,16 @@ export const LobbyView = () => {
             ) : (
                 <ul className="game-list">
                     {games.map(game => (
-                        <li key={game.gameId} className="game-card" onClick={() => handleJoinGame(game)}>
+                        <li
+                            key={game.gameId}
+                            className="game-card"
+                            onClick={() => {
+                                if (isNameEntered) {
+                                    setSelectedGame(game);
+                                    setShowColorDialog(true);
+                                }
+                            }}
+                        >
                             <div className="game-icon">🎮</div>
                             <div className="game-info">
                                 <div className="game-title">
@@ -51,19 +149,34 @@ export const LobbyView = () => {
                                     👥 {game.players.length} player{game.players.length !== 1 ? 's' : ''}
                                 </div>
                             </div>
+
                             <button
-                                className="join-button"
+                                className={`button ${rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'rejoinButton' : 'joinButton'}`}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleJoinGame(game);
+                                    if (rejoinAvailable && game.gameId === foundGameForPlayer?.gameId) {
+                                        setSelectedGame(game);
+                                        joinGame();
+                                    } else {
+                                        setSelectedGame(game);
+                                        setShowColorDialog(true);
+                                    }
                                 }}
+                                disabled={!isNameEntered && !(rejoinAvailable && game.gameId === foundGameForPlayer?.gameId)}
                             >
-                                Join
+                                {rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'Rejoin' : 'Join'}
                             </button>
                         </li>
                     ))}
                 </ul>
             )}
+
+            <ColorPickerDialog
+                opened={showColorDialog}
+                onClose={() => setShowColorDialog(false)}
+                onSelect={handleColorSelect}
+                takenColors={selectedGame?.players.map(p => p.color) || []}
+            />
         </div>
     );
 };

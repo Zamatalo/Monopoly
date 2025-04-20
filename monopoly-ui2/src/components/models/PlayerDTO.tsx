@@ -3,19 +3,21 @@ import {PlayerColor, positions} from "../utils/constants";
 import gsap from "gsap";
 import {PropertyDTO} from "./PropertyDTO";
 import {Object3D} from "three";
-import WorldSingleton from "../utils/WorldSingleton";
+import WorldSingleton from "../../stores/WorldSingleton";
 
 export class PlayerDTO {
     playerId: string;
+    playerName: string;
     color: PlayerColor;
     inJail: boolean;
     balance: number;
     position: number;
     ownedProperties: PropertyDTO[];
 
-    constructor({playerId, color, inJail, balance, position, ownedProperties}: PlayerDTO) {
+    constructor({playerId, color, inJail, balance, position, ownedProperties, playerName}: PlayerDTO) {
         this.playerId = playerId;
         this.color = color;
+        this.playerName = playerName;
         this.inJail = inJail;
         this.balance = balance;
         this.position = position;
@@ -23,10 +25,17 @@ export class PlayerDTO {
     }
 
     static fromRaw(raw: any): PlayerDTO {
+        if (!raw) throw new Error("Cannot construct PlayerDTO from undefined!");
         return new PlayerDTO({
             ...raw,
-            properties: raw.properties || []
+            ownedProperties: raw.ownedProperties || []
         });
+    }
+    updateFromRaw(raw: any): void {
+        this.inJail = raw.inJail;
+        this.balance = raw.balance;
+        this.position = raw.position;
+        this.ownedProperties = raw.ownedProperties || [];
     }
 
     async loadPlayerModel(): Promise<void> {
@@ -69,7 +78,7 @@ export class PlayerDTO {
         });
     }
 
-    animatePlayerMovement(targetPosition: number,model:Object3D, callback: () => void = () => {
+    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {
     }): void {
         if (!model) {
             console.error('Model not loaded yet!');

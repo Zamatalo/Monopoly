@@ -1,4 +1,4 @@
-# Query.findGameById: GameDTO!
+# Query.getFreeColorsForGame: [String]
                  
 ## Arguments
 | Name | Description | Required | Type |
@@ -8,13 +8,7 @@
 ## Example
 ```graphql
 {
-  findGameById(gameId: "random12345") {
-    gameId
-    players
-    currentPlayerIndex
-    gameState
-    createdTime
-  }
+  getFreeColorsForGame(gameId: "random12345")
 }
 
 ```

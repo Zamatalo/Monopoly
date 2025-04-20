@@ -21,7 +21,7 @@ public class Player {
     //@GeneratedValue(strategy = GenerationType.AUTO)
     private UUID playerId;
 
-    private String name;
+    private String playerName;
 
     @Enumerated(EnumType.STRING)
     private PlayerColors color;

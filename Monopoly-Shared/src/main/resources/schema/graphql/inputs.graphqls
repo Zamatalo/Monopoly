@@ -8,10 +8,10 @@ input GameDTOInput {
 
 input PlayerDTOInput {
     playerId: ID
+    playerName:String
     color: String
     balance: Int
     position:Int
-    name:String
     inJail:Boolean
     ownedProperties:[PropertiesDTOInput]
 }

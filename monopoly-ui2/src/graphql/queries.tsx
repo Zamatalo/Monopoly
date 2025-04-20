@@ -9,10 +9,10 @@ export const GET_ACTIVE_GAMES = gql`
             createdTime
             players {
                 playerId
+                playerName
                 color
                 balance
                 position
-                name
                 inJail
             }
         }
@@ -23,23 +23,25 @@ export const GET_PLAYER = gql`
     query GetPlayer($playerId: ID!) {
         getPlayer(playerId: $playerId) {
             playerId
+            playerName
             color
             balance
             position
-            name
             inJail
         }
     }
+
 `
 
 export const GET_FIND_BY_ID = gql`
     query FindGameById($gameId: ID!) {
-        findGameById(id:$gameId ) {
+        findGameById(gameId:$gameId ) {
             gameId
             currentPlayerIndex
             gameState
             players {
                 playerId
+                playerName
                 color
                 balance
                 position
@@ -63,7 +65,7 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
             players {
                 playerId
                 color
-                name
+                playerName
                 balance
                 position
                 inJail
@@ -88,7 +90,7 @@ export const JOIN_GAME_MUTATION = gql`
             players {
                 playerId
                 color
-                name
+                playerName
                 balance
                 position
                 inJail
@@ -113,7 +115,7 @@ export const CREATE_GAME_MUTATION = gql`
             players {
                 playerId
                 color
-                name
+                playerName
                 balance
                 position
                 inJail
@@ -138,7 +140,7 @@ export const GET_GAME_BY_PLAYER_ID = gql`
             players {
                 playerId
                 color
-                name
+                playerName
                 balance
                 position
                 inJail
@@ -155,12 +157,7 @@ export const GET_GAME_BY_PLAYER_ID = gql`
 
 export const ROLL_DICE = gql`
     mutation RollDice($gameId: ID!, $playerId: ID!) {
-        rollDice(gameId: $gameId, playerId: $playerId) {
-            gameId
-            currentPlayerIndex
-            gameState
-            createdTime
-        }
+        rollDice(gameId: $gameId, playerId: $playerId)
     }
 `;
 

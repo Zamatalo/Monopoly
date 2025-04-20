@@ -14,7 +14,7 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class PlayerController {
-    private PlayerService playerService;
+    private final PlayerService playerService;
 
     @QueryMapping
     public PlayerDTO getPlayer(@Argument("playerId") UUID playerId){
