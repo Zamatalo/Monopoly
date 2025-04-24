@@ -21,16 +21,16 @@ public class DicePublisher {
         }
     }
 
-    public Publisher<DicePosition> getPublisherForGame(String gameId) {
+    public Publisher<DicePosition> getPublisherForDice(String gameId) {
         return sinksMap.computeIfAbsent(gameId, _ -> Sinks.many()
                 .replay().latest()).asFlux();
     }
 
-    public Flux<DicePosition> getPublisherForGameAsFlux(String gameId) {
-        return Flux.from(getPublisherForGame(gameId));
+    public Flux<DicePosition> getPublisherForDiceAsFlux(String gameId) {
+        return Flux.from(getPublisherForDice(gameId));
     }
 
-    public void removeGamePublisher(String gameId) {
+    public void removeDicePublisher(String gameId) {
         Sinks.Many<DicePosition> sink = sinksMap.remove(gameId);
         if (sink != null) {
             sink.tryEmitComplete();

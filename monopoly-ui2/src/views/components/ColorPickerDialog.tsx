@@ -1,6 +1,6 @@
 import React from 'react';
-import '../styles/ColorPickerDialog.css';
-import {PlayerColor} from "./utils/constants";
+import '../../styles/ColorPickerDialog.css';
+import {PlayerColor} from "../../components/utils/constants";
 
 interface ColorPickerDialogProps {
     opened: boolean;

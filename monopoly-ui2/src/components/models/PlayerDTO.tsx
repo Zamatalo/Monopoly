@@ -31,6 +31,7 @@ export class PlayerDTO {
             ownedProperties: raw.ownedProperties || []
         });
     }
+
     updateFromRaw(raw: any): void {
         this.inJail = raw.inJail;
         this.balance = raw.balance;
@@ -78,8 +79,7 @@ export class PlayerDTO {
         });
     }
 
-    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {
-    }): void {
+    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {}): void {
         if (!model) {
             console.error('Model not loaded yet!');
             return;

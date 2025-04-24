@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ColorHexMap, GameState } from "../components/utils/constants";
-import GameSingleton from "../stores/singletons/GameSingleton";
-import "../styles/gameInterface.css";
-import { useMutation } from "@apollo/client";
-import { ROLL_DICE } from "../graphql/queries";
-import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
-import { PlayerDTO } from "../components/models/PlayerDTO";
-
+import GameSingleton from "../../stores/singletons/GameSingleton";
+import {useMutation} from "@apollo/client";
+import {ROLL_DICE} from "../../graphql/queries";
+import {PlayerDTO} from "../../components/models/PlayerDTO";
+import CurrentPlayerSingleton from "../../stores/singletons/CurrentPlayerSingleton";
+import {ColorHexMap, GameState} from "../../components/utils/constants";
+import '../../styles/gameInterface.css'
 
 const UIGameInterface: React.FC = () => {
     const game = GameSingleton.getInstance();

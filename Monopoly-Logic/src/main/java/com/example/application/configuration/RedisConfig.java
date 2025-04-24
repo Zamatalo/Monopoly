@@ -1,6 +1,6 @@
 package com.example.application.configuration;
 
-import com.example.application.services.RedisMessageSubscriber;
+import com.example.application.redis.RedisMessageSubscriber;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
@@ -27,7 +27,7 @@ public class RedisConfig {
             RedisMessageSubscriber messageSubscriber) {
         StatefulRedisPubSubConnection<String, String> connection = redisClient.connectPubSub();
         connection.addListener(messageSubscriber);
-        connection.async().psubscribe("*");
+        connection.async().psubscribe("game:*");
         return connection;
     }
 }

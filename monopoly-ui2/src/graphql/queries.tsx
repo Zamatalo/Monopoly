@@ -46,9 +46,9 @@ export const GET_FIND_BY_ID = gql`
                 balance
                 position
                 ownedProperties {
-                    propertyName
+                    displayName
                     cost
-                    rent
+                    boardPosition
                     upgradable
                 }
             }
@@ -70,9 +70,9 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
                 position
                 inJail
                 ownedProperties {
-                    propertyName
+                    displayName
                     cost
-                    rent
+                    boardPosition
                     upgradable
                 }
             }
@@ -95,9 +95,9 @@ export const JOIN_GAME_MUTATION = gql`
                 position
                 inJail
                 ownedProperties {
-                    propertyName
+                    displayName
                     cost
-                    rent
+                    boardPosition
                     upgradable
                 }
             }
@@ -120,9 +120,9 @@ export const CREATE_GAME_MUTATION = gql`
                 position
                 inJail
                 ownedProperties {
-                    propertyName
+                    displayName
                     cost
-                    rent
+                    boardPosition
                     upgradable
                 }
             }
@@ -145,9 +145,9 @@ export const GET_GAME_BY_PLAYER_ID = gql`
                 position
                 inJail
                 ownedProperties {
-                    propertyName
+                    displayName
                     cost
-                    rent
+                    boardPosition
                     upgradable
                 }
             }

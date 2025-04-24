@@ -22,9 +22,8 @@ public class GamePublisher {
     }
 
     public Publisher<GameDTO> getPublisherForGame(String gameId) {
-        return sinksMap.computeIfAbsent(gameId, id -> {
-            return Sinks.many().replay().latest();
-        }).asFlux();
+        return sinksMap.computeIfAbsent(gameId, id ->
+                Sinks.many().replay().latest()).asFlux();
     }
 
     @PreDestroy
