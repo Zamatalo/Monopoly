@@ -17,8 +17,8 @@ input PlayerDTOInput {
 }
 
 input PropertiesDTOInput{
-    propertyName:PropertyNames
+    displayName:String
+    boardPosition:Int
     cost:Int
-    rent:Int
     upgradable:Boolean
 }

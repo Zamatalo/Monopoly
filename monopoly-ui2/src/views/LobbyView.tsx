@@ -6,7 +6,7 @@ import GameSingleton from '../stores/singletons/GameSingleton';
 import {useEffect, useState} from 'react';
 import '../styles/lobby.css';
 import {PlayerColor} from "../components/utils/constants";
-import {ColorPickerDialog} from "../components/ColorPickerDialog";
+import {ColorPickerDialog} from "./components/ColorPickerDialog";
 
 export const LobbyView = () => {
     const navigate = useNavigate();
@@ -70,6 +70,7 @@ export const LobbyView = () => {
         });
         setShowColorDialog(false);
     };
+
     const joinGame = () => {
         const gameToJoin = rejoinAvailable ? foundGameForPlayer : selectedGame;
 
@@ -145,7 +146,7 @@ export const LobbyView = () => {
                             <div className="game-info">
                                 <div className="game-title">
                                     {game.gameId.slice(0,30)}...
-                                    <span className={`chip ${game.gameState === 'WAITING' ? 'warning' : 'success'}`}>
+                                    <span className={`chip ${game.gameState === 'STARTED' ? 'warning' : 'success'}`}>
                                         {game.gameState}
                                     </span>
                                 </div>

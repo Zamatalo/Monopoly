@@ -4,6 +4,8 @@ package com.example.application.services;
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,12 +14,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GameService {
     private final GameRepo gameRepo;
-
-    public GameService(GameRepo gameRepo) {
-        this.gameRepo = gameRepo;
-    }
 
     @Transactional(readOnly = true)
     public List<Game> findAll() {
@@ -28,6 +27,7 @@ public class GameService {
     public Optional<Game> findById(UUID id) {
         return gameRepo.findById(id);
     }
+
     @Transactional
     public Game save(Game game) {
         return gameRepo.save(game);
@@ -44,7 +44,8 @@ public class GameService {
         var gm = gameRepo.save(game);
        // return gm.getPlayers().stream().filter(e -> e.getPlayerId().equals(player.getPlayerId())).findFirst().orElse(null);
     }
-    @Transactional
+
+    @Transactional(readOnly = true)
     public Optional<Game> findGameByPlayerId (UUID playerId) {
         return gameRepo.findGameByPlayerId(playerId);
     }

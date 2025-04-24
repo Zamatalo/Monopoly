@@ -1,6 +1,7 @@
-package com.example.application.services;
+package com.example.application.redis;
 
 import com.example.application.components.DicePublisher;
+import com.example.application.controller.GameController;
 import com.example.application.controller.GameSubscription;
 import com.example.application.types.DicePosition;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +30,10 @@ public class RedisMessageSubscriber implements RedisPubSubListener<String, Strin
             }
             String gameId = parts[1];
 
+            /**
+             * listening for updates from dice-server, and publishing it to subscribed players
+             *
+             */
             if (channel.endsWith(":dice-update")) {
                 JsonNode jsonNode = objectMapper.readTree(message);
                 DicePosition position = DicePosition.newBuilder()
@@ -37,8 +42,13 @@ public class RedisMessageSubscriber implements RedisPubSubListener<String, Strin
                         .build();
                 dicePublisher.publish(gameId, position);
             }
+
+            /**
+             * listening for topFace and completing the future in
+             * @see GameController.rollDice
+             */
             if (channel.endsWith(":dice-topFace")) {
-                GameSubscription.completeDiceFuture(UUID.fromString(gameId), objectMapper.readTree(message).get("value").asInt());
+                GameController.completeDiceFuture(UUID.fromString(gameId), objectMapper.readTree(message).get("value").asInt());
             }
         } catch (Exception e) {
             log.error("Error processing Redis message: {}", e.getMessage(), e);

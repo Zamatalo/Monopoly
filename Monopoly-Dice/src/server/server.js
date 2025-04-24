@@ -31,7 +31,7 @@ class DiceGame {
         this.dice = null;
         this.resultSent = false;
         this.setupPhysics();
-        setInterval(() => this.update(), 13);
+        setInterval(() => this.update(), 14);
     }
 
     setupPhysics() {

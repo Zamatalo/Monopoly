@@ -1,15 +1,16 @@
 package com.example.application.entity;
 
 import com.example.application.PlayerColors;
+import com.example.application.PropertyNames;
+import com.example.application.util.PropertyData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
@@ -31,6 +32,17 @@ public class Player {
     private boolean inJail = false;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private List<Property> ownedProperties = new ArrayList<>();
+    @CollectionTable(name = "ownedProperties", joinColumns = @JoinColumn(name = "player_id"))
+    private List<PropertyData> ownedProperties = new ArrayList<>();
+
+    public void addProperty(PropertyNames propertyName) {
+        PropertyData property = PropertyData.of(propertyName);
+        if (property != null) {
+            ownedProperties.add(property);
+        } else {
+            throw new IllegalArgumentException("Invalid property: " + propertyName);
+        }
+    }
+
 
 }

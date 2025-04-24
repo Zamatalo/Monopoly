@@ -2,23 +2,22 @@ import {useEffect, useRef, useState} from 'react';
 import {useQuery, useSubscription} from "@apollo/client";
 import {DICE_UPDATED_SUBSCRIPTION, GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, GET_PLAYER} from "../graphql/queries";
 import GameSingleton from "../stores/singletons/GameSingleton";
-import UIGameInterface from "./UIGameInterface";
 import "../styles/gameView.css";
 import {useParams} from "react-router";
 import WorldSingleton from '../stores/singletons/WorldSingleton';
 import {diceUpdate, resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
 import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
 import {Dice} from "../components/models/Dice";
+import UIGameInterface from "./components/UIGameInterface";
 
 export const GameView = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [sceneInitialized, setSceneInitialized] = useState(false);
     const {gameId} = useParams<{ gameId: string }>();
-    const {data: gameData, loading: loadingGame} = useQuery(GET_FIND_BY_ID, {
+    const {data: gameData} = useQuery(GET_FIND_BY_ID, {
         variables: {gameId},
         fetchPolicy: 'cache-and-network',
     });
-
     const {data: findPlayer} = useQuery(GET_PLAYER, {
         variables: {
             playerId: localStorage.getItem('playerId')
@@ -41,13 +40,15 @@ export const GameView = () => {
         variables: {gameId},
         fetchPolicy: 'network-only',
         onData: ({data}) => {
-            const updatedGame = data?.data?.diceUpdated;
+            const updatedDicePos = data?.data?.diceUpdated;
             console.log(data)
-            if (updatedGame) {
-                diceUpdate(updatedGame);
+            if (updatedDicePos) {
+                diceUpdate(updatedDicePos);
             }
         }
     });
+
+
     useEffect(() => {
         if (gameData && !sceneInitialized && findPlayer) {
             const container = containerRef.current;
@@ -68,7 +69,6 @@ export const GameView = () => {
         }
     }, [gameData, findPlayer]);
 
-
     useEffect(() => {
         if (!sceneInitialized || !findPlayer?.getPlayer) return;
 
@@ -79,7 +79,6 @@ export const GameView = () => {
         const dice = new Dice();
         dice.loadDice()
     }, [sceneInitialized, findPlayer]);
-
 
     useEffect(() => {
         return () => {
