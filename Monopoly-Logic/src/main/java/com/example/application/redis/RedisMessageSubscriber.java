@@ -31,8 +31,7 @@ public class RedisMessageSubscriber implements RedisPubSubListener<String, Strin
             String gameId = parts[1];
 
             /**
-             * listening for updates from dice-server, and publishing it to subscribed players
-             *
+             * listening for updates from dice-server and publishing it to subscribed players
              */
             if (channel.endsWith(":dice-update")) {
                 JsonNode jsonNode = objectMapper.readTree(message);

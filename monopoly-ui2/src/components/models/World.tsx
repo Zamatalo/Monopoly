@@ -1,14 +1,15 @@
 import * as THREE from 'three';
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls.js";
-import {Dice} from "./Dice";
-import GUI from "three/examples/jsm/libs/lil-gui.module.min";
+// @ts-ignore
+import Stats from 'three/addons/libs/stats.module.js'
+
 
 export class World {
     scene: THREE.Scene;
     renderer: THREE.WebGLRenderer;
     controls: OrbitControls;
     camera: THREE.PerspectiveCamera;
-
+    stats: Stats;
     constructor(container: HTMLElement) {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.CubeTextureLoader()
@@ -35,6 +36,9 @@ export class World {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(this.renderer.domElement);
 
+
+        this.stats = new Stats()
+        document.body.appendChild(this.stats.dom)
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true
@@ -83,6 +87,7 @@ export class World {
     animate = () => {
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
+        this.stats.update()
     };
 
     dispose() {

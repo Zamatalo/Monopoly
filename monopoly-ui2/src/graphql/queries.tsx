@@ -1,5 +1,8 @@
 import {gql} from '@apollo/client';
 
+/**
+ * Get all active Games
+ */
 export const GET_ACTIVE_GAMES = gql`
     query GetActiveGames {
         getActiveGames {
@@ -18,7 +21,9 @@ export const GET_ACTIVE_GAMES = gql`
         }
     }
 `;
-
+/**
+ * Get PlayerDTO from playerID
+ */
 export const GET_PLAYER = gql`
     query GetPlayer($playerId: ID!) {
         getPlayer(playerId: $playerId) {
@@ -33,6 +38,9 @@ export const GET_PLAYER = gql`
 
 `
 
+/**
+ * Get GameDTO from gameId
+ */
 export const GET_FIND_BY_ID = gql`
     query FindGameById($gameId: ID!) {
         findGameById(gameId:$gameId ) {
@@ -168,4 +176,33 @@ export const DICE_UPDATED_SUBSCRIPTION = gql`
             rot
         }
     }
+`
+
+/**
+ * Buy Property for Current Player for specific game
+ */
+export const BUY_PROPERTY_MUTATION = gql`
+    mutation BuyPropertyForPlayer($gameId: ID!) {
+        buyPropertyForPlayer(gameId: $gameId) {
+            gameId
+            currentPlayerIndex
+            gameState
+            createdTime
+            players {
+                playerId
+                playerName
+                color
+                balance
+                position
+                inJail
+                ownedProperties {
+                    cost
+                    upgradable
+                    displayName
+                    boardPosition
+                }
+            }
+        }
+    }
+
 `

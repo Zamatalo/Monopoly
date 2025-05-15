@@ -20,6 +20,10 @@ class CurrentPlayerInstance {
     static reset(): void {
         this.instance = null;
     }
+
+    static hasInstance(): boolean {
+        return this.instance !== null;
+    }
     static update(rawPlayerData: any): PlayerDTO {
         if (!this.instance) {
             throw new Error("Player not initialized. Call initialize() first.");

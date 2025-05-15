@@ -1,4 +1,4 @@
-package com.example.application;
+package com.example.application.util.enums;
 
 public enum PlayerColors {
     PLAYER_RED,

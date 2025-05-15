@@ -1,6 +1,6 @@
 package com.example.application.util;
 
-import com.example.application.PropertyNames;
+import com.example.application.util.enums.PropertyNames;
 import jakarta.persistence.Embeddable;
 
 import java.util.Map;
@@ -59,14 +59,10 @@ public record PropertyData(
             Map.entry(PropertyNames.RAILROAD_3, new PropertyData("Beverly Railroad", 25,  200, false)),
             Map.entry(PropertyNames.RAILROAD_4, new PropertyData("Manhattan Railroad", 35,  200, false)),
 
-
             // Special Tiles
             Map.entry(PropertyNames.START, new PropertyData("Start", 0,  0, false)),
-
             Map.entry(PropertyNames.COMMUNITY_CHEST, new PropertyData("Community Chest", 2, 0,false)),
-
             Map.entry(PropertyNames.CHANCE, new PropertyData("Chance", 7,  0, false)),
-
             Map.entry(PropertyNames.JAIL, new PropertyData("Jail", 10,  0, false)),
             Map.entry(PropertyNames.FREE_PARKING, new PropertyData("Free Parking", 20, 0, false)),
             Map.entry(PropertyNames.GO_TO_JAIL, new PropertyData("Go to Jail", 30,  0, false))

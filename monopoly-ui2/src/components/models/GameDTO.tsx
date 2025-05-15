@@ -34,14 +34,13 @@ export class GameDTO {
         this.players = raw.players.map((player: any) => PlayerDTO.fromRaw(player));
     }
 
-    async loadBoardModel(): Promise<void> {
+    async loadBoardModel(loader:GLTFLoader): Promise<void> {
         if (this.model) {
             console.log('Board model already loaded');
             return;
         }
 
         const boardPath = '/assets/models/monopolyBoard.glb';
-        const loader = new GLTFLoader();
         const world = WorldSingleton.getInstance();
 
         return new Promise((resolve, reject) => {

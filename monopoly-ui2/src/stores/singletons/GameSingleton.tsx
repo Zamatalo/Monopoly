@@ -25,6 +25,10 @@ class GameSingleton {
         return this.instance;
     }
 
+    static hasInstance(): boolean {
+        return this.instance !== null;
+    }
+
     static reset(): void {
         this.instance = null;
     }

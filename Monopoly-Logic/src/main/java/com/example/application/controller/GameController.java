@@ -1,6 +1,5 @@
 package com.example.application.controller;
 
-import com.example.application.PropertyNames;
 import com.example.application.components.GamePublisher;
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
@@ -56,7 +55,7 @@ public class GameController {
         Player player = new Player();
         player.setPlayerName(playerName);
         player.setPlayerId(playerId);
-        player.setColor(com.example.application.PlayerColors.valueOf(playerColor.toString()));
+        player.setColor(com.example.application.util.enums.PlayerColors.valueOf(playerColor.toString()));
 
         gameService.addPlayerToGame(player, game);
 
@@ -89,29 +88,27 @@ public class GameController {
                 .orElse(null);
     }
 
-    public static void completeDiceFuture(UUID gameId, int topFace) {
-        CompletableFuture<Integer> future = diceResults.remove(gameId);
-        if (future != null) {
-            future.complete(topFace);
-        }
-    }
-
     @MutationMapping
     public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameID) {
         var game = gameService.findById(gameID);
         if (game.isEmpty()) {
             throw new IllegalArgumentException("Game not found");
         }
+
         var playerId = game.get().getPlayers().get(game.get().getCurrentPlayerIndex()).getPlayerId();
         var player = playerService.findPlayer(playerId);
         if (player.isEmpty()) {
             throw new IllegalArgumentException("Player not found");
         }
+
         var whichCellIsPlayerStandingOn = PropertyData.ofPos(player.get().getPosition());
-        player.get().addProperty(PropertyNames.BLUE_1);
+        player.get().addProperty(whichCellIsPlayerStandingOn);
         playerService.savePlayer(player.get());
 
-        return GameMapper.INSTANCE.GameToGameDTO(gameService.findById(gameID).get());
+
+        var updGame = GameMapper.INSTANCE.GameToGameDTO(gameService.findById(gameID).get());
+        gamePublisher.publish(updGame);
+        return updGame;
     }
 
     /**
@@ -180,5 +177,12 @@ public class GameController {
         }));
 
 
+    }
+
+    public static void completeDiceFuture(UUID gameId, int topFace) {
+        CompletableFuture<Integer> future = diceResults.remove(gameId);
+        if (future != null) {
+            future.complete(topFace);
+        }
     }
 }
