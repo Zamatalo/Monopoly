@@ -1,7 +1,6 @@
 package com.example.application.entity;
 
-import com.example.application.PlayerColors;
-import com.example.application.PropertyNames;
+import com.example.application.util.enums.PlayerColors;
 import com.example.application.util.PropertyData;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,8 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -35,14 +35,11 @@ public class Player {
     @CollectionTable(name = "ownedProperties", joinColumns = @JoinColumn(name = "player_id"))
     private List<PropertyData> ownedProperties = new ArrayList<>();
 
-    public void addProperty(PropertyNames propertyName) {
-        PropertyData property = PropertyData.of(propertyName);
+    public void addProperty(PropertyData property) {
         if (property != null) {
             ownedProperties.add(property);
         } else {
-            throw new IllegalArgumentException("Invalid property: " + propertyName);
+            throw new IllegalArgumentException("Invalid property");
         }
     }
-
-
 }

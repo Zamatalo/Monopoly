@@ -5,31 +5,34 @@ import GameSingleton from "../stores/singletons/GameSingleton";
 import "../styles/gameView.css";
 import {useParams} from "react-router";
 import WorldSingleton from '../stores/singletons/WorldSingleton';
-import {diceUpdate, resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
+import {diceUpdate, initGame, resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
 import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
-import {Dice} from "../components/models/Dice";
+import currentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
 import UIGameInterface from "./components/UIGameInterface";
 
 export const GameView = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [sceneInitialized, setSceneInitialized] = useState(false);
+    const [gameInitialized, setGameInitialized] = useState(false);
     const {gameId} = useParams<{ gameId: string }>();
+
     const {data: gameData} = useQuery(GET_FIND_BY_ID, {
         variables: {gameId},
-        fetchPolicy: 'cache-and-network',
+        //fetchPolicy: 'cache-and-network',
     });
     const {data: findPlayer} = useQuery(GET_PLAYER, {
         variables: {
             playerId: localStorage.getItem('playerId')
         },
-        fetchPolicy: 'cache-and-network',
+        //fetchPolicy: 'cache-and-network',
     });
 
     useSubscription(GAME_UPDATED_SUBSCRIPTION, {
         variables: {gameId},
-        fetchPolicy:"standby",
+        fetchPolicy: "no-cache",
         onData: ({data}) => {
             const updatedGame = data?.data?.gameUpdated;
+            console.log("Game updated", updatedGame);
             if (updatedGame) {
                 updateGame(updatedGame);
             }
@@ -38,10 +41,9 @@ export const GameView = () => {
 
     useSubscription(DICE_UPDATED_SUBSCRIPTION, {
         variables: {gameId},
-        fetchPolicy: 'network-only',
+        fetchPolicy: 'no-cache',
         onData: ({data}) => {
             const updatedDicePos = data?.data?.diceUpdated;
-            console.log(data)
             if (updatedDicePos) {
                 diceUpdate(updatedDicePos);
             }
@@ -70,22 +72,18 @@ export const GameView = () => {
     }, [gameData, findPlayer]);
 
     useEffect(() => {
-        if (!sceneInitialized || !findPlayer?.getPlayer) return;
-
-
-        const game = GameSingleton.getInstance();
-        game.loadBoardModel();
-        game.players.forEach(player => player.loadPlayerModel());
-        const dice = new Dice();
-        dice.loadDice()
-    }, [sceneInitialized, findPlayer]);
+        if (!sceneInitialized || !currentPlayerSingleton.hasInstance() || gameInitialized) return;
+        initGame();
+        setGameInitialized(true);
+        console.log("Game Initialized");
+    }, [sceneInitialized, gameInitialized]);
 
     useEffect(() => {
         return () => {
             console.log("Cleaning up");
             const container = containerRef.current;
             if (container && container.children.length > 0) {
-                container.removeChild(container.children[0]);
+                container.remove();
             }
             resetGameEnvironment();
         };

@@ -1,7 +1,7 @@
 package com.example.application.entity;
 
 
-import com.example.application.GameState;
+import com.example.application.util.enums.GameState;
 import jakarta.persistence.*;
 import lombok.*;
 

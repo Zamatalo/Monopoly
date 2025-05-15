@@ -8,7 +8,10 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.List;
 
-/// this, and WebsocketHandler should in the future communicate with API-Gateway
+/**
+ * this, and WebsocketHandler should in the future communicate with API-Gateway
+ * (Dice and Game publishers should later also be here)
+ **/
 public class MySocketHandler implements WebSocketHandler {
 
     @Override

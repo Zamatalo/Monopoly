@@ -28,7 +28,7 @@ export class PlayerDTO {
         if (!raw) throw new Error("Cannot construct PlayerDTO from undefined!");
         return new PlayerDTO({
             ...raw,
-            ownedProperties: raw.ownedProperties || []
+            ownedProperties: raw.ownedProperties ? raw.ownedProperties.map((prop: any) => PropertyDTO.fromRaw(prop)) : []
         });
     }
 
@@ -39,9 +39,8 @@ export class PlayerDTO {
         this.ownedProperties = raw.ownedProperties || [];
     }
 
-    async loadPlayerModel(): Promise<void> {
+    async loadPlayerModel(loader:GLTFLoader): Promise<void> {
         const playerPath = `/assets/models/${this.color}_pawn.glb`;
-        const loader = new GLTFLoader();
         const world = WorldSingleton.getInstance();
 
         return new Promise((resolve, reject) => {
@@ -50,8 +49,8 @@ export class PlayerDTO {
                 (gltf) => {
                     const model = gltf.scene;
                     const {xOffset, zOffset} = this.helperSwitch(this.color);
-                    const coords = positions[this.position];
-                    model.position.set(coords.x + xOffset, 0.13, coords.z + zOffset);
+                    const pos = positions[this.position];
+                    model.position.set(pos.x + xOffset, 0.14, pos.z + zOffset);
                     model.scale.set(2.5, 2.5, 2.5);
 
                     model.userData = {

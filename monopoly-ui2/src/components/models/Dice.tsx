@@ -2,11 +2,9 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {Object3D} from "three";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
 
-
 export class Dice {
-    async loadDice(): Promise<void> {
+    async loadDice(loader:GLTFLoader): Promise<void> {
         const boardPath = "/assets/models/dice3.glb";
-        const loader = new GLTFLoader();
         const world = WorldSingleton.getInstance();
 
         return new Promise((resolve, reject) => {

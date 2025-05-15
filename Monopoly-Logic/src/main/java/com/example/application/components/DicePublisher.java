@@ -10,6 +10,7 @@ import reactor.core.publisher.Sinks;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/// Publisher for GraphQL subscriptions
 @Component
 public class DicePublisher {
     private final Map<String, Sinks.Many<DicePosition>> sinksMap = new ConcurrentHashMap<>();

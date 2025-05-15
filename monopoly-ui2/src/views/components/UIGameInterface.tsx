@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import GameSingleton from "../../stores/singletons/GameSingleton";
 import {useMutation} from "@apollo/client";
-import {ROLL_DICE} from "../../graphql/queries";
+import {BUY_PROPERTY_MUTATION, ROLL_DICE} from "../../graphql/queries";
 import {PlayerDTO} from "../../components/models/PlayerDTO";
 import CurrentPlayerSingleton from "../../stores/singletons/CurrentPlayerSingleton";
 import {ColorHexMap, GameState} from "../../components/utils/constants";
@@ -10,6 +10,7 @@ import '../../styles/gameInterface.css'
 const UIGameInterface: React.FC = () => {
     const game = GameSingleton.getInstance();
     const [rollDice, { error }] = useMutation(ROLL_DICE);
+    const [buyProperty] = useMutation(BUY_PROPERTY_MUTATION);
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [rolledValue, setRolledValue] = useState<number | null>(null);
 
@@ -36,8 +37,18 @@ const UIGameInterface: React.FC = () => {
         }
     };
 
-    const handleBuyProperty = () => {
-        // TODO: Implement
+    const handleBuyProperty = async () => {
+        if ( !game?.gameId || !currentPlayer?.playerId) return;
+
+        try {
+            await buyProperty({
+                variables: {
+                    gameId: game.gameId
+                }
+            });
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const handleEndTurn = () => {
@@ -52,11 +63,6 @@ const UIGameInterface: React.FC = () => {
 
     return (
         <div className="game-interface compact">
-            <div className="header">
-                <h3>Monopoly</h3>
-                <span className={`status ${currentGameState?.toLowerCase()}`}>{currentGameState || 'Unknown'}</span>
-            </div>
-
             <div className="current-player">
                 <div className="player-info">
                     <span className="name">Name: {currentPlayer?.playerName}</span>
