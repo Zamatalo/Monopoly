@@ -10,6 +10,8 @@ public enum PropertyNames {
     GREEN_1, GREEN_2, GREEN_3,
     BLUE_1, BLUE_2,
     RAILROAD_1, RAILROAD_2, RAILROAD_3,RAILROAD_4,
+
+    // Special Tiles
     JAIL,GO_TO_JAIL,
     FREE_PARKING,
     COMMUNITY_CHEST,

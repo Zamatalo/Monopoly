@@ -3,5 +3,6 @@ type Mutation {
     joinToGame(gameId: ID!, playerName: String!,playerColor:PlayerColors!,playerId:ID!):GameDTO!
     createNewGame:GameDTO
     buyPropertyForPlayer(gameId:ID!):GameDTO
+    startGame(gameId:ID!):GameDTO
 }
 

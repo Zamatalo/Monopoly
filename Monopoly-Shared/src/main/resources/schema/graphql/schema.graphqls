@@ -24,6 +24,13 @@ enum PropertyNames {
     START COMMUNITY_CHEST CHANCE JAIL FREE_PARKING GO_TO_JAIL
 }
 
+enum PlayerActions{
+    ROLL_DICE,
+    BUY_PROPERTY,
+    END_TURN,
+    START_GAME
+}
+
 type GameDTO {
     gameId: ID
     players: [PlayerDTO]

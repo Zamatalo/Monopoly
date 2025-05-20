@@ -30,7 +30,12 @@ export enum GameState {
     IN_PROGRESS = 'IN_PROGRESS',
     FINISHED = 'FINISHED',
 }
-
+export enum PlayerActions{
+    ROLL_DICE= 'ROLL_DICE',
+    BUY_PROPERTY=`BUY_PROPERTY`,
+    END_TURN= 'END_TURN',
+    START_GAME = `START_GAME`
+}
 export enum PropertyNames {
     SHOULD_BE_ADDED = 'SHOULD_BE_ADDED',
 }

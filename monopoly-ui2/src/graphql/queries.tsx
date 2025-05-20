@@ -204,5 +204,35 @@ export const BUY_PROPERTY_MUTATION = gql`
             }
         }
     }
-
 `
+
+export const START_GAME = gql(`
+    mutation StartGame($gameId: ID!) {
+        startGame(gameId: $gameId) {
+            gameId
+            currentPlayerIndex
+            gameState
+            createdTime
+            players {
+                playerId
+                playerName
+                color
+                balance
+                position
+                inJail
+                ownedProperties {
+                    displayName
+                    boardPosition
+                    cost
+                    upgradable
+                }
+            }
+        }
+    }
+`);
+
+export const GET_AVAILABLE_ACTIONS = gql`
+    query GetPossibleCurrentPlayerActions($gameId: ID!) {
+        getPossibleCurrentPlayerActions(gameId:$gameId)
+    }
+`;

@@ -14,14 +14,18 @@ export function initGame() {
     game.loadBoardModel(loader);
 
     game.players.forEach(player => {
-        player.loadPlayerModel(loader);
+        player.loadPlayerModel(loader)
     });
 
     game.players.forEach(player => {
         player.ownedProperties.forEach(ele => {
-            ele.loadBuildingModel(loader);
-        })
+            if (!getExistingBuildingIds().has(ele.displayName)) {
+                console.log(ele.displayName);
+                ele.loadBuildingModel(loader,player.color);
+            }
+        });
     });
+
     const dice = new Dice();
     dice.loadDice(loader);
 }
@@ -51,16 +55,12 @@ export function updateGame(newGameRaw: GameDTO) {
         }
 
     });
-    const existingBuildingIds = new Set(
-        world.scene.children
-            .filter(e => e.userData.isBuilding)
-            .map(b => b.userData.buildingName)
-    );
 
     newGame.players.forEach(player => {
         player.ownedProperties.forEach(ele => {
-            if (!existingBuildingIds.has(ele.displayName)) {
-                ele.loadBuildingModel(loader);
+            if (!getExistingBuildingIds().has(ele.displayName)) {
+                console.log(ele.displayName);
+                ele.loadBuildingModel(loader,player.color);
             }
         });
     });
@@ -87,6 +87,7 @@ export function diceUpdate(dicePosAndRot:any){
 export function resetGameEnvironment() {
     const world = WorldSingleton.hasInstance() ? WorldSingleton.getInstance() : null;
     if (world) {
+        world.dispose()
         const container = world.renderer.domElement.parentElement;
         if (container) {
             container.removeChild(world.renderer.domElement);
@@ -96,3 +97,13 @@ export function resetGameEnvironment() {
     GameSingleton.reset();
     CurrentPlayerSingleton.reset();
 }
+
+function getExistingBuildingIds() {
+    const world = WorldSingleton.getInstance();
+    return new Set(
+        world.scene.children
+            .filter(e => e.userData.isBuilding)
+            .map(b => b.userData.buildingName)
+    )
+}
+

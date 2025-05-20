@@ -1,6 +1,12 @@
 import {useEffect, useRef, useState} from 'react';
 import {useQuery, useSubscription} from "@apollo/client";
-import {DICE_UPDATED_SUBSCRIPTION, GAME_UPDATED_SUBSCRIPTION, GET_FIND_BY_ID, GET_PLAYER} from "../graphql/queries";
+import {
+    DICE_UPDATED_SUBSCRIPTION,
+    GAME_UPDATED_SUBSCRIPTION,
+    GET_AVAILABLE_ACTIONS,
+    GET_FIND_BY_ID,
+    GET_PLAYER
+} from "../graphql/queries";
 import GameSingleton from "../stores/singletons/GameSingleton";
 import "../styles/gameView.css";
 import {useParams} from "react-router";
@@ -8,6 +14,8 @@ import WorldSingleton from '../stores/singletons/WorldSingleton';
 import {diceUpdate, initGame, resetGameEnvironment, updateGame} from "../stores/GameEnvironment";
 import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
 import currentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
+import StartGameDialog from "./components/StartGameDialog";
+import {GameState, PlayerActions} from "../components/utils/constants";
 import UIGameInterface from "./components/UIGameInterface";
 
 export const GameView = () => {
@@ -16,15 +24,21 @@ export const GameView = () => {
     const [gameInitialized, setGameInitialized] = useState(false);
     const {gameId} = useParams<{ gameId: string }>();
 
+    const {data: actionsData} = useQuery(GET_AVAILABLE_ACTIONS, {
+        variables: {
+            gameId: gameId,
+        }
+    });
+
     const {data: gameData} = useQuery(GET_FIND_BY_ID, {
         variables: {gameId},
-        //fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'cache-and-network',
     });
     const {data: findPlayer} = useQuery(GET_PLAYER, {
         variables: {
             playerId: localStorage.getItem('playerId')
         },
-        //fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'cache-and-network',
     });
 
     useSubscription(GAME_UPDATED_SUBSCRIPTION, {
@@ -33,7 +47,7 @@ export const GameView = () => {
         onData: ({data}) => {
             const updatedGame = data?.data?.gameUpdated;
             console.log("Game updated", updatedGame);
-            if (updatedGame) {
+            if (updatedGame && gameInitialized) {
                 updateGame(updatedGame);
             }
         }
@@ -41,15 +55,14 @@ export const GameView = () => {
 
     useSubscription(DICE_UPDATED_SUBSCRIPTION, {
         variables: {gameId},
-        fetchPolicy: 'no-cache',
+        fetchPolicy: "standby",
         onData: ({data}) => {
             const updatedDicePos = data?.data?.diceUpdated;
-            if (updatedDicePos) {
+            if (updatedDicePos && gameInitialized) {
                 diceUpdate(updatedDicePos);
             }
         }
     });
-
 
     useEffect(() => {
         if (gameData && !sceneInitialized && findPlayer) {
@@ -66,6 +79,7 @@ export const GameView = () => {
             } else {
                 console.error("No player data found in findPlayer", findPlayer);
             }
+            console.log()
 
             setSceneInitialized(true);
         }
@@ -75,8 +89,9 @@ export const GameView = () => {
         if (!sceneInitialized || !currentPlayerSingleton.hasInstance() || gameInitialized) return;
         initGame();
         setGameInitialized(true);
-        console.log("Game Initialized");
     }, [sceneInitialized, gameInitialized]);
+
+
 
     useEffect(() => {
         return () => {
@@ -92,7 +107,11 @@ export const GameView = () => {
     return (
         <div className="game-view">
             <div ref={containerRef} className="canvas"/>
-            {sceneInitialized && <UIGameInterface/>}
+            {sceneInitialized && actionsData && actionsData?.getPossibleCurrentPlayerActions.includes(PlayerActions.START_GAME) && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState != GameState.IN_PROGRESS) && (
+                <StartGameDialog />
+            )}
+            {sceneInitialized && GameSingleton.hasInstance() && GameSingleton.getInstance().gameState === GameState.IN_PROGRESS &&
+                <UIGameInterface/>}
         </div>
     );
 };

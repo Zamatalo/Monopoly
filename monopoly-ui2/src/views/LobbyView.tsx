@@ -36,12 +36,12 @@ export const LobbyView = () => {
 
     const {data: allGames, error: gamesError, loading: gamesLoading} = useQuery(GET_ACTIVE_GAMES, {
         pollInterval: 5000,
-        //fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'cache-and-network',
     });
 
     const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
         variables: {playerId},
-        //fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'cache-and-network',
         skip: !playerId,
     });
 
