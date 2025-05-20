@@ -3,14 +3,12 @@ import WorldSingleton from "../../stores/singletons/WorldSingleton";
 import {PlayerColor, positions} from "../utils/constants";
 
 export class PropertyDTO {
-    id: string;
     displayName: string;
     boardPosition: number;
     cost: number;
     upgradable: boolean;
 
     constructor(data: PropertyDTO) {
-        this.id = data.id;
         this.displayName = data.displayName;
         this.boardPosition = data.boardPosition;
         this.cost = data.cost;
@@ -36,7 +34,7 @@ export class PropertyDTO {
                 (gltf) => {
                     const model = gltf.scene;
                     model.scale.set(1.75, 1.75, 1.75);
-                    let y = 0.14;
+                    // let y = 0.14;
                     model.traverse((obj: any) => {
                         if (obj.castShadow !== undefined) {
                             obj.castShadow = true;
@@ -62,17 +60,7 @@ export class PropertyDTO {
                         posi.z += 1.55;
                     }
 
-                    if (posi.x === 7 && posi.z === 9.5 ||
-                        posi.x === -7 && posi.z === 9.5||
-                        posi.x === -9.5 && posi.z === 7 ||
-                        posi.x === -9.5 && posi.z === 1.85||
-                        posi.x === -9.5 && posi.z === -1.85||
-                        posi.x === 9.5 && posi.z === 7
-                    ) {
-                        y= 12;
-                    }
-
-                    model.position.set(posi.x, y, posi.z);
+                    model.position.set(posi.x, 0.14, posi.z);
                     world.scene.add(model);
                     console.log(`Building Model loaded`);
                     resolve();

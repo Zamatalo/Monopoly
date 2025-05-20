@@ -45,8 +45,8 @@ type PlayerDTO {
     color: PlayerColors
     balance: Int
     position: Int
-    ownedProperties: [PropertyDTO]
     inJail: Boolean
+    ownedProperties: [PropertyDTO]
 }
 
 type PropertyDTO {

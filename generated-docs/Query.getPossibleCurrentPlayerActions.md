@@ -1,14 +1,14 @@
-# Query.getFreeColorsForGame: [PlayerColors]
+# Query.getPossibleCurrentPlayerActions: [PlayerActions]
                  
 ## Arguments
 | Name | Description | Required | Type |
 | :--- | :---------- | :------: | :--: |
-| gameId |  | ✅ | ID! |
+| gameId |  | Optional | ID |
             
 ## Example
 ```graphql
 {
-  getFreeColorsForGame(gameId: "random12345")
+  getPossibleCurrentPlayerActions(gameId: "random12345")
 }
 
 ```
