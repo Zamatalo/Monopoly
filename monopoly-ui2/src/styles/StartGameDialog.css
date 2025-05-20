@@ -2,6 +2,7 @@
     position: fixed;
     top: 25%;
     left: 50%;
+    display: grid;
     transform: translate(-50%, -50%);
     font-family: 'Segoe UI', sans-serif;
     padding: 20px;
@@ -88,15 +89,6 @@
     background-color: #f5f5f5;
 }
 
-.player-tag.bot {
-    background-color: #e3f2fd;
-    border-color: #bbdefb;
-}
-
-.bot-icon {
-    font-size: 0.8rem;
-}
-
 .action-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -128,14 +120,4 @@
     background-color: #4caf50;
     color: white;
     grid-column: span 2;
-}
-
-.addbot-btn {
-    background-color: #2196f3;
-    color: white;
-}
-
-.exit-btn {
-    background-color: #f44336;
-    color: white;
 }

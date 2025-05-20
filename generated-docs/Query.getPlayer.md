@@ -14,8 +14,8 @@
     color
     balance
     position
-    ownedProperties
     inJail
+    ownedProperties
   }
 }
 

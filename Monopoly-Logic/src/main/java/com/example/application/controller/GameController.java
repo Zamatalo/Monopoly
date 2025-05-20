@@ -154,6 +154,7 @@ public class GameController {
             return List.of(PlayerActions.START_GAME);
         }
 
+
         var playerId = game.get().getPlayers().get(game.get().getCurrentPlayerIndex()).getPlayerId();
         var player = playerService.findPlayer(playerId);
         if (player.isEmpty()) {

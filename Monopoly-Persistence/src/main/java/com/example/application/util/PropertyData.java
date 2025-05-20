@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 
 @Embeddable
-public record PropertyData(String displayName,
+public record PropertyData(
+        String displayName,
         int boardPosition,
         int cost,
         boolean upgradable,
@@ -59,7 +60,7 @@ public record PropertyData(String displayName,
             Map.entry(PropertyNames.RAILROAD_3, new PropertyData("Beverly Railroad", 25,  200, false,false)),
             Map.entry(PropertyNames.RAILROAD_4, new PropertyData("Manhattan Railroad", 35,  200, false,false)),
 
-            // Special Tiles
+            // Special Tiles#TODO START should not be added as property
             Map.entry(PropertyNames.START, new PropertyData("Start", 0,  0, false,false)),
             Map.entry(PropertyNames.COMMUNITY_CHEST, new PropertyData("Community Chest", 2, 0,false,false)),
             Map.entry(PropertyNames.CHANCE, new PropertyData("Chance", 7,  0, false,false)),

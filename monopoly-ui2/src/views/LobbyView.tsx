@@ -3,7 +3,7 @@ import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, GET_GAME_BY_PLAYER_ID, JOIN_GAME
 import {GameDTO} from '../components/models/GameDTO';
 import {useNavigate} from 'react-router';
 import GameSingleton from '../stores/singletons/GameSingleton';
-import {useEffect, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import '../styles/lobby.css';
 import {PlayerColor} from "../components/utils/constants";
 import {ColorPickerDialog} from "./components/ColorPickerDialog";
@@ -23,6 +23,7 @@ export const LobbyView = () => {
         return id;
     });
 
+
     const [playerName, setPlayerName] = useState('');
     const isNameEntered = playerName.trim() !== '';
 
@@ -32,11 +33,12 @@ export const LobbyView = () => {
     const [createGame] = useMutation(CREATE_GAME_MUTATION);
     const [joinGameMutation] = useMutation(JOIN_GAME_MUTATION);
     const [foundGameForPlayer, setFoundGameForPlayer] = useState<GameDTO | null>(null);
+    const [createButtonClicked, setCreateButtonClicked] = useState(false);
     const [rejoinAvailable, setRejoinAvailable] = useState(false);
 
     const {data: allGames, error: gamesError, loading: gamesLoading} = useQuery(GET_ACTIVE_GAMES, {
         pollInterval: 5000,
-        fetchPolicy: 'cache-and-network',
+        fetchPolicy: 'network-only',
     });
 
     const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
@@ -45,7 +47,11 @@ export const LobbyView = () => {
         skip: !playerId,
     });
 
-    const games: GameDTO[] = allGames?.getActiveGames?.map(GameDTO.fromRaw) || [];
+    const games: [GameDTO] = useMemo(() => allGames?.getActiveGames?.map(GameDTO.fromRaw) || [], [allGames]);
+
+    useEffect(() => {
+        setCreateButtonClicked(false);
+    }, [games, ]);
 
     useEffect(() => {
         if (findGameData?.findGameByPlayerId) {
@@ -84,13 +90,14 @@ export const LobbyView = () => {
     };
 
 
-    if (gamesLoading) {
+    if (gamesLoading ) {
         return (
             <div className="centered">
                 <div className="spinner"></div>
             </div>
         );
     }
+
 
     if (gamesError) {
         return <div className="error-alert">Error: {gamesError.message}</div>;
@@ -100,7 +107,7 @@ export const LobbyView = () => {
         <div className="lobby-container">
             <button onClick={
                 () => localStorage.setItem('playerId', crypto.randomUUID())
-            }style={{width:"fit-content"}}>REGENERATE PLAYERID (DEBUG)
+            } style={{width: "fit-content"}}>REGENERATE PLAYERID (DEBUG)
             </button>
             <div className="lobby-header">
                 <h1>Active Games</h1>
@@ -115,13 +122,15 @@ export const LobbyView = () => {
                     onChange={(e) => setPlayerName(e.target.value)}
                     placeholder="Enter your name"
                 />
-
                 <button
-                    className="button createButton"
-                    onClick={() => createGame()}
-                    disabled={!isNameEntered}
+                    className={`button createButton ${createButtonClicked ? 'loading' : ''}`}
+                    onClick={() => {
+                        setCreateButtonClicked(true);
+                        createGame();
+                    }}
+                    disabled={!isNameEntered || createButtonClicked}
                 >
-                    Create Game
+                    <span>Create Game</span>
                 </button>
             </div>
 
@@ -145,7 +154,7 @@ export const LobbyView = () => {
                             <div className="game-icon">🎮</div>
                             <div className="game-info">
                                 <div className="game-title">
-                                    {game.gameId.slice(0,30)}...
+                                    {game.gameId.slice(0, 30)}...
                                     <span className={`chip ${game.gameState === 'STARTED' ? 'warning' : 'success'}`}>
                                         {game.gameState}
                                     </span>
@@ -169,6 +178,7 @@ export const LobbyView = () => {
                                 }}
                                 disabled={!isNameEntered && !(rejoinAvailable && game.gameId === foundGameForPlayer?.gameId)}
                             >
+
                                 {rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'Rejoin' : 'Join'}
                             </button>
                         </li>

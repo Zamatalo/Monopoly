@@ -20,7 +20,6 @@ export function initGame() {
     game.players.forEach(player => {
         player.ownedProperties.forEach(ele => {
             if (!getExistingBuildingIds().has(ele.displayName)) {
-                console.log(ele.displayName);
                 ele.loadBuildingModel(loader,player.color);
             }
         });
@@ -59,7 +58,6 @@ export function updateGame(newGameRaw: GameDTO) {
     newGame.players.forEach(player => {
         player.ownedProperties.forEach(ele => {
             if (!getExistingBuildingIds().has(ele.displayName)) {
-                console.log(ele.displayName);
                 ele.loadBuildingModel(loader,player.color);
             }
         });

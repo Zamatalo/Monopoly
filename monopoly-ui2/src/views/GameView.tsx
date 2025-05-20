@@ -43,10 +43,9 @@ export const GameView = () => {
 
     useSubscription(GAME_UPDATED_SUBSCRIPTION, {
         variables: {gameId},
-        fetchPolicy: "no-cache",
+        fetchPolicy: "network-only",
         onData: ({data}) => {
             const updatedGame = data?.data?.gameUpdated;
-            console.log("Game updated", updatedGame);
             if (updatedGame && gameInitialized) {
                 updateGame(updatedGame);
             }
@@ -79,7 +78,6 @@ export const GameView = () => {
             } else {
                 console.error("No player data found in findPlayer", findPlayer);
             }
-            console.log()
 
             setSceneInitialized(true);
         }
@@ -90,7 +88,6 @@ export const GameView = () => {
         initGame();
         setGameInitialized(true);
     }, [sceneInitialized, gameInitialized]);
-
 
 
     useEffect(() => {
@@ -107,11 +104,9 @@ export const GameView = () => {
     return (
         <div className="game-view">
             <div ref={containerRef} className="canvas"/>
-            {sceneInitialized && actionsData && actionsData?.getPossibleCurrentPlayerActions.includes(PlayerActions.START_GAME) && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState != GameState.IN_PROGRESS) && (
-                <StartGameDialog />
-            )}
-            {sceneInitialized && GameSingleton.hasInstance() && GameSingleton.getInstance().gameState === GameState.IN_PROGRESS &&
-                <UIGameInterface/>}
+            {sceneInitialized && actionsData && actionsData?.getPossibleCurrentPlayerActions.includes(PlayerActions.START_GAME) && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState == GameState.STARTED) && (<StartGameDialog />)}
+            {sceneInitialized && GameSingleton.hasInstance() && GameSingleton.getInstance().gameState === GameState.IN_PROGRESS &&<UIGameInterface/>}
+            {/*{sceneInitialized && <UIGameInterface />}*/}
         </div>
     );
 };
