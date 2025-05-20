@@ -3,7 +3,6 @@ package com.example.application.services;
 
 import com.example.application.entity.Player;
 import com.example.application.repo.PlayerRepo;
-import com.example.application.util.PropertyData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,4 +24,5 @@ public class PlayerService {
     public void savePlayer(Player player) {
         playerRepository.save(player);
     }
+
 }

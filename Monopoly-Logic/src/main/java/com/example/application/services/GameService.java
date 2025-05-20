@@ -1,14 +1,15 @@
 package com.example.application.services;
 
-
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
+import com.example.application.util.PropertyData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,5 +49,16 @@ public class GameService {
     @Transactional(readOnly = true)
     public Optional<Game> findGameByPlayerId (UUID playerId) {
         return gameRepo.findGameByPlayerId(playerId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PropertyData> findProperties_AllPlayers_ForGame(UUID gameId) {
+        var gm = gameRepo.findById(gameId);
+        List<PropertyData> list = new ArrayList<>();
+
+        gm.get().getPlayers().forEach(player -> {
+            list.addAll(player.getOwnedProperties());
+        });
+        return list;
     }
 }

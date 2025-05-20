@@ -1,6 +1,6 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
-import {positions} from "../utils/constants";
+import {PlayerColor, positions} from "../utils/constants";
 
 export class PropertyDTO {
     id: string;
@@ -8,7 +8,6 @@ export class PropertyDTO {
     boardPosition: number;
     cost: number;
     upgradable: boolean;
-
 
     constructor(data: PropertyDTO) {
         this.id = data.id;
@@ -22,21 +21,22 @@ export class PropertyDTO {
         return new PropertyDTO(raw);
     }
 
-    public async loadBuildingModel(loader:GLTFLoader): Promise<void> {
+    public async loadBuildingModel(loader: GLTFLoader, playerColor: PlayerColor): Promise<void> {
         if (!WorldSingleton.hasInstance()) {
             return;
         }
         const world = WorldSingleton.getInstance();
         const posi = {...positions[this.boardPosition]};
-        const buildingPath = '/assets/models/building.glb';
+        const buildingPath = `/assets/models/${playerColor}_building.glb`;
+
 
         return new Promise((resolve, reject) => {
             loader.load(
                 buildingPath,
                 (gltf) => {
                     const model = gltf.scene;
-                    model.scale.set(1.5, 1.5, 1.5);
-
+                    model.scale.set(1.75, 1.75, 1.75);
+                    let y = 0.14;
                     model.traverse((obj: any) => {
                         if (obj.castShadow !== undefined) {
                             obj.castShadow = true;
@@ -50,18 +50,29 @@ export class PropertyDTO {
                     };
 
                     if (posi.x === 9.5) {
-                        posi.x -= 2.2;
+                        posi.x -= 1.55;
                     } else if (posi.x === -9.5) {
-                        model.rotateY(4.72);
-                        posi.x += 2.2;
+                        model.rotateY(Math.PI);
+                        posi.x += 1.55;
                     } else if (posi.z === 9.5) {
-                        posi.z -= 2.2;
+                        model.rotateY(-Math.PI / 2);
+                        posi.z -= 1.55;
                     } else if (posi.z === -9.5) {
-                        posi.z += 2.2;
+                        model.rotateY(Math.PI / 2);
+                        posi.z += 1.55;
                     }
 
+                    if (posi.x === 7 && posi.z === 9.5 ||
+                        posi.x === -7 && posi.z === 9.5||
+                        posi.x === -9.5 && posi.z === 7 ||
+                        posi.x === -9.5 && posi.z === 1.85||
+                        posi.x === -9.5 && posi.z === -1.85||
+                        posi.x === 9.5 && posi.z === 7
+                    ) {
+                        y= 12;
+                    }
 
-                    model.position.set(posi.x, 0.14, posi.z);
+                    model.position.set(posi.x, y, posi.z);
                     world.scene.add(model);
                     console.log(`Building Model loaded`);
                     resolve();

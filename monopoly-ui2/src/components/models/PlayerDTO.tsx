@@ -43,6 +43,7 @@ export class PlayerDTO {
         const playerPath = `/assets/models/${this.color}_pawn.glb`;
         const world = WorldSingleton.getInstance();
 
+
         return new Promise((resolve, reject) => {
             loader.load(
                 playerPath,

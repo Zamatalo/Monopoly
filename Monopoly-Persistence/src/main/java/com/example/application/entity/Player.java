@@ -1,7 +1,7 @@
 package com.example.application.entity;
 
-import com.example.application.util.enums.PlayerColors;
 import com.example.application.util.PropertyData;
+import com.example.application.util.enums.PlayerColors;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +28,9 @@ public class Player {
     private PlayerColors color;
 
     private int balance = 1500;
+
     private int position = 0;
+
     private boolean inJail = false;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -42,4 +44,6 @@ public class Player {
             throw new IllegalArgumentException("Invalid property");
         }
     }
+
+
 }
