@@ -3,34 +3,23 @@ package com.example.application.controller;
 import com.example.application.components.GamePublisher;
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
-import com.example.application.services.BotService;
 import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.types.GameDTO;
 import com.example.application.util.PropertyData;
 import com.example.application.util.enums.GameState;
-import com.example.application.util.enums.PlayerActions;
-import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -47,59 +36,6 @@ public class GameController {
     private static final ConcurrentHashMap<UUID, CompletableFuture<Integer>> diceResults = new ConcurrentHashMap<>();
     private final RedisClient redisClient;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
-    private final BotService botService;
-
-
-    @MutationMapping
-    public GameDTO createNewGame() {
-        Game game = new Game();
-
-        game = gameService.save(game);
-        GameDTO gameDTO = GameMapper.INSTANCE.GameToGameDTO(game);
-        gamePublisher.publish(gameDTO);
-        return gameDTO;
-    }
-
-    @MutationMapping
-    public GameDTO joinToGame(@Argument("gameId") UUID gameId,
-                              @Argument("playerName") String playerName,
-                              @Argument("playerColor") PlayerColors playerColor,
-                              @Argument("playerId") UUID playerId) {
-        Game game = gameService.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
-
-        Player player = new Player();
-        player.setPlayerName(playerName);
-        player.setPlayerId(playerId);
-        player.setColor(PlayerColors.valueOf(playerColor.toString()));
-
-        gameService.addPlayerToGame(player, game);
-
-        GameDTO gameDto = gameService.findById(gameId)
-                .map(GameMapper.INSTANCE::GameToGameDTO)
-                .orElseThrow(() -> new IllegalStateException("Failed to convert game to DTO"));
-
-        gamePublisher.publish(gameDto);
-        return gameDto;
-    }
-
-    @MutationMapping
-    public GameDTO startGame(@Argument("gameId") UUID gameId) {
-        Game game = gameService.findById(gameId)
-                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
-
-        if (!(game.getPlayers().size() == 4) || !game.getGameState().equals(GameState.STARTED)) {
-            return GameMapper.INSTANCE.GameToGameDTO(game);
-        }
-
-        game.setGameState(GameState.IN_PROGRESS);
-        game.setCurrentPlayerIndex(0);
-        gameService.save(game);
-
-        GameDTO gameDTO = GameMapper.INSTANCE.GameToGameDTO(game);
-        gamePublisher.publish(gameDTO);
-        return gameDTO;
-    }
 
     @QueryMapping
     public List<GameDTO> getActiveGames() {
@@ -123,92 +59,37 @@ public class GameController {
     }
 
     @MutationMapping
-    public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameID) {
-        var game = gameService.findById(gameID);
-        if (game.isEmpty()) {
-            throw new IllegalArgumentException("Game not found");
-        }
+    public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameID, @Argument("playerId") UUID playerId) {
+        var game = gameService.findById(gameID)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
 
-        if (!game.get().getGameState().equals(GameState.IN_PROGRESS)) {
+        if (!game.getGameState().equals(GameState.IN_PROGRESS)) {
             throw new IllegalArgumentException("Game should be IN_PROGRESS");
         }
 
-        var playerId = game.get().getPlayers().get(game.get().getCurrentPlayerIndex()).getPlayerId();
-        var player = playerService.findPlayer(playerId);
-        if (player.isEmpty()) {
-            throw new IllegalArgumentException("Player not found");
+        var realPlayerId = game.getPlayers().get(game.getCurrentPlayerIndex()).getPlayerId();
+        if (!realPlayerId.equals(playerId)) {
+            throw new IllegalArgumentException("Wrong player id");
         }
 
-        var whichCellIsPlayerStandingOn_Property = PropertyData.ofPos(player.get().getPosition());
-        var allPropertiesForGame = gameService.findProperties_AllPlayers_ForGame(gameID);
-        if (allPropertiesForGame.contains(whichCellIsPlayerStandingOn_Property)) {
+        var player = playerService.findPlayer(playerId)
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
+
+
+        var whichCellIsPlayerStandingOn_Property = PropertyData.ofPos(player.getPosition());
+
+        var allBoughtPropertiesForGame = gameService.findProperties_AllPlayers_ForGame(gameID);
+        if (allBoughtPropertiesForGame.contains(whichCellIsPlayerStandingOn_Property)) {
             throw new IllegalArgumentException("Property already bought");
         }
 
-        player.get().addProperty(whichCellIsPlayerStandingOn_Property);
-        player.get().setBalance(player.get().getBalance() - whichCellIsPlayerStandingOn_Property.cost());
-        playerService.savePlayer(player.get());
+        player.addProperty(whichCellIsPlayerStandingOn_Property);
+        player.setBalance(player.getBalance() - whichCellIsPlayerStandingOn_Property.cost());
+        playerService.savePlayer(player);
 
         var updGame = GameMapper.INSTANCE.GameToGameDTO(gameService.findById(gameID).get());
         gamePublisher.publish(updGame);
         return updGame;
-    }
-
-    @MutationMapping
-    public GameDTO addBotToGame(@Argument("gameId") UUID gameId) {
-        var game = gameService.findById(gameId);
-        if (game.isEmpty()) {
-            throw new IllegalArgumentException("Game not found");
-        }
-        if ((game.get().getPlayers().size() >= 4) || !game.get().getGameState().equals(GameState.STARTED)) {
-            throw  new IllegalArgumentException("Already 4 players");
-        }
-
-        var allColors = PlayerColors.values();
-        var usedColors = new ArrayList<>();
-
-        game.get().getPlayers().forEach(p -> usedColors.add(p.getColor()));
-
-        var color = Arrays.stream(allColors)
-                .filter(color1 -> !usedColors.contains(color1))
-                .findFirst();
-
-        if (color.isEmpty()) {
-            throw  new IllegalArgumentException("Color not found");
-        }
-
-        Player bot = new Player();
-        bot.setPlayerId(UUID.randomUUID());
-        bot.setPlayerName("Bot "+ LocalTime.now().getSecond());
-        bot.setBot(true);
-        bot.setColor(color.get());
-
-        gameService.addPlayerToGame(bot,game.get());
-        gamePublisher.publish(GameMapper.INSTANCE.GameToGameDTO(gameService.findById(gameId).get()));
-        return GameMapper.INSTANCE.GameToGameDTO(game.get());
-    }
-
-
-    @QueryMapping
-    public List<PlayerActions> getPossibleCurrentPlayerActions(@Argument("gameId") UUID gameId) {
-        var game = gameService.findById(gameId);
-        if (game.isEmpty()) {
-            throw new IllegalArgumentException("Game not found");
-        }
-
-        if (!game.get().getGameState().equals(GameState.IN_PROGRESS)) {
-            return List.of(PlayerActions.START_GAME);
-        }
-
-
-        var playerId = game.get().getPlayers().get(game.get().getCurrentPlayerIndex()).getPlayerId();
-        var player = playerService.findPlayer(playerId);
-        if (player.isEmpty()) {
-            throw new IllegalArgumentException("Player not found");
-        }
-
-
-        return List.of(PlayerActions.BUY_PROPERTY, PlayerActions.END_TURN);
     }
 
     /**
@@ -240,7 +121,6 @@ public class GameController {
         }
 
         Player current = game.getPlayers().get(game.getCurrentPlayerIndex());
-
         if (!player.getPlayerId().equals(current.getPlayerId())) {
             throw new IllegalStateException("Wrong player id");
         }
@@ -253,7 +133,6 @@ public class GameController {
             asyncCommands.publish("game:" + gameId + ":dice-roll-action", "");
         }
 
-
         scheduler.schedule(() -> {
             if (!future.isDone()) {
                 future.completeExceptionally(new TimeoutException("Dice roll timed out"));
@@ -261,10 +140,7 @@ public class GameController {
             }
         }, 90, TimeUnit.SECONDS);
 
-        return future.thenCompose(topFace ->
-                CompletableFuture.supplyAsync(() -> handleDiceRoll(gameId, topFace)));
-
-
+        return future.thenCompose(topFace -> CompletableFuture.supplyAsync(() -> handleDiceRoll(gameId, topFace)));
     }
 
     private Integer handleDiceRoll(UUID gameId, int topFace) {
@@ -285,13 +161,15 @@ public class GameController {
         freshPlayer.setPosition(newPosition);
 
         int nextIndex = (freshGame.getCurrentPlayerIndex() + 1) % freshGame.getPlayers().size();
+
+
         freshGame.setCurrentPlayerIndex(nextIndex);
 
         gameService.save(freshGame);
 
         GameDTO updatedDto = GameMapper.INSTANCE.GameToGameDTO(freshGame);
         gamePublisher.publish(updatedDto);
-
+        isNextPlayerBot(freshGame, nextIndex);
         return topFace;
     }
 
@@ -302,20 +180,32 @@ public class GameController {
         }
     }
 
-    private String recieveMove_FromLLM(Game game) {
-        try {
-            var possibleMoves = this.getPossibleCurrentPlayerActions(game.getGameId());
-            var prompt =
-                    "Possible moves: " + possibleMoves
-                            + "For Game:" + new ObjectMapper().writeValueAsString(game);
-            var result = botService.decideMove(prompt);
-            System.out.println(result);
-            return result;
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    private void isNextPlayerBot(Game game, Integer nextPlayerIndex) {
+        var nextPlayer = game.getPlayers().get(nextPlayerIndex);
 
+        if (nextPlayer.isBot()) {
+
+            try {
+                TimeUnit.SECONDS.sleep(5);
+                rollDice(game.getGameId(), nextPlayer.getPlayerId());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
-
+//    private String recieveMove_FromLLM(Game game) {
+//        try {
+//            var possibleMoves = this.getPossibleCurrentPlayerActions(game.getGameId());
+//            var prompt =
+//                    "Possible moves: " + possibleMoves
+//                            + "For Game:" + new ObjectMapper().writeValueAsString(game);
+//            var result = botService.decideMove(prompt);
+//            System.out.println(result);
+//            return result;
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//    }
 }

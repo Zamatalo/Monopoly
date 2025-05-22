@@ -2,7 +2,7 @@ type Mutation {
     rollDice(gameId: ID!, playerId: ID!): Int
     joinToGame(gameId: ID!, playerName: String!,playerColor:PlayerColors!,playerId:ID!):GameDTO!
     createNewGame:GameDTO
-    buyPropertyForPlayer(gameId:ID!):GameDTO
+    buyPropertyForPlayer(gameId:ID!,playerId:ID!):GameDTO
     startGame(gameId:ID!):GameDTO
     addBotToGame(gameId:ID!):GameDTO
 }

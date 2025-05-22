@@ -5,6 +5,7 @@ import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.V;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,6 +24,7 @@ public class BotService {
     public String decideMove(String jsonState) {
         return llmBot.decideAction(jsonState);
     }
+
 
 
     public interface MonopolyLLMBot {

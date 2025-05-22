@@ -22,4 +22,5 @@ public class PlayerController {
         var pl = playerService.findPlayer(playerId).orElseGet(null);
         return GameMapper.INSTANCE.playerToDto(pl);
     }
+
 }
