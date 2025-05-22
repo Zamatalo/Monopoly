@@ -4,5 +4,6 @@ type Mutation {
     createNewGame:GameDTO
     buyPropertyForPlayer(gameId:ID!):GameDTO
     startGame(gameId:ID!):GameDTO
+    addBotToGame(gameId:ID!):GameDTO
 }
 

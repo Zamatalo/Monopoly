@@ -3,6 +3,7 @@ package com.example.application.controller;
 import com.example.application.components.GamePublisher;
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
+import com.example.application.services.BotService;
 import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.types.GameDTO;
@@ -11,7 +12,8 @@ import com.example.application.util.PropertyData;
 import com.example.application.util.enums.GameState;
 import com.example.application.util.enums.PlayerActions;
 import com.example.application.utility.GameMapper;
-import com.example.application.utility.TurnTimerManager;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
 /// TODO: add proper error and exception handling
 @Controller
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -38,6 +41,7 @@ public class GameController {
     private static final ConcurrentHashMap<UUID, CompletableFuture<Integer>> diceResults = new ConcurrentHashMap<>();
     private final RedisClient redisClient;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    private final BotService botService;
 
     @MutationMapping
     public GameDTO createNewGame() {
@@ -101,7 +105,7 @@ public class GameController {
     public GameDTO findGameById(@Argument("gameId") UUID id) {
         return gameService.findById(id)
                 .map(GameMapper.INSTANCE::GameToGameDTO)
-                .orElseThrow(() ->  new IllegalArgumentException("Game not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
     }
 
     @QueryMapping
@@ -143,6 +147,28 @@ public class GameController {
         return updGame;
     }
 
+    @MutationMapping
+    public GameDTO addBotToGame(@Argument("gameId") UUID gameId) {
+        var game = gameService.findById(gameId);
+        if (game.isEmpty()) {
+            throw new IllegalArgumentException("Game not found");
+        }
+
+        try {
+            var possibleMoves = this.getPossibleCurrentPlayerActions(gameId);
+            var prompt =
+                    "Possible moves: " + possibleMoves
+                    + "For Game:" + new ObjectMapper().writeValueAsString(game.get())
+                    ;
+            var a = botService.decideMove(prompt);
+            System.out.println(a);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return GameMapper.INSTANCE.GameToGameDTO(game.get());
+    }
+
+
     @QueryMapping
     public List<PlayerActions> getPossibleCurrentPlayerActions(@Argument("gameId") UUID gameId) {
         var game = gameService.findById(gameId);
@@ -162,8 +188,9 @@ public class GameController {
         }
 
 
-        return List.of(PlayerActions.BUY_PROPERTY);
+        return List.of(PlayerActions.BUY_PROPERTY, PlayerActions.END_TURN);
     }
+
     /**
      * TODO: write whats going on here
      */
