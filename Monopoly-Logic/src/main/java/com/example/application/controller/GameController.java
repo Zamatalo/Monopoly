@@ -7,10 +7,10 @@ import com.example.application.services.BotService;
 import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.types.GameDTO;
-import com.example.application.types.PlayerColors;
 import com.example.application.util.PropertyData;
 import com.example.application.util.enums.GameState;
 import com.example.application.util.enums.PlayerActions;
+import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,11 +20,17 @@ import io.lettuce.core.api.async.RedisAsyncCommands;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -42,6 +48,7 @@ public class GameController {
     private final RedisClient redisClient;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
     private final BotService botService;
+
 
     @MutationMapping
     public GameDTO createNewGame() {
@@ -64,7 +71,7 @@ public class GameController {
         Player player = new Player();
         player.setPlayerName(playerName);
         player.setPlayerId(playerId);
-        player.setColor(com.example.application.util.enums.PlayerColors.valueOf(playerColor.toString()));
+        player.setColor(PlayerColors.valueOf(playerColor.toString()));
 
         gameService.addPlayerToGame(player, game);
 
@@ -153,18 +160,31 @@ public class GameController {
         if (game.isEmpty()) {
             throw new IllegalArgumentException("Game not found");
         }
-
-        try {
-            var possibleMoves = this.getPossibleCurrentPlayerActions(gameId);
-            var prompt =
-                    "Possible moves: " + possibleMoves
-                    + "For Game:" + new ObjectMapper().writeValueAsString(game.get())
-                    ;
-            var a = botService.decideMove(prompt);
-            System.out.println(a);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        if ((game.get().getPlayers().size() >= 4) || !game.get().getGameState().equals(GameState.STARTED)) {
+            throw  new IllegalArgumentException("Already 4 players");
         }
+
+        var allColors = PlayerColors.values();
+        var usedColors = new ArrayList<>();
+
+        game.get().getPlayers().forEach(p -> usedColors.add(p.getColor()));
+
+        var color = Arrays.stream(allColors)
+                .filter(color1 -> !usedColors.contains(color1))
+                .findFirst();
+
+        if (color.isEmpty()) {
+            throw  new IllegalArgumentException("Color not found");
+        }
+
+        Player bot = new Player();
+        bot.setPlayerId(UUID.randomUUID());
+        bot.setPlayerName("Bot "+ LocalTime.now().getSecond());
+        bot.setBot(true);
+        bot.setColor(color.get());
+
+        gameService.addPlayerToGame(bot,game.get());
+        gamePublisher.publish(GameMapper.INSTANCE.GameToGameDTO(gameService.findById(gameId).get()));
         return GameMapper.INSTANCE.GameToGameDTO(game.get());
     }
 
@@ -280,6 +300,21 @@ public class GameController {
         if (future != null) {
             future.complete(topFace);
         }
+    }
+
+    private String recieveMove_FromLLM(Game game) {
+        try {
+            var possibleMoves = this.getPossibleCurrentPlayerActions(game.getGameId());
+            var prompt =
+                    "Possible moves: " + possibleMoves
+                            + "For Game:" + new ObjectMapper().writeValueAsString(game);
+            var result = botService.decideMove(prompt);
+            System.out.println(result);
+            return result;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 

@@ -33,4 +33,11 @@ public class Game {
     private int currentPlayerIndex = 0;
 
     private String createdTime = LocalDateTime.now().toString();
+
+    public void addPlayer(Player player) {
+        if(this.players.contains(player) || players.size() >=4)  {
+            return;
+        }
+        players.add(player);
+    }
 }

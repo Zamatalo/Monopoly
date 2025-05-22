@@ -33,6 +33,8 @@ public class Player {
 
     private boolean inJail = false;
 
+    private boolean isBot = false;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "ownedProperties", joinColumns = @JoinColumn(name = "player_id"))
     private List<PropertyData> ownedProperties = new ArrayList<>();
