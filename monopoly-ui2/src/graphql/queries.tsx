@@ -17,6 +17,7 @@ export const GET_ACTIVE_GAMES = gql`
                 balance
                 position
                 inJail
+                isBot
             }
         }
     }
@@ -33,6 +34,7 @@ export const GET_PLAYER = gql`
             balance
             position
             inJail
+            isBot
         }
     }
 
@@ -53,6 +55,8 @@ export const GET_FIND_BY_ID = gql`
                 color
                 balance
                 position
+                inJail
+                isBot
                 ownedProperties {
                     displayName
                     cost
@@ -77,6 +81,7 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
                 balance
                 position
                 inJail
+                isBot
                 ownedProperties {
                     displayName
                     cost
@@ -102,6 +107,7 @@ export const JOIN_GAME_MUTATION = gql`
                 balance
                 position
                 inJail
+                isBot
                 ownedProperties {
                     displayName
                     cost
@@ -127,6 +133,7 @@ export const CREATE_GAME_MUTATION = gql`
                 balance
                 position
                 inJail
+                isBot
                 ownedProperties {
                     displayName
                     cost
@@ -152,6 +159,7 @@ export const GET_GAME_BY_PLAYER_ID = gql`
                 balance
                 position
                 inJail
+                isBot
                 ownedProperties {
                     displayName
                     cost
@@ -195,6 +203,7 @@ export const BUY_PROPERTY_MUTATION = gql`
                 balance
                 position
                 inJail
+                isBot
                 ownedProperties {
                     cost
                     upgradable
@@ -220,6 +229,7 @@ export const START_GAME = gql(`
                 balance
                 position
                 inJail
+                isBot
                 ownedProperties {
                     displayName
                     boardPosition

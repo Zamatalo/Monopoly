@@ -13,7 +13,6 @@
         <module>Monopoly-Persistence</module>
         <module>Monopoly-Shared</module>
         <module>Monopoly-API-Gateway</module>
-        <module>Monopoly-Bot</module>
     </modules>
 
     <properties>

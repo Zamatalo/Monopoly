@@ -46,6 +46,7 @@ type PlayerDTO {
     balance: Int
     position: Int
     inJail: Boolean
+    isBot:Boolean
     ownedProperties: [PropertyDTO]
 }
 

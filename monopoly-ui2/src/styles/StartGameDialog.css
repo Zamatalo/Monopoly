@@ -72,8 +72,7 @@
 }
 
 .players-list {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 6px;
     margin-bottom: 12px;
 }

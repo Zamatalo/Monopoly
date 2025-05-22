@@ -41,8 +41,8 @@ public class GameService {
 
     @Transactional
     public void addPlayerToGame(Player player, Game game) {
-        game.getPlayers().add(player);
-        var gm = gameRepo.save(game);
+        game.addPlayer(player);
+        gameRepo.save(game);
        // return gm.getPlayers().stream().filter(e -> e.getPlayerId().equals(player.getPlayerId())).findFirst().orElse(null);
     }
 
