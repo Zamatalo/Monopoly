@@ -9,7 +9,7 @@ import '../../styles/gameInterface.css'
 
 const UIGameInterface: React.FC = () => {
     const game = GameSingleton.getInstance();
-    const [rollDice, { error }] = useMutation(ROLL_DICE);
+    const [rollDice, {error}] = useMutation(ROLL_DICE);
     const [buyProperty] = useMutation(BUY_PROPERTY_MUTATION);
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [rolledValue, setRolledValue] = useState<number | null>(null);
@@ -17,8 +17,8 @@ const UIGameInterface: React.FC = () => {
 
     useEffect(() => {
         if (game?.gameId) {
-           let a = fetchAvailableActions({ variables: { gameId: game.gameId } });
-           a.then(e=>console.log(e.data));
+            let a = fetchAvailableActions({variables: {gameId: game.gameId}});
+            a.then(e => console.log(e.data));
         }
     }, [game]);
 
@@ -26,6 +26,7 @@ const UIGameInterface: React.FC = () => {
         const current = CurrentPlayerSingleton.getInstance();
         setCurrentPlayer(current);
     }, [game.currentPlayerIndex]);
+
 
     const handleRollDice = async () => {
         if ( !game?.gameId || !currentPlayer?.playerId) return;

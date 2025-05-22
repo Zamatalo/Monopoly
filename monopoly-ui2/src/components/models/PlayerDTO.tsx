@@ -10,15 +10,17 @@ export class PlayerDTO {
     playerName: string;
     color: PlayerColor;
     inJail: boolean;
+    isBot:boolean;
     balance: number;
     position: number;
     ownedProperties: PropertyDTO[];
 
-    constructor({playerId, color, inJail, balance, position, ownedProperties, playerName}: PlayerDTO) {
+    constructor({playerId, color, inJail, balance, position, ownedProperties, playerName,isBot}: PlayerDTO) {
         this.playerId = playerId;
         this.color = color;
         this.playerName = playerName;
         this.inJail = inJail;
+        this.isBot = isBot;
         this.balance = balance;
         this.position = position;
         this.ownedProperties = ownedProperties;
