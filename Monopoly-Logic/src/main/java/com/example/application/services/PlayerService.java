@@ -12,10 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,31 +29,39 @@ public class PlayerService {
         playerRepository.save(player);
     }
 
-    @Transactional(readOnly = true)
     public List<PlayerActions> resolvePlayerActions(UUID playerId) {
-        var player = playerRepository.findById(playerId).orElseThrow();
-        var game = player.getGame();
-        var actions = new ArrayList<PlayerActions>();
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NoSuchElementException("Player not found"));
 
-        if (!game.getGameState().equals(GameState.IN_PROGRESS)) {
+        Game game = player.getGame();
+
+        List<PlayerActions> actions = new ArrayList<>();
+        //the game isn't started
+        if (game.getGameState() != GameState.IN_PROGRESS) {
             return actions;
         }
+
+        //not a player's turn
         if (!game.getCurrentPlayer().getPlayerId().equals(playerId)) {
             return actions;
         }
 
+        // Waiting for player response
         if (player.getPlayerState() == PlayerState.IDLE) {
             actions.add(PlayerActions.ROLL_DICE);
         }
 
+        // player moved
         if (player.getPlayerState() == PlayerState.MOVED) {
             if (canBuy(player.getPosition(), game)) {
                 actions.add(PlayerActions.BUY_PROPERTY);
             }
             actions.add(PlayerActions.END_TURN);
         }
+
         return actions;
     }
+
 
     private boolean canBuy(Integer playerPosition, Game game) {
         return game.getPlayers().stream()

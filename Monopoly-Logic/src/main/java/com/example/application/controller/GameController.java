@@ -37,27 +37,7 @@
 //    private final RedisClient redisClient;
 //    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 //
-//    @QueryMapping
-//    public List<GameDTO> getActiveGames() {
-//        return gameService.findAll().stream()
-//                .map(GameMapper.INSTANCE::GameToGameDTO)
-//                .collect(Collectors.toList());
-//    }
-//
-//    @QueryMapping
-//    public GameDTO findGameById(@Argument("gameId") UUID id) {
-//        return gameService.findById(id)
-//                .map(GameMapper.INSTANCE::GameToGameDTO)
-//                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
-//    }
-//
-//    @QueryMapping
-//    public GameDTO findGameByPlayerId(@Argument("playerId") UUID playerId) {
-//        return gameService.findGameByPlayerId(playerId)
-//                .map(GameMapper.INSTANCE::GameToGameDTO)
-//                .orElse(null);
-//    }
-//
+
 //    @MutationMapping
 //    public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameID, @Argument("playerId") UUID playerId) {
 //        var game = gameService.findById(gameID)

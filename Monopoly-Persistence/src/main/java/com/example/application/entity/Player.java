@@ -50,7 +50,6 @@ public class Player {
 
     private String createdTime = LocalDateTime.now().toString();
 
-
     public void addProperty(PropertyData property) {
         if (property != null) {
             ownedProperties.add(property);
