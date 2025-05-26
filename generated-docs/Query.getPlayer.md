@@ -15,6 +15,7 @@
     balance
     position
     inJail
+    isBot
     ownedProperties
   }
 }

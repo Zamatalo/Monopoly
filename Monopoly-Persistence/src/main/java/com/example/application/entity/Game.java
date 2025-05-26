@@ -23,21 +23,25 @@ public class Game {
 
     @Column(name = "game_state", nullable = false)
     @Enumerated(EnumType.STRING)
-    private GameState gameState=GameState.STARTED;
+    private GameState gameState = GameState.STARTED;
 
-    @ToString.Exclude
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    @OrderColumn(name = "player_order")
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<Player> players = new ArrayList<>();
 
     private int currentPlayerIndex = 0;
 
+    private boolean isTimerRunning = false;
+
     private String createdTime = LocalDateTime.now().toString();
 
+
     public void addPlayer(Player player) {
-        if(this.players.contains(player) || players.size() >=4)  {
-            return;
-        }
+        if (this.players.contains(player) || players.size() >= 4) return;
+        player.setGame(this);
         players.add(player);
+    }
+
+    public Player getCurrentPlayer() {
+        return players.get(currentPlayerIndex);
     }
 }

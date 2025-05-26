@@ -10,6 +10,15 @@ enum PlayerColors {
     PLAYER_YELLOW
     PLAYER_GREEN
 }
+enum GameActions {
+    START_GAME,
+    END_GAME,
+    START_TIMER,
+    END_TIMER,
+    CREATE_GAME,
+    JOIN_TO_GAME,
+    ADD_BOT
+}
 
 enum PropertyNames {
     BROWN_1 BROWN_2
@@ -56,3 +65,4 @@ type PropertyDTO {
     cost: Int
     upgradable: Boolean
 }
+

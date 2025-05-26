@@ -14,9 +14,9 @@
     color
     balance
     position
-    name
-    ownedProperties
     inJail
+    isBot
+    ownedProperties
   }
 }
 

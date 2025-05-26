@@ -3,6 +3,8 @@ type Mutation {
     joinToGame(gameId: ID!, playerName: String!,playerColor:PlayerColors!,playerId:ID!):GameDTO!
     createNewGame:GameDTO
     buyPropertyForPlayer(gameId:ID!,playerId:ID!):GameDTO
+    makePlayerAction(gameId:ID!,playerId:ID!,action:PlayerActions!):String
+    makeGameAction(gameId:ID!,action:GameActions!):String
     startGame(gameId:ID!):GameDTO
     addBotToGame(gameId:ID!):GameDTO
 }
