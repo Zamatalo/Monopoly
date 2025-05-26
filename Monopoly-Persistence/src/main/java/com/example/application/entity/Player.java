@@ -2,12 +2,14 @@ package com.example.application.entity;
 
 import com.example.application.util.PropertyData;
 import com.example.application.util.enums.PlayerColors;
+import com.example.application.util.enums.PlayerState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +26,10 @@ public class Player {
 
     private String playerName;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id")
+    private Game game;
+
     @Enumerated(EnumType.STRING)
     private PlayerColors color;
 
@@ -35,9 +41,15 @@ public class Player {
 
     private boolean isBot = false;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "ownedProperties", joinColumns = @JoinColumn(name = "player_id"))
     private List<PropertyData> ownedProperties = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    private PlayerState playerState = PlayerState.IDLE;
+
+    private String createdTime = LocalDateTime.now().toString();
+
 
     public void addProperty(PropertyData property) {
         if (property != null) {

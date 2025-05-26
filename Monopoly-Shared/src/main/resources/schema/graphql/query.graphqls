@@ -3,6 +3,7 @@ type Query {
     getActiveGames:[GameDTO!]!
     findGameByPlayerId(playerId:ID!):GameDTO
     getPlayer(playerId:ID!):PlayerDTO
-    getPossibleCurrentPlayerActions(gameId:ID):[PlayerActions]
+    getGameActions(gameId:ID!):[GameActions]
+    getPlayerActions(gameId:ID!,playerId:ID!):[PlayerActions]
 }
 
