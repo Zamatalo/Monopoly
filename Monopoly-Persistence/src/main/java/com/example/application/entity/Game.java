@@ -3,7 +3,10 @@ package com.example.application.entity;
 
 import com.example.application.util.enums.GameState;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,9 +39,10 @@ public class Game {
 
 
     public void addPlayer(Player player) {
-        if (this.players.contains(player) || players.size() >= 4) return;
-        player.setGame(this);
-        players.add(player);
+        if (this.players!=null&&!this.players.isEmpty()&&!this.players.contains(player) && this.players.size() < 4) {
+            player.setGame(this);
+            players.add(player);
+        }
     }
 
     public Player getCurrentPlayer() {

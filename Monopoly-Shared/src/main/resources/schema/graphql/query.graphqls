@@ -1,6 +1,6 @@
 type Query {
     findGameById(gameId:ID!): GameDTO!
-    getActiveGames:[GameDTO!]!
+    getAllGames:[GameDTO!]
     findGameByPlayerId(playerId:ID!):GameDTO
     getPlayer(playerId:ID!):PlayerDTO
     getGameActions(gameId:ID!):[GameActions]

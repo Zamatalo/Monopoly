@@ -9,6 +9,9 @@
     <artifactId>Monopoly-Shared</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
