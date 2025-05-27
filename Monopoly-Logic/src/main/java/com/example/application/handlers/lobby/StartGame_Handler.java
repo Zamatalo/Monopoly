@@ -1,7 +1,7 @@
-package com.example.application.handlers;
+package com.example.application.handlers.lobby;
 
-import com.example.application.entity.Game;
 import com.example.application.services.GameService;
+import com.example.application.types.GameDTO;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,23 +9,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
-@Slf4j
 @RequiredArgsConstructor
-public class CreateNewGame_Handler implements GameActionHandler {
+@Slf4j
+public class StartGame_Handler implements GameActionHandler {
     private final GameService gameService;
     private final ObjectMapper objectMapper;
 
     @Override
     public String getAction() {
-        return "createNewGame";
+        return "startGame";
     }
 
     @Override
     public void handle(RequestContextRedis ctx) {
         try {
-            Game game = new Game();
-            gameService.save(game);
+            UUID gameId = UUID.fromString(ctx.body().get("gameID"));
+            GameDTO game = gameService.startGame(gameId);
             ctx.respond(objectMapper.writeValueAsString(game));
         } catch (Exception e) {
             e.printStackTrace();

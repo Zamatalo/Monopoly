@@ -1,5 +1,7 @@
 package com.example.application.redis;
 
+import com.example.application.handlers.IsActionValid_Handler;
+import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -12,7 +14,6 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Component;
-import com.example.application.utility.GameActionHandler;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -29,11 +30,31 @@ public class GameRequestStreamListener {
     private final List<GameActionHandler> handlers;
 
     private final Map<String, GameActionHandler> handlerMap = new HashMap<>();
+    private final IsActionValid_Handler isActionValid_Handler;
 
     @PostConstruct
     public void startListening() {
+        //filling with all handlers
         for (var handler : handlers) {
             handlerMap.put(handler.getAction(), handler);
+        }
+        //creating groups
+        try {
+            redisTemplate.opsForStream()
+                    .createGroup("game.request", ReadOffset.latest(), "backend");
+        } catch (Exception e) {
+            if (!e.getMessage().contains("BUSYGROUP")) {
+                System.out.println("Group exist already. Skipping");
+            }
+        }
+
+        try {
+            redisTemplate.opsForStream()
+                    .createGroup("game.response", ReadOffset.latest(), "gateway");
+        } catch (Exception e) {
+            if (!e.getMessage().contains("BUSYGROUP")) {
+                System.out.println("Group exist already. Skipping");
+            }
         }
 
         assert redisTemplate.getConnectionFactory() != null;
@@ -62,12 +83,23 @@ public class GameRequestStreamListener {
         var ctx = new RequestContextRedis(correlationId, body, message, redisTemplate, objectMapper);
 
         var handler = handlerMap.get(action);
-        if (handler != null) {
+        if (handler != null && isActionValid(action, body)) {
             handler.handle(ctx);
         } else {
-            log.error("Unknown action {}", action);
+            ctx.respond("Invalid action");
+            log.error("Unknown/Forbidden action {}", action);
         }
 
         redisTemplate.opsForStream().acknowledge("game.request", "backend", message.getId());
+    }
+
+    private boolean isActionValid(String action, Map<String, String> body) {
+        if (action.equals("getGameActions") || action.equals("getPlayerActions") || action.equals("getAllGames")) {
+            return true;
+        }
+        if (body.get("gameId") != null && !action.isEmpty()) {
+            return isActionValid_Handler.check(action, body.get("gameId"));
+        }
+        return false;
     }
 }

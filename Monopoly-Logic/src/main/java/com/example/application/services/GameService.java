@@ -24,21 +24,18 @@ public class GameService {
 
     @Transactional(readOnly = true)
     public List<GameDTO> findAll() {
-        return gameRepo.findAll()
-                .stream()
-                .map(GameMapper.INSTANCE::GameToGameDTO)
-                .toList();
+        return gameRepo.findAll().stream().map(GameMapper.INSTANCE::GameToGameDTO).toList();
     }
 
     @Transactional(readOnly = true)
     public Optional<GameDTO> findById(UUID id) {
-        return gameRepo.findById(id)
-                .map(GameMapper.INSTANCE::GameToGameDTO);
+        return gameRepo.findById(id).map(GameMapper.INSTANCE::GameToGameDTO);
     }
 
     @Transactional
-    public void save(Game game) {
-        gameRepo.save(game);
+    public GameDTO save(Game game) {
+        var gameSaved = gameRepo.save(game);
+        return GameMapper.INSTANCE.GameToGameDTO(gameSaved);
     }
 
     @Transactional
@@ -46,6 +43,17 @@ public class GameService {
         var game = gameRepo.findById(gameId).get();
         game.addPlayer(player);
         gameRepo.save(game);
+    }
+
+    @Transactional
+    public GameDTO startGame(UUID gameId) {
+        Game game = gameRepo.findById(gameId).get();
+
+        if (game.getGameState() != GameState.STARTED && game.getPlayers().size() != 4) {
+            throw new IllegalStateException("Game cannot be started");
+        }
+        Game savedGame = gameRepo.save(game);
+        return GameMapper.INSTANCE.GameToGameDTO(savedGame);
     }
 
     @Transactional
