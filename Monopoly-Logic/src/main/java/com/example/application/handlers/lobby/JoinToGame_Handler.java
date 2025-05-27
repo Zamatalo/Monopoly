@@ -1,4 +1,4 @@
-package com.example.application.handlers;
+package com.example.application.handlers.lobby;
 
 import com.example.application.entity.Player;
 import com.example.application.services.GameService;
@@ -17,7 +17,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JoinToGame_Handler implements GameActionHandler {
     private final GameService gameService;
-    private final ObjectMapper objectMapper;
 
     @Override
     public String getAction() {

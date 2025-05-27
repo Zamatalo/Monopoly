@@ -17,27 +17,23 @@ public class GameGatewayService {
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisStreamResponseHandler responseHandler;
 
-    public CompletableFuture<String> getAllGames() {
-        String correlationId = UUID.randomUUID().toString();
-
-        Map<String, String> body = new HashMap<>();
-        body.put("correlationId", correlationId);
-        body.put("action", "getAllGames");
-
-        redisTemplate.opsForStream().add("game.request", body);
-
-        return responseHandler.register(correlationId);
+    public CompletableFuture<String> sendAction(String action) {
+        return sendAction(action, new HashMap<>());
     }
 
-    public CompletableFuture<String> getGame_PlayerId(String playerId) {
+    public CompletableFuture<String> sendAction(String action, String argName, String argValue) {
+        Map<String, String> additionalArgs = new HashMap<>();
+        additionalArgs.put(argName, argValue);
+        return sendAction(action, additionalArgs);
+    }
+
+    public CompletableFuture<String> sendAction(String action, Map<String, String> additionalArgs) {
         String correlationId = UUID.randomUUID().toString();
-
-        Map<String, String> body = new HashMap<>();
+        Map<String, String> body = new HashMap<>(additionalArgs);
         body.put("correlationId", correlationId);
-        body.put("action", "findGameByPlayerId");
-        body.put("playerId", playerId);
-        redisTemplate.opsForStream().add("game.request", body);
+        body.put("action", action);
 
+        redisTemplate.opsForStream().add("game.request", body);
         return responseHandler.register(correlationId);
     }
 }
