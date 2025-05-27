@@ -3,7 +3,6 @@ import {useQuery, useSubscription} from "@apollo/client";
 import {
     DICE_UPDATED_SUBSCRIPTION,
     GAME_UPDATED_SUBSCRIPTION,
-    GET_AVAILABLE_ACTIONS,
     GET_FIND_BY_ID,
     GET_PLAYER
 } from "../graphql/queries";
@@ -23,12 +22,6 @@ export const GameView = () => {
     const [sceneInitialized, setSceneInitialized] = useState(false);
     const [gameInitialized, setGameInitialized] = useState(false);
     const {gameId} = useParams<{ gameId: string }>();
-
-    const {data: actionsData} = useQuery(GET_AVAILABLE_ACTIONS, {
-        variables: {
-            gameId: gameId,
-        }
-    });
 
     const {data: gameData} = useQuery(GET_FIND_BY_ID, {
         variables: {gameId},
@@ -104,7 +97,7 @@ export const GameView = () => {
     return (
         <div className="game-view">
             <div ref={containerRef} className="canvas"/>
-            {sceneInitialized && actionsData && actionsData?.getPossibleCurrentPlayerActions.includes(PlayerActions.START_GAME) && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState == GameState.STARTED) && (<StartGameDialog />)}
+            {sceneInitialized && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState == GameState.STARTED) && (<StartGameDialog />)}
             {sceneInitialized && GameSingleton.hasInstance() && GameSingleton.getInstance().gameState === GameState.IN_PROGRESS &&<UIGameInterface/>}
             {/*{sceneInitialized && <UIGameInterface />}*/}
         </div>

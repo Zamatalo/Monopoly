@@ -1,5 +1,6 @@
 package com.example.application.handlers.lobby;
 
+import com.example.application.components.GameActionResolver;
 import com.example.application.entity.Game;
 import com.example.application.services.GameService;
 import com.example.application.types.GameDTO;
@@ -15,11 +16,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CreateNewGame_Handler implements GameActionHandler {
     private final GameService gameService;
-    private final ObjectMapper objectMapper;
 
     @Override
     public String getAction() {
-        return "createNewGame";
+        return "CREATE_GAME";
     }
 
     @Override
@@ -27,7 +27,7 @@ public class CreateNewGame_Handler implements GameActionHandler {
         try {
             Game game = new Game();
             GameDTO savedGame =gameService.save(game);
-            ctx.respond(objectMapper.writeValueAsString(savedGame));
+            ctx.respond(savedGame);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -1,12 +1,19 @@
 package com.example.application.redis;
 
-import com.example.application.handlers.IsActionValid_Handler;
+import com.example.application.components.GameActionResolver;
+import com.example.application.services.GameService;
+import com.example.application.services.PlayerService;
+import com.example.application.types.GameActions;
+import com.example.application.types.GameDTO;
+import com.example.application.types.PlayerActions;
+import com.example.application.types.PlayerDTO;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -16,21 +23,19 @@ import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GameRequestStreamListener {
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final List<GameActionHandler> handlers;
-
     private final Map<String, GameActionHandler> handlerMap = new HashMap<>();
-    private final IsActionValid_Handler isActionValid_Handler;
+    private final GameService gameService;
+    private final PlayerService playerService;
 
     @PostConstruct
     public void startListening() {
@@ -94,12 +99,36 @@ public class GameRequestStreamListener {
     }
 
     private boolean isActionValid(String action, Map<String, String> body) {
-        if (action.equals("getGameActions") || action.equals("getPlayerActions") || action.equals("getAllGames")) {
+        if (action.equals("getGameActions") ||
+                action.equals("getPlayerActions") ||
+                action.equals("getAllGames") ||
+                action.equals("createNewGame") ||
+                action.equals("findGameByPlayerId")
+        ) {
             return true;
         }
+
         if (body.get("gameId") != null && !action.isEmpty()) {
-            return isActionValid_Handler.check(action, body.get("gameId"));
+            var gameId = body.get("gameId");
+            Optional<GameDTO> game = gameService.findById(UUID.fromString(gameId));
+            assert game.isPresent();
+            List<GameActions> actions = GameActionResolver.resolveGameActions(game.get());
+            return actions.contains(GameActions.valueOf(action));
         }
+
+//        if (body.get("gameId") != null && !action.isEmpty() && body.get("playerId") != null) {
+//            var gameId = body.get("gameId");
+//            var playerId = body.get("playerId");
+//
+//            Optional<GameDTO> game = gameService.findById(UUID.fromString(gameId));
+//            assert game.isPresent();
+//
+//            PlayerDTO player = playerService.findById(UUID.fromString(playerId));
+//
+//            List<PlayerActions> actions = GameActionResolver.resolvePlayerActions(game.get(), player);
+//            return actions.contains(PlayerActions.valueOf(action));
+//        }
+
         return false;
     }
 }

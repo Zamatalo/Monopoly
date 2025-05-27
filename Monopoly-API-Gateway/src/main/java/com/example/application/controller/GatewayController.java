@@ -24,53 +24,11 @@ public class GatewayController {
     private final GameGatewayService redisRequestReplyService;
     private final ObjectMapper mapper;
 
-//    @MutationMapping
-//    public void makePlayerAction(@Argument("gameId") UUID gameId,
-//                                 @Argument("playerId") UUID playerId,
-//                                 @Argument("action") PlayerActions action) {
-//        publisher.publish("gameId:" + gameId + ":player:" + playerId + ":action", action);
-//    }
-//
-//    @MutationMapping
-//    public void makeGameAction(@Argument("gameId") UUID gameId,
-//                               @Argument("action") GameActions action) {
-//        publisher.publish("gameId:" + gameId + ":action", action);
-//    }
-
-    @QueryMapping
-    public List<PlayerActions> getPlayerActions(@Argument("gameId") UUID gameId,
-                                                @Argument("playerId") UUID playerId) {
-        String json = redisRequestReplyService.sendAction("getPlayerActions",
-                        Map.of("gameId", gameId.toString(),
-                                "playerId",playerId.toString()))
-                .join();
-        try {
-            String actualJson = mapper.readValue(json, String.class);
-            return List.of(mapper.readValue(actualJson, PlayerActions[].class));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
-        }
-    }
-
-    @QueryMapping
-    public List<GameActions> getGameActions(@Argument("gameId") UUID gameId) {
-        String json = redisRequestReplyService.sendAction("getGameActions",
-                        Map.of("gameId", gameId.toString()))
-                .join();
-        try {
-            String actualJson = mapper.readValue(json, String.class);
-            return List.of(mapper.readValue(actualJson, GameActions[].class));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
-        }
-    }
-
     @MutationMapping
     public GameDTO createNewGame() {
-        String json = redisRequestReplyService.sendAction("createNewGame").join();
+        String json = redisRequestReplyService.sendAction("CREATE_GAME").join();
         try {
-            String actualJson = mapper.readValue(json, String.class);
-            return mapper.readValue(actualJson, GameDTO.class);
+            return mapper.readValue(json, GameDTO.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
         }
@@ -80,8 +38,7 @@ public class GatewayController {
     public List<GameDTO> getAllGames() {
         String json = redisRequestReplyService.sendAction("getAllGames").join();
         try {
-            String actualJson = mapper.readValue(json, String.class);
-            return Arrays.asList(mapper.readValue(actualJson, GameDTO[].class));
+            return Arrays.asList(mapper.readValue(json, GameDTO[].class));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
         }
@@ -103,12 +60,12 @@ public class GatewayController {
 
     @QueryMapping
     public GameDTO findGameById(@Argument("gameId") UUID gameId) {
-        String json = redisRequestReplyService.sendAction("findGameById",
+        String json = redisRequestReplyService.sendAction(
+                "findGameById",
                         Map.of("gameId", gameId.toString()))
                 .join();
         try {
-            String actualJson = mapper.readValue(json, String.class);
-            return mapper.readValue(actualJson, GameDTO.class);
+            return mapper.readValue(json, GameDTO.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
         }
@@ -120,7 +77,8 @@ public class GatewayController {
                               @Argument("playerColor") PlayerColors playerColor,
                               @Argument("playerId") UUID playerId) {
 
-        String json = redisRequestReplyService.sendAction("joinToGame",
+        String json = redisRequestReplyService.sendAction(
+                "JOIN_TO_GAME",
                         Map.of("gameId", gameId.toString(),
                                 "playerName", playerName,
                                 "playerColor", playerColor.toString(),
@@ -128,8 +86,7 @@ public class GatewayController {
                         ))
                 .join();
         try {
-            String actualJson = mapper.readValue(json, String.class);
-            return mapper.readValue(actualJson, GameDTO.class);
+            return mapper.readValue(json, GameDTO.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
         }

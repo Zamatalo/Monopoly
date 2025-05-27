@@ -16,7 +16,7 @@ public class RedisStreamResponseHandler {
     public CompletableFuture<String> register(String correlationId) {
         CompletableFuture<String> future = new CompletableFuture<>();
         futures.put(correlationId, future);
-        return future.orTimeout(5, TimeUnit.SECONDS);
+        return future.orTimeout(10, TimeUnit.SECONDS);
     }
 
     public void complete(String correlationId, String response) {

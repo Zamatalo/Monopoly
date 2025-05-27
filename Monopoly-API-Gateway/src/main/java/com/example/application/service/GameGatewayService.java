@@ -4,13 +4,14 @@ import com.example.application.redis.RedisStreamResponseHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class GameGatewayService {
 

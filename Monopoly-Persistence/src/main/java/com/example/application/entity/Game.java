@@ -33,17 +33,15 @@ public class Game {
 
     private int currentPlayerIndex = 0;
 
-    private boolean isTimerRunning = false;
-
     private String createdTime = LocalDateTime.now().toString();
 
-
     public void addPlayer(Player player) {
-        if (this.players!=null&&!this.players.isEmpty()&&!this.players.contains(player) && this.players.size() < 4) {
+        if (this.players != null && !this.players.contains(player) && this.players.size() < 4) {
             player.setGame(this);
             players.add(player);
         }
     }
+
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);

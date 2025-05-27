@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import GameSingleton from "../../stores/singletons/GameSingleton";
 import {useLazyQuery, useMutation, useQuery} from "@apollo/client";
-import {BUY_PROPERTY_MUTATION, GET_AVAILABLE_ACTIONS, ROLL_DICE, START_GAME} from "../../graphql/queries";
+import {BUY_PROPERTY_MUTATION, ROLL_DICE, START_GAME} from "../../graphql/queries";
 import {PlayerDTO} from "../../components/models/PlayerDTO";
 import CurrentPlayerSingleton from "../../stores/singletons/CurrentPlayerSingleton";
 import {ColorHexMap, GameState} from "../../components/utils/constants";
@@ -13,14 +13,7 @@ const UIGameInterface: React.FC = () => {
     const [buyProperty] = useMutation(BUY_PROPERTY_MUTATION);
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [rolledValue, setRolledValue] = useState<number | null>(null);
-    const [fetchAvailableActions] = useLazyQuery(GET_AVAILABLE_ACTIONS);
 
-    useEffect(() => {
-        if (game?.gameId) {
-            let a = fetchAvailableActions({variables: {gameId: game.gameId}});
-            a.then(e => console.log(e.data));
-        }
-    }, [game]);
 
     useEffect(() => {
         const current = CurrentPlayerSingleton.getInstance();

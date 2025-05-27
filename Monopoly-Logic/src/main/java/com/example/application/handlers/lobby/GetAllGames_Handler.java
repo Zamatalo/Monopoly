@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GetAllGames_Handler implements GameActionHandler {
     private final GameService gameService;
-    private final ObjectMapper objectMapper;
 
     @Override
     public String getAction() {
@@ -25,8 +24,7 @@ public class GetAllGames_Handler implements GameActionHandler {
     public void handle(RequestContextRedis ctx) {
         try {
             var games = gameService.findAll();
-            String payload = objectMapper.writeValueAsString(games);
-            ctx.respond(payload);
+            ctx.respond(games);
         } catch (Exception e) {
             e.printStackTrace();
         }

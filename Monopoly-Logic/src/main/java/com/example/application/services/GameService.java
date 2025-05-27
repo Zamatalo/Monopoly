@@ -1,90 +1,79 @@
 package com.example.application.services;
 
+import com.example.application.components.GameActionResolver;
 import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
 import com.example.application.types.GameDTO;
-import com.example.application.util.enums.GameActions;
 import com.example.application.util.enums.GameState;
 import com.example.application.utility.GameMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GameService {
     private final GameRepo gameRepo;
 
     @Transactional(readOnly = true)
     public List<GameDTO> findAll() {
-        return gameRepo.findAll().stream().map(GameMapper.INSTANCE::GameToGameDTO).toList();
+        return gameRepo.findAll()
+                .stream()
+                .map(this::toEnrichedGameDTO)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public Optional<GameDTO> findById(UUID id) {
-        return gameRepo.findById(id).map(GameMapper.INSTANCE::GameToGameDTO);
+        return gameRepo.findById(id).map(this::toEnrichedGameDTO);
     }
 
     @Transactional
     public GameDTO save(Game game) {
-        var gameSaved = gameRepo.save(game);
-        return GameMapper.INSTANCE.GameToGameDTO(gameSaved);
+        Game savedGame = gameRepo.save(game);
+        return toEnrichedGameDTO(savedGame);
     }
 
     @Transactional
     public void addPlayerToGame(Player player, UUID gameId) {
-        var game = gameRepo.findById(gameId).get();
+        Game game = gameRepo.findById(gameId).orElseThrow();
         game.addPlayer(player);
         gameRepo.save(game);
     }
 
     @Transactional
     public GameDTO startGame(UUID gameId) {
-        Game game = gameRepo.findById(gameId).get();
+        Game game = gameRepo.findById(gameId).orElseThrow();
 
-        if (game.getGameState() != GameState.STARTED && game.getPlayers().size() != 4) {
+        if (game.getGameState() != GameState.STARTED || game.getPlayers().size() != 4) {
             throw new IllegalStateException("Game cannot be started");
         }
+
+        game.setGameState(GameState.IN_PROGRESS);
         Game savedGame = gameRepo.save(game);
-        return GameMapper.INSTANCE.GameToGameDTO(savedGame);
+        return toEnrichedGameDTO(savedGame);
+    }
+    @Transactional(readOnly = true)
+    public Optional<Game> findGameByPlayerId (UUID playerId) {
+        return gameRepo.findGameByPlayerId(playerId);
     }
 
-    @Transactional
-    public List<GameActions> resolveGameActions(UUID gameId) {
-        Game game = gameRepo.findById(gameId).get();
+    private GameDTO toEnrichedGameDTO(Game game) {
+        GameDTO dto = GameMapper.INSTANCE.GameToGameDTO(game);
+        dto.setGameActions(GameActionResolver.resolveGameActions(dto));
 
-        List<GameActions> actions = new ArrayList<>();
+        dto.getPlayers().forEach(playerDTO -> {
+            var actions = GameActionResolver.resolvePlayerActions(dto, playerDTO);
+            playerDTO.setPlayerActions(actions);
+        });
 
-        // The Game could be started
-        if (game.getGameState() == GameState.STARTED && game.getPlayers().size() == 4) {
-            actions.add(GameActions.START_GAME);
-        } else {
-            actions.add(GameActions.JOIN_TO_GAME);
-            actions.add(GameActions.ADD_BOT);
-        }
-
-        // Timer could be started/ended
-        if (game.getGameState() == GameState.IN_PROGRESS) {
-            if (game.isTimerRunning()) {
-                actions.add(GameActions.END_TIMER);
-            } else {
-                actions.add(GameActions.START_TIMER);
-            }
-        }
-
-        // possible to end game
-        if (game.getGameState() == GameState.FINISHED) {
-            actions.add(GameActions.END_GAME);
-        }
-
-        return actions;
+        return dto;
     }
 
 }

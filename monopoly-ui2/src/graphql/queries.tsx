@@ -4,12 +4,13 @@ import {gql} from '@apollo/client';
  * Get all active Games
  */
 export const GET_ACTIVE_GAMES = gql`
-    query GetActiveGames {
-        getActiveGames {
+    query GetAllGames {
+        getAllGames {
             gameId
             currentPlayerIndex
             gameState
             createdTime
+            gameActions
             players {
                 playerId
                 playerName
@@ -190,8 +191,8 @@ export const DICE_UPDATED_SUBSCRIPTION = gql`
  * Buy Property for Current Player for specific game
  */
 export const BUY_PROPERTY_MUTATION = gql`
-    mutation BuyPropertyForPlayer($gameId: ID!) {
-        buyPropertyForPlayer(gameId: $gameId) {
+    mutation BuyPropertyForPlayer($gameId: ID!,$playerId: ID!) {
+        buyPropertyForPlayer(gameId: $gameId,playerId: $playerId) {
             gameId
             currentPlayerIndex
             gameState
@@ -241,8 +242,8 @@ export const START_GAME = gql(`
     }
 `);
 
-export const GET_AVAILABLE_ACTIONS = gql`
-    query GetPossibleCurrentPlayerActions($gameId: ID!) {
-        getPossibleCurrentPlayerActions(gameId:$gameId)
-    }
-`;
+// export const GET_AVAILABLE_ACTIONS = gql`
+//     query GetPossibleCurrentPlayerActions($gameId: ID!) {
+//         getPossibleCurrentPlayerActions(gameId:$gameId)
+//     }
+// `;
