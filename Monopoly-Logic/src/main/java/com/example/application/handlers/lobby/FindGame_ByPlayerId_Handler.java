@@ -1,5 +1,6 @@
 package com.example.application.handlers.lobby;
 
+import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
@@ -15,8 +16,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FindGame_ByPlayerId_Handler implements GameActionHandler {
-    private final PlayerService playerService;
-    private final ObjectMapper objectMapper;
+    private final GameService gameService;
 
     @Override
     public String getAction() {
@@ -27,11 +27,9 @@ public class FindGame_ByPlayerId_Handler implements GameActionHandler {
     public void handle(RequestContextRedis ctx) {
         try {
             var playerId = ctx.body().get("playerId");
-            var player = playerService.findById(UUID.fromString(playerId));
-            var game = player.get().getGame();
-            var payload = objectMapper.writeValueAsString(game);
+            var game = gameService.findGameByPlayerId(UUID.fromString(playerId));
 
-            ctx.respond(payload);
+            ctx.respond(game);
         } catch (Exception e) {
             e.printStackTrace();
         }

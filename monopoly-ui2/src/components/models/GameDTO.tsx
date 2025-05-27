@@ -1,8 +1,7 @@
 import {PlayerDTO} from "./PlayerDTO";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
-import {GameState, PlayerColor} from "../utils/constants";
-import {Object3D} from "three";
+import {GameActions, GameState} from "../utils/constants";
 
 export class GameDTO {
     gameId: string;
@@ -10,14 +9,15 @@ export class GameDTO {
     players: PlayerDTO[];
     currentPlayerIndex: number;
     createdTime: Date;
-    model: Object3D | undefined;
+    gameActions: GameActions[]
 
-    constructor({gameId, gameState, players, currentPlayerIndex,createdTime}: GameDTO) {
+    constructor({gameId, gameState, players, currentPlayerIndex, createdTime, gameActions}: GameDTO) {
         this.gameId = gameId;
         this.gameState = gameState;
         this.players = players;
         this.currentPlayerIndex = currentPlayerIndex;
         this.createdTime = createdTime;
+        this.gameActions = gameActions;
     }
 
     static fromRaw(raw: any): GameDTO {
@@ -35,11 +35,6 @@ export class GameDTO {
     }
 
     async loadBoardModel(loader:GLTFLoader): Promise<void> {
-        if (this.model) {
-            console.log('Board model already loaded');
-            return;
-        }
-
         const boardPath = '/assets/models/monopolyBoard.glb';
         const world = WorldSingleton.getInstance();
 
@@ -47,17 +42,17 @@ export class GameDTO {
             loader.load(
                 boardPath,
                 (gltf) => {
-                    this.model = gltf.scene;
-                    this.model.position.set(0, 0, 0);
-                    this.model.userData = { isBoard: true };
-                    this.model.scale.set(1, 1, 1);
-                    this.model.traverse((obj:any) => {
+                    const model = gltf.scene;
+                    model.position.set(0, 0, 0);
+                    model.userData = {isBoard: true};
+                    model.scale.set(1, 1, 1);
+                    model.traverse((obj: any) => {
                         if (obj.castShadow !== undefined) {
                             obj.receiveShadow = true;
                         }
                     });
 
-                    world.addToScene(this.model);
+                    world.addToScene(model);
                     console.log('Board model loaded');
                     resolve();
                 },

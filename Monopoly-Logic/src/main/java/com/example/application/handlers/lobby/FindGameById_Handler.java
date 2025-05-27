@@ -15,7 +15,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FindGameById_Handler implements GameActionHandler {
     private final GameService gameService;
-    private final ObjectMapper objectMapper;
 
     @Override
     public String getAction() {
@@ -27,9 +26,8 @@ public class FindGameById_Handler implements GameActionHandler {
         try {
             var gameId = ctx.body().get("gameId");
             var game = gameService.findById(UUID.fromString(gameId));
-            String payload = objectMapper.writeValueAsString(game);
 
-            ctx.respond(payload);
+            ctx.respond(game);
         } catch (Exception e) {
             e.printStackTrace();
         }

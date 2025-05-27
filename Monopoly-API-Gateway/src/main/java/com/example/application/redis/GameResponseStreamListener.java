@@ -44,8 +44,10 @@ public class GameResponseStreamListener {
         String correlationId = body.get("correlationId");
         String response = body.get("payload");
 
+        if (response.equals("\"Invalid action\"")) {
+            throw new RuntimeException("Invalid/Forbidden action");
+        }
         responseHandler.complete(correlationId, response);
-
         redisTemplate.opsForStream().acknowledge("game.response", "gateway", message.getId());
     }
 }

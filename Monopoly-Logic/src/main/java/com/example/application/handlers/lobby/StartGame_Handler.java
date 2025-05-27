@@ -16,7 +16,6 @@ import java.util.UUID;
 @Slf4j
 public class StartGame_Handler implements GameActionHandler {
     private final GameService gameService;
-    private final ObjectMapper objectMapper;
 
     @Override
     public String getAction() {
@@ -28,7 +27,7 @@ public class StartGame_Handler implements GameActionHandler {
         try {
             UUID gameId = UUID.fromString(ctx.body().get("gameID"));
             GameDTO game = gameService.startGame(gameId);
-            ctx.respond(objectMapper.writeValueAsString(game));
+            ctx.respond(game);
         } catch (Exception e) {
             e.printStackTrace();
         }

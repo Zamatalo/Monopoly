@@ -4,21 +4,28 @@ enum GameState {
     FINISHED
 }
 
+enum PlayerState {
+    AWAITING_ROLL,
+    AWAITING_PURCHASE_DECISION,
+    IDLE,
+    MOVED
+}
+
 enum PlayerColors {
     PLAYER_RED
     PLAYER_BLUE
     PLAYER_YELLOW
     PLAYER_GREEN
 }
+
 enum GameActions {
     START_GAME,
     END_GAME,
-    START_TIMER,
-    END_TIMER,
     CREATE_GAME,
     JOIN_TO_GAME,
     ADD_BOT
 }
+
 
 enum PropertyNames {
     BROWN_1 BROWN_2
@@ -36,8 +43,7 @@ enum PropertyNames {
 enum PlayerActions{
     ROLL_DICE,
     BUY_PROPERTY,
-    END_TURN,
-    START_GAME
+    END_TURN
 }
 
 type GameDTO {
@@ -46,6 +52,7 @@ type GameDTO {
     currentPlayerIndex: Int
     gameState: GameState
     createdTime: String
+    gameActions:[GameActions]
 }
 
 type PlayerDTO {
@@ -56,6 +63,8 @@ type PlayerDTO {
     position: Int
     inJail: Boolean
     isBot:Boolean
+    playerState:PlayerState
+    playerActions:[PlayerActions]
     ownedProperties: [PropertyDTO]
 }
 

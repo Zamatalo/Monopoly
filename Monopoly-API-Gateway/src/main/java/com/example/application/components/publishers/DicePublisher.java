@@ -1,4 +1,4 @@
-package com.example.application.publishers;
+package com.example.application.components.publishers;
 
 import com.example.application.types.DicePosition;
 import jakarta.annotation.PreDestroy;

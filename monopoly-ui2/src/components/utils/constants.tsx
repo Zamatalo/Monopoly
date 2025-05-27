@@ -36,8 +36,12 @@ export enum PlayerActions{
     END_TURN= 'END_TURN',
     START_GAME = `START_GAME`
 }
-export enum PropertyNames {
-    SHOULD_BE_ADDED = 'SHOULD_BE_ADDED',
+export enum GameActions {
+    START_GAME="START_GAME",
+    END_GAME="END_GAME",
+    CREATE_GAME="CREATE_GAME",
+    JOIN_TO_GAME="JOIN_TO_GAME",
+    ADD_BOT = "ADD_BOT"
 }
 
 

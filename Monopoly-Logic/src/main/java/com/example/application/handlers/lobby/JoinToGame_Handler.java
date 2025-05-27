@@ -2,6 +2,7 @@ package com.example.application.handlers.lobby;
 
 import com.example.application.entity.Player;
 import com.example.application.services.GameService;
+import com.example.application.services.PlayerService;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
@@ -17,10 +18,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JoinToGame_Handler implements GameActionHandler {
     private final GameService gameService;
+    private final PlayerService playerService;
 
     @Override
     public String getAction() {
-        return "joinToGame";
+        return "JOIN_TO_GAME";
     }
 
     @Override
@@ -30,6 +32,8 @@ public class JoinToGame_Handler implements GameActionHandler {
             var playerId = ctx.body().get("playerId");
             var playerColor = ctx.body().get("playerColor");
             var playerName = ctx.body().get("playerName");
+            playerService.findById(UUID.fromString(playerId));
+
 
             Player player = new Player();
             player.setPlayerName(playerName);
@@ -44,4 +48,6 @@ public class JoinToGame_Handler implements GameActionHandler {
             e.printStackTrace();
         }
     }
+
+
 }

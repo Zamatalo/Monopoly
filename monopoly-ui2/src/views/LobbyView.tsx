@@ -1,11 +1,11 @@
 import {useMutation, useQuery} from '@apollo/client';
-import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, GET_GAME_BY_PLAYER_ID, JOIN_GAME_MUTATION} from '../graphql/queries';
+import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, JOIN_GAME_MUTATION} from '../graphql/queries';
 import {GameDTO} from '../components/models/GameDTO';
 import {useNavigate} from 'react-router';
 import GameSingleton from '../stores/singletons/GameSingleton';
 import {useEffect, useMemo, useState} from 'react';
 import '../styles/lobby.css';
-import {PlayerColor} from "../components/utils/constants";
+import {GameActions, PlayerColor} from "../components/utils/constants";
 import {ColorPickerDialog} from "./components/ColorPickerDialog";
 
 export const LobbyView = () => {
@@ -41,25 +41,24 @@ export const LobbyView = () => {
         fetchPolicy: 'network-only',
     });
 
-    const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
-        variables: {playerId},
-        fetchPolicy: 'cache-and-network',
-        skip: !playerId,
-    });
-
-    const games: [GameDTO] = useMemo(() => allGames?.getActiveGames?.map(GameDTO.fromRaw) || [], [allGames]);
+    // const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
+    //     variables: {playerId},
+    //     fetchPolicy: 'cache-and-network',
+    //     skip: !playerId,
+    // });
+    const games: [GameDTO] = useMemo(() => allGames?.getAllGames?.map(GameDTO.fromRaw) || [], [allGames]);
 
     useEffect(() => {
         setCreateButtonClicked(false);
     }, [games, ]);
 
-    useEffect(() => {
-        if (findGameData?.findGameByPlayerId) {
-            const foundGame = GameDTO.fromRaw(findGameData.findGameByPlayerId);
-            setFoundGameForPlayer(foundGame);
-            setRejoinAvailable(true);
-        }
-    }, [findGameData]);
+    // useEffect(() => {
+    //     if (findGameData?.findGameByPlayerId) {
+    //         const foundGame = GameDTO.fromRaw(findGameData.findGameByPlayerId);
+    //         setFoundGameForPlayer(foundGame);
+    //         setRejoinAvailable(true);
+    //     }
+    // }, [findGameData]);
 
     const handleColorSelect = (color: PlayerColor) => {
         if (!selectedGame) return;
@@ -176,7 +175,9 @@ export const LobbyView = () => {
                                         setShowColorDialog(true);
                                     }
                                 }}
-                                disabled={!isNameEntered && !(rejoinAvailable && game.gameId === foundGameForPlayer?.gameId)}
+                                disabled={!isNameEntered &&
+                                    !(rejoinAvailable &&game.gameId === foundGameForPlayer?.gameId) &&
+                                    game.gameActions?.includes(GameActions.JOIN_TO_GAME)}
                             >
 
                                 {rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'Rejoin' : 'Join'}

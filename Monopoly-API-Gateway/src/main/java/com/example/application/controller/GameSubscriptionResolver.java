@@ -1,7 +1,7 @@
 package com.example.application.controller;
 
-import com.example.application.publishers.DicePublisher;
-import com.example.application.publishers.GamePublisher;
+import com.example.application.components.publishers.DicePublisher;
+import com.example.application.components.publishers.GamePublisher;
 import com.example.application.types.DicePosition;
 import com.example.application.types.GameDTO;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
 @Controller
-public class GameSubscriptions {
+public class GameSubscriptionResolver {
     private final GamePublisher gamePublisher;
     private final DicePublisher dicePublisher;
 
