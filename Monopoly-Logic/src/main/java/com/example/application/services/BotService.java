@@ -26,7 +26,6 @@ public class BotService {
     }
 
 
-
     public interface MonopolyLLMBot {
 
         @SystemMessage("You are a bot that plays a Monopoly game. You will receive the full game state as a JSON object. Respond *only* in JSON format. Your response must strictly follow this structure: {\"action\": \"yourChosenAction\"}, where \"yourChosenAction\" is one of the available legal actions provided in the game state.")

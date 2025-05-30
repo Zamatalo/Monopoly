@@ -3,10 +3,7 @@ package com.example.application.entity;
 
 import com.example.application.util.enums.GameState;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +25,7 @@ public class Game {
     @Enumerated(EnumType.STRING)
     private GameState gameState = GameState.STARTED;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private List<Player> players = new ArrayList<>();
 

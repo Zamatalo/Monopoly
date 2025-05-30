@@ -32,8 +32,11 @@ public class JoinToGame_Handler implements GameActionHandler {
             var playerId = ctx.body().get("playerId");
             var playerColor = ctx.body().get("playerColor");
             var playerName = ctx.body().get("playerName");
-            playerService.findById(UUID.fromString(playerId));
-
+            var playerDTO =playerService.findById(UUID.fromString(playerId));
+            if(playerDTO.isPresent()) {
+                ctx.respond("Player already exists");
+                return;
+            }
 
             Player player = new Player();
             player.setPlayerName(playerName);

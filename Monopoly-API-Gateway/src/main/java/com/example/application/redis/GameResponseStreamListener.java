@@ -1,6 +1,5 @@
 package com.example.application.redis;
 
-import com.example.application.redis.RedisStreamResponseHandler;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.Consumer;
@@ -47,7 +46,14 @@ public class GameResponseStreamListener {
         if (response.equals("\"Invalid action\"")) {
             throw new RuntimeException("Invalid/Forbidden action");
         }
+        if (response.equals("\"Player already exists\"")) {
+            throw new RuntimeException("Player already in Game");
+        }
         responseHandler.complete(correlationId, response);
         redisTemplate.opsForStream().acknowledge("game.response", "gateway", message.getId());
+    }
+
+    private void handeGameSubscription() {
+
     }
 }

@@ -19,10 +19,8 @@ public class PlayerService {
     private final PlayerRepo playerRepository;
 
     @Transactional(readOnly = true)
-    public PlayerDTO findById(UUID playerId) {
-        Player player = playerRepository.findById(playerId)
-                .orElseThrow(()-> new EntityNotFoundException("Player with id: " + playerId + " not found"));
-        return GameMapper.INSTANCE.playerToDto(player);
+    public Optional<PlayerDTO> findById(UUID playerId) {
+        return playerRepository.findById(playerId).map(GameMapper.INSTANCE::playerToDto);
     }
 
     @Transactional

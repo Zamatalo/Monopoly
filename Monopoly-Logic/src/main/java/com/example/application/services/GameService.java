@@ -41,10 +41,10 @@ public class GameService {
     }
 
     @Transactional
-    public void addPlayerToGame(Player player, UUID gameId) {
+    public GameDTO addPlayerToGame(Player player, UUID gameId) {
         Game game = gameRepo.findById(gameId).orElseThrow();
         game.addPlayer(player);
-        gameRepo.save(game);
+        return save(game);
     }
 
     @Transactional
@@ -59,9 +59,10 @@ public class GameService {
         Game savedGame = gameRepo.save(game);
         return toEnrichedGameDTO(savedGame);
     }
+
     @Transactional(readOnly = true)
-    public Optional<Game> findGameByPlayerId (UUID playerId) {
-        return gameRepo.findGameByPlayerId(playerId);
+    public Optional<GameDTO> findGameByPlayerId(UUID playerId) {
+        return gameRepo.findGameByPlayerId(playerId).map(this::toEnrichedGameDTO);
     }
 
     private GameDTO toEnrichedGameDTO(Game game) {

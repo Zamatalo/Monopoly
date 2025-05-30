@@ -5,8 +5,6 @@ import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.types.GameActions;
 import com.example.application.types.GameDTO;
-import com.example.application.types.PlayerActions;
-import com.example.application.types.PlayerDTO;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -99,12 +97,11 @@ public class GameRequestStreamListener {
     }
 
     private boolean isActionValid(String action, Map<String, String> body) {
-        if (action.equals("getGameActions") ||
-                action.equals("getPlayerActions") ||
-                action.equals("getAllGames") ||
+        if (action.equals("getAllGames") ||
                 action.equals("createNewGame") ||
-                action.equals("findGameByPlayerId")
-        ) {
+                action.equals("findGameByPlayerId") ||
+                action.equals("findGameById") ||
+                action.equals("getPlayer")) {
             return true;
         }
 

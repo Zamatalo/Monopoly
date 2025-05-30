@@ -27,6 +27,7 @@ export const GameView = () => {
         variables: {gameId},
         fetchPolicy: 'cache-and-network',
     });
+
     const {data: findPlayer} = useQuery(GET_PLAYER, {
         variables: {
             playerId: localStorage.getItem('playerId')

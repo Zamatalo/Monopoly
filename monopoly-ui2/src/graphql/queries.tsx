@@ -19,6 +19,8 @@ export const GET_ACTIVE_GAMES = gql`
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
             }
         }
     }
@@ -36,6 +38,8 @@ export const GET_PLAYER = gql`
             position
             inJail
             isBot
+            playerState
+            playerActions
         }
     }
 
@@ -50,6 +54,8 @@ export const GET_FIND_BY_ID = gql`
             gameId
             currentPlayerIndex
             gameState
+            createdTime
+            gameActions
             players {
                 playerId
                 playerName
@@ -58,10 +64,12 @@ export const GET_FIND_BY_ID = gql`
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
                 ownedProperties {
                     displayName
-                    cost
                     boardPosition
+                    cost
                     upgradable
                 }
             }
@@ -73,20 +81,24 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
     subscription GameUpdated($gameId: ID!) {
         gameUpdated(gameId: $gameId) {
             gameId
-            gameState
             currentPlayerIndex
+            gameState
+            createdTime
+            gameActions
             players {
                 playerId
-                color
                 playerName
+                color
                 balance
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
                 ownedProperties {
                     displayName
-                    cost
                     boardPosition
+                    cost
                     upgradable
                 }
             }
@@ -98,21 +110,24 @@ export const JOIN_GAME_MUTATION = gql`
     mutation JoinGame($gameId: ID!, $playerName: String!,$playerColor: PlayerColors!,$playerId:ID!) {
         joinToGame(gameId: $gameId, playerName: $playerName, playerColor: $playerColor,playerId:$playerId) {
             gameId
-            gameState
             currentPlayerIndex
+            gameState
             createdTime
+            gameActions
             players {
                 playerId
-                color
                 playerName
+                color
                 balance
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
                 ownedProperties {
                     displayName
-                    cost
                     boardPosition
+                    cost
                     upgradable
                 }
             }
@@ -124,21 +139,24 @@ export const CREATE_GAME_MUTATION = gql`
     mutation CreateGame {
         createNewGame {
             gameId
-            gameState
             currentPlayerIndex
+            gameState
             createdTime
+            gameActions
             players {
                 playerId
-                color
                 playerName
+                color
                 balance
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
                 ownedProperties {
                     displayName
-                    cost
                     boardPosition
+                    cost
                     upgradable
                 }
             }
@@ -150,21 +168,24 @@ export const GET_GAME_BY_PLAYER_ID = gql`
     query findGameByPlayerId($playerId: ID!) {
         findGameByPlayerId(playerId:$playerId) {
             gameId
-            gameState
             currentPlayerIndex
+            gameState
             createdTime
+            gameActions
             players {
                 playerId
-                color
                 playerName
+                color
                 balance
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
                 ownedProperties {
                     displayName
-                    cost
                     boardPosition
+                    cost
                     upgradable
                 }
             }
@@ -223,6 +244,7 @@ export const START_GAME = gql(`
             currentPlayerIndex
             gameState
             createdTime
+            gameActions
             players {
                 playerId
                 playerName
@@ -231,6 +253,8 @@ export const START_GAME = gql(`
                 position
                 inJail
                 isBot
+                playerState
+                playerActions
                 ownedProperties {
                     displayName
                     boardPosition
@@ -241,9 +265,3 @@ export const START_GAME = gql(`
         }
     }
 `);
-
-// export const GET_AVAILABLE_ACTIONS = gql`
-//     query GetPossibleCurrentPlayerActions($gameId: ID!) {
-//         getPossibleCurrentPlayerActions(gameId:$gameId)
-//     }
-// `;

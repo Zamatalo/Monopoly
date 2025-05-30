@@ -1,5 +1,5 @@
 import {useMutation, useQuery} from '@apollo/client';
-import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, JOIN_GAME_MUTATION} from '../graphql/queries';
+import {CREATE_GAME_MUTATION, GET_ACTIVE_GAMES, GET_GAME_BY_PLAYER_ID, JOIN_GAME_MUTATION} from '../graphql/queries';
 import {GameDTO} from '../components/models/GameDTO';
 import {useNavigate} from 'react-router';
 import GameSingleton from '../stores/singletons/GameSingleton';
@@ -36,29 +36,29 @@ export const LobbyView = () => {
     const [createButtonClicked, setCreateButtonClicked] = useState(false);
     const [rejoinAvailable, setRejoinAvailable] = useState(false);
 
-    const {data: allGames, error: gamesError, loading: gamesLoading} = useQuery(GET_ACTIVE_GAMES, {
-        pollInterval: 5000,
-        fetchPolicy: 'network-only',
+    const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
+        variables: {playerId},
+        fetchPolicy: 'cache-and-network',
+        skip: !playerId,
     });
 
-    // const {data: findGameData} = useQuery(GET_GAME_BY_PLAYER_ID, {
-    //     variables: {playerId},
-    //     fetchPolicy: 'cache-and-network',
-    //     skip: !playerId,
-    // });
+    const {data: allGames, error: gamesError, loading: gamesLoading} = useQuery(GET_ACTIVE_GAMES, {
+        pollInterval: 3000,
+        fetchPolicy: 'network-only',
+    });
     const games: [GameDTO] = useMemo(() => allGames?.getAllGames?.map(GameDTO.fromRaw) || [], [allGames]);
 
     useEffect(() => {
         setCreateButtonClicked(false);
     }, [games, ]);
 
-    // useEffect(() => {
-    //     if (findGameData?.findGameByPlayerId) {
-    //         const foundGame = GameDTO.fromRaw(findGameData.findGameByPlayerId);
-    //         setFoundGameForPlayer(foundGame);
-    //         setRejoinAvailable(true);
-    //     }
-    // }, [findGameData]);
+    useEffect(() => {
+        if (findGameData?.findGameByPlayerId) {
+            const foundGame = GameDTO.fromRaw(findGameData.findGameByPlayerId);
+            setFoundGameForPlayer(foundGame);
+            setRejoinAvailable(true);
+        }
+    }, [findGameData]);
 
     const handleColorSelect = (color: PlayerColor) => {
         if (!selectedGame) return;
