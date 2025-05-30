@@ -5,13 +5,15 @@ import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.types.GameActions;
 import com.example.application.types.GameDTO;
+import com.example.application.types.PlayerActions;
+import com.example.application.types.PlayerDTO;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -25,53 +27,48 @@ import java.util.*;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@RequiredArgsConstructor
 public class GameRequestStreamListener {
+    private static final String REQUEST_STREAM = "game.request";
+    private static final String RESPONSE_STREAM = "game.response";
+    private static final String BACKEND_GROUP = "backend";
+    private static final String CONSUMER_NAME = "backend-1";
+    private static final String GATEWAY_GROUP = "gateway";
 
-    private final RedisTemplate<String, String> redisTemplate;
-    private final ObjectMapper objectMapper;
     private final List<GameActionHandler> handlers;
-    private final Map<String, GameActionHandler> handlerMap = new HashMap<>();
     private final GameService gameService;
     private final PlayerService playerService;
+    private final RedisTemplate<String, Object> redisOp;
+    private final Map<String, GameActionHandler> handlerMap = new HashMap<>();
+    private final ObjectMapper objectMapper;
+
+    private StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
 
     @PostConstruct
     public void startListening() {
-        //filling with all handlers
-        for (var handler : handlers) {
+        /// creating groups
+        createConsumerGroup(REQUEST_STREAM, BACKEND_GROUP);
+        createConsumerGroup(RESPONSE_STREAM, GATEWAY_GROUP);
+
+        /// adding handlers
+        for (GameActionHandler handler : handlers) {
             handlerMap.put(handler.getAction(), handler);
         }
-        //creating groups
-        try {
-            redisTemplate.opsForStream()
-                    .createGroup("game.request", ReadOffset.latest(), "backend");
-        } catch (Exception e) {
-            if (!e.getMessage().contains("BUSYGROUP")) {
-                System.out.println("Group exist already. Skipping");
-            }
-        }
 
-        try {
-            redisTemplate.opsForStream()
-                    .createGroup("game.response", ReadOffset.latest(), "gateway");
-        } catch (Exception e) {
-            if (!e.getMessage().contains("BUSYGROUP")) {
-                System.out.println("Group exist already. Skipping");
-            }
-        }
-
-        assert redisTemplate.getConnectionFactory() != null;
-        StreamMessageListenerContainer<String, MapRecord<String, String, String>> container =
+        /// creating listening container
+        assert redisOp.getConnectionFactory() != null;
+        container =
                 StreamMessageListenerContainer.create(
-                        redisTemplate.getConnectionFactory(),
-                        StreamMessageListenerContainer.StreamMessageListenerContainerOptions.builder()
+                        redisOp.getConnectionFactory(),
+                        StreamMessageListenerContainer.StreamMessageListenerContainerOptions
+                                .builder()
                                 .pollTimeout(Duration.ofSeconds(1))
                                 .build()
                 );
 
         container.receive(
-                Consumer.from("backend", "backend-1"),
-                StreamOffset.create("game.request", ReadOffset.lastConsumed()),
+                Consumer.from(BACKEND_GROUP, CONSUMER_NAME),
+                StreamOffset.create(REQUEST_STREAM, ReadOffset.lastConsumed()),
                 this::handleMessage
         );
 
@@ -79,53 +76,89 @@ public class GameRequestStreamListener {
     }
 
     private void handleMessage(MapRecord<String, String, String> message) {
-        var body = message.getValue();
-        var action = body.get("action");
-        var correlationId = body.get("correlationId");
+        try {
+            Map<String, String> body = message.getValue();
+            String action = body.get("action");
+            String correlationId = body.get("correlationId");
 
-        var ctx = new RequestContextRedis(correlationId, body, message, redisTemplate, objectMapper);
+            RequestContextRedis ctx = new RequestContextRedis(correlationId, body, message, redisOp, objectMapper);
+            GameActionHandler handler = handlerMap.get(action);
 
-        var handler = handlerMap.get(action);
-        if (handler != null && isActionValid(action, body)) {
-            handler.handle(ctx);
-        } else {
-            ctx.respond("Invalid action");
-            log.error("Unknown/Forbidden action {}", action);
+            if (handler != null && isActionValid(action, body)) {
+                handler.handle(ctx);
+            } else {
+                ctx.respond("Invalid action");
+                log.warn("Invalid or unknown action received: {}", action);
+            }
+        } catch (Exception e) {
+            log.error("Failed to process message: {}", message, e);
+
+            String correlationId = message.getValue().get("correlationId");
+            if (correlationId != null) {
+                redisOp.opsForStream().add(RESPONSE_STREAM,
+                        Map.of(
+                                "correlationId", correlationId,
+                                "payload", "{\"error\":\"Internal Server Error: " + e.getMessage() + "\"}"
+                        ));
+            }
+        } finally {
+            redisOp.opsForStream().acknowledge(REQUEST_STREAM, BACKEND_GROUP, message.getId());
         }
+    }
 
-        redisTemplate.opsForStream().acknowledge("game.request", "backend", message.getId());
+    private void createConsumerGroup(String stream, String group) {
+        try {
+            redisOp.opsForStream()
+                    .createGroup(stream, ReadOffset.latest(), group);
+        } catch (Exception e) {
+            if (!e.getMessage().contains("BUSYGROUP")) {
+                System.out.println("Group exist already. Skipping");
+            } else {
+                System.out.println("Creating Redis group");
+            }
+        }
     }
 
     private boolean isActionValid(String action, Map<String, String> body) {
-        if (action.equals("getAllGames") ||
-                action.equals("createNewGame") ||
-                action.equals("findGameByPlayerId") ||
-                action.equals("findGameById") ||
-                action.equals("getPlayer")) {
+        if ("getAllGames".equals(action) ||
+                "CREATE_GAME".equals(action) ||
+                "findGameByPlayerId".equals(action) ||
+                "findGameById".equals(action) ||
+                "getPlayer".equals(action)) {
             return true;
         }
 
-        if (body.get("gameId") != null && !action.isEmpty()) {
-            var gameId = body.get("gameId");
-            Optional<GameDTO> game = gameService.findById(UUID.fromString(gameId));
-            assert game.isPresent();
+        if (body.get("gameId") != null && !action.isEmpty() && body.get("playerId") == null) {
+            UUID gameId = UUID.fromString(body.get("gameId"));
+            Optional<GameDTO> game = gameService.findById(gameId);
+            if (game.isEmpty()) return false;
+
             List<GameActions> actions = GameActionResolver.resolveGameActions(game.get());
             return actions.contains(GameActions.valueOf(action));
         }
 
-//        if (body.get("gameId") != null && !action.isEmpty() && body.get("playerId") != null) {
-//            var gameId = body.get("gameId");
-//            var playerId = body.get("playerId");
-//
-//            Optional<GameDTO> game = gameService.findById(UUID.fromString(gameId));
-//            assert game.isPresent();
-//
-//            PlayerDTO player = playerService.findById(UUID.fromString(playerId));
-//
-//            List<PlayerActions> actions = GameActionResolver.resolvePlayerActions(game.get(), player);
-//            return actions.contains(PlayerActions.valueOf(action));
-//        }
+        if (body.get("gameId") != null && !action.isEmpty() && body.get("playerId") != null) {
+            UUID gameId = UUID.fromString(body.get("gameId"));
+            UUID playerId = UUID.fromString(body.get("playerId"));
+
+            Optional<GameDTO> game = gameService.findById(gameId);
+            if (game.isEmpty()) return false;
+
+            Optional<PlayerDTO> player = playerService.findById(playerId);
+            if (player.isEmpty()) return false;
+
+            List<PlayerActions> actions = GameActionResolver.resolvePlayerActions(game.get(), player.get());
+            return actions.contains(PlayerActions.valueOf(action));
+        }
 
         return false;
+    }
+
+
+    @PreDestroy
+    public void stop() {
+        if (container != null) {
+            container.stop();
+        }
     }
 }

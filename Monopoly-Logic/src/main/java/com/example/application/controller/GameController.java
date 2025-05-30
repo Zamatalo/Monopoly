@@ -37,7 +37,7 @@
 //    private final RedisClient redisClient;
 //    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 //
-
+//
 //    @MutationMapping
 //    public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameID, @Argument("playerId") UUID playerId) {
 //        var game = gameService.findById(gameID)

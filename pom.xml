@@ -18,7 +18,7 @@
     <properties>
         <java.version>23</java.version>
         <vaadin.version>24.7.1</vaadin.version>
-        <spring.version>3.4.4</spring.version>
+        <spring.version>3.5.0</spring.version>
         <postgresql.version>42.7.4</postgresql.version>
         <lombok.version>1.18.36</lombok.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -41,7 +41,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>

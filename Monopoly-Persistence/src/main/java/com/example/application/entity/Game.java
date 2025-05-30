@@ -1,9 +1,11 @@
 package com.example.application.entity;
 
-
 import com.example.application.util.enums.GameState;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,7 +17,6 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,23 +24,21 @@ public class Game {
 
     @Column(name = "game_state", nullable = false)
     @Enumerated(EnumType.STRING)
-    private GameState gameState = GameState.STARTED;
+    private  GameState gameState = GameState.STARTED;
 
-    @ToString.Exclude
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<Player> players = new ArrayList<>();
+    private  List<Player> players = new ArrayList<>();
 
-    private int currentPlayerIndex = 0;
+    private  int currentPlayerIndex = 0;
 
-    private String createdTime = LocalDateTime.now().toString();
+    private  String createdTime = LocalDateTime.now().toString();
 
     public void addPlayer(Player player) {
-        if (this.players != null && !this.players.contains(player) && this.players.size() < 4) {
+        if (!this.players.contains(player) && this.players.size() < 4) {
             player.setGame(this);
             players.add(player);
         }
     }
-
 
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex);
