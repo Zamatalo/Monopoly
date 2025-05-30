@@ -1,10 +1,10 @@
 package com.example.application.controller;
 
+import com.example.application.components.publishers.GamePublisher;
 import com.example.application.service.GameGatewayService;
-import com.example.application.types.GameActions;
 import com.example.application.types.GameDTO;
-import com.example.application.types.PlayerActions;
 import com.example.application.types.PlayerColors;
+import com.example.application.types.PlayerDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +23,7 @@ import java.util.UUID;
 public class GatewayController {
     private final GameGatewayService redisRequestReplyService;
     private final ObjectMapper mapper;
+    private final GamePublisher gamePublisher;
 
     @MutationMapping
     public GameDTO createNewGame() {
@@ -51,8 +52,7 @@ public class GatewayController {
                         Map.of("playerId", playerId.toString()))
                 .join();
         try {
-            String actualJson = mapper.readValue(json, String.class);
-            return mapper.readValue(actualJson, GameDTO.class);
+            return mapper.readValue(json, GameDTO.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
         }
@@ -61,7 +61,7 @@ public class GatewayController {
     @QueryMapping
     public GameDTO findGameById(@Argument("gameId") UUID gameId) {
         String json = redisRequestReplyService.sendAction(
-                "findGameById",
+                        "findGameById",
                         Map.of("gameId", gameId.toString()))
                 .join();
         try {
@@ -78,7 +78,7 @@ public class GatewayController {
                               @Argument("playerId") UUID playerId) {
 
         String json = redisRequestReplyService.sendAction(
-                "JOIN_TO_GAME",
+                        "JOIN_TO_GAME",
                         Map.of("gameId", gameId.toString(),
                                 "playerName", playerName,
                                 "playerColor", playerColor.toString(),
@@ -86,7 +86,52 @@ public class GatewayController {
                         ))
                 .join();
         try {
-            return mapper.readValue(json, GameDTO.class);
+            var game = mapper.readValue(json, GameDTO.class);
+            gamePublisher.publish(game);
+            return game;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
+        }
+    }
+
+    @MutationMapping
+    public GameDTO addBotToGame(@Argument("gameId") UUID gameId) {
+        String json = redisRequestReplyService.sendAction(
+                        "ADD_BOT",
+                        Map.of("gameId", gameId.toString()))
+                .join();
+        try {
+            var game = mapper.readValue(json, GameDTO.class);
+            gamePublisher.publish(game);
+            return game;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
+        }
+    }
+
+    @QueryMapping
+    public PlayerDTO getPlayer(@Argument("playerId") UUID playerId) {
+        String json = redisRequestReplyService.sendAction(
+                        "getPlayer",
+                        Map.of("playerId", playerId.toString()))
+                .join();
+        try {
+            return mapper.readValue(json, PlayerDTO.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
+        }
+    }
+
+    @MutationMapping
+    public GameDTO startGame(@Argument("gameId") UUID gameId) {
+        String json = redisRequestReplyService.sendAction(
+                        "START_GAME",
+                        Map.of("gameId", gameId.toString()))
+                .join();
+        try {
+            var game = mapper.readValue(json, GameDTO.class);
+            gamePublisher.publish(game);
+            return game;
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse GameDTO list from Redis response", e);
         }

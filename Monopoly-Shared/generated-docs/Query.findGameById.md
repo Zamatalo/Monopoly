@@ -14,6 +14,7 @@
     currentPlayerIndex
     gameState
     createdTime
+    gameActions
   }
 }
 
