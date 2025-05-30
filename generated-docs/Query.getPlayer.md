@@ -16,6 +16,8 @@
     position
     inJail
     isBot
+    playerState
+    playerActions
     ownedProperties
   }
 }

@@ -1,9 +1,12 @@
 package com.example.application.service;
 
 import com.example.application.redis.RedisStreamResponseHandler;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.stream.StreamRecords;
+import org.springframework.data.redis.connection.stream.StringRecord;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,27 +17,26 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class GameGatewayService {
-
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisStreamResponseHandler responseHandler;
+    private final ObjectMapper objectMapper;
 
-    public CompletableFuture<String> sendAction(String action) {
-        return sendAction(action, new HashMap<>());
+    public <T> CompletableFuture<T> sendAction(String action, Class<T> clazz) {
+        return sendAction(action, new HashMap<>(), clazz);
     }
 
-    public CompletableFuture<String> sendAction(String action, String argName, String argValue) {
-        Map<String, String> additionalArgs = new HashMap<>();
-        additionalArgs.put(argName, argValue);
-        return sendAction(action, additionalArgs);
-    }
-
-    public CompletableFuture<String> sendAction(String action, Map<String, String> additionalArgs) {
+    public <T> CompletableFuture<T> sendAction(String action, Map<String, String> args, Class<T> clazz) {
         String correlationId = UUID.randomUUID().toString();
-        Map<String, String> body = new HashMap<>(additionalArgs);
+        Map<String, String> body = new HashMap<>(args);
         body.put("correlationId", correlationId);
         body.put("action", action);
+        StringRecord record = StreamRecords.string(body).withStreamKey("game.request");
 
-        redisTemplate.opsForStream().add("game.request", body);
-        return responseHandler.register(correlationId);
+        var javaType = objectMapper.getTypeFactory().constructType(clazz);
+
+        redisTemplate.opsForStream().add(record);
+
+        return responseHandler.register(correlationId, javaType);
     }
+
 }

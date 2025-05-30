@@ -4,10 +4,7 @@ import com.example.application.util.PropertyData;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.util.enums.PlayerState;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,16 +15,16 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Player {
     @Id
     //@GeneratedValue(strategy = GenerationType.AUTO)
     private UUID playerId;
 
-    private String playerName;
+    private  String playerName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id")
+    @ToString.Exclude
     private Game game;
 
     @Enumerated(EnumType.STRING)

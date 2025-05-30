@@ -26,6 +26,11 @@ enum GameActions {
     ADD_BOT
 }
 
+enum PlayerActions{
+    ROLL_DICE,
+    BUY_PROPERTY,
+    END_TURN
+}
 
 enum PropertyNames {
     BROWN_1 BROWN_2
@@ -40,11 +45,6 @@ enum PropertyNames {
     START COMMUNITY_CHEST CHANCE JAIL FREE_PARKING GO_TO_JAIL
 }
 
-enum PlayerActions{
-    ROLL_DICE,
-    BUY_PROPERTY,
-    END_TURN
-}
 
 type GameDTO {
     gameId: ID
@@ -71,6 +71,7 @@ type PlayerDTO {
 type PropertyDTO {
     displayName: String
     boardPosition: Int
+    isOwned:Boolean
     cost: Int
     upgradable: Boolean
 }

@@ -1,36 +1,50 @@
 package com.example.application.redis;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class RedisStreamResponseHandler {
+    private final Map<String, FutureWrapper<?>> futures = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
 
-    private final Map<String, CompletableFuture<String>> futures = new ConcurrentHashMap<>();
 
-    @Value("${redis.response.timeout.seconds:5}")
-    private int responseTimeoutSeconds;
-
-    public CompletableFuture<String> register(String correlationId) {
-        CompletableFuture<String> future = new CompletableFuture<>();
-        futures.put(correlationId, future);
-        return future.orTimeout(responseTimeoutSeconds, TimeUnit.SECONDS)
-                .exceptionally(ex -> {
-                    futures.remove(correlationId);
-                    return "{\"error\":\"Request timed out\"}";
-                });
+    public <T> CompletableFuture<T> register(String correlationId, JavaType javaType) {
+        FutureWrapper<T> wrapper = new FutureWrapper<>(javaType);
+        futures.put(correlationId, wrapper);
+        return wrapper.future;
     }
 
     public void complete(String correlationId, String response) {
-        CompletableFuture<String> future = futures.remove(correlationId);
-        if (future != null) {
-            future.complete(response);
+        FutureWrapper<?> wrapper = futures.remove(correlationId);
+        if (wrapper != null) {
+            try {
+                var json = objectMapper.readTree(response).asText();
+                var object =objectMapper.readValue(json,wrapper.javaType);
+                CompletableFuture<Object> future = (CompletableFuture<Object>) wrapper.future;
+                future.complete(object);
+            } catch (Exception e) {
+                wrapper.future.completeExceptionally(e);
+            }
+        }
+    }
+
+    private static class FutureWrapper<T> {
+        final JavaType javaType;
+        final CompletableFuture<T> future;
+
+        FutureWrapper(JavaType javaType) {
+            this.javaType = javaType;
+            this.future = new CompletableFuture<>();
         }
     }
 }

@@ -43,10 +43,9 @@ public class JoinToGame_Handler implements GameActionHandler {
             player.setPlayerId(UUID.fromString(playerId));
             player.setColor(PlayerColors.valueOf(playerColor.toString()));
 
-            gameService.addPlayerToGame(player, UUID.fromString(gameId));
+            var updGame =gameService.addPlayerToGame(player, UUID.fromString(gameId));
 
-            var payload = String.format("Player %s joined the game", playerName);
-            ctx.respond(payload);
+            ctx.respond(updGame);
         } catch (Exception e) {
             e.printStackTrace();
         }

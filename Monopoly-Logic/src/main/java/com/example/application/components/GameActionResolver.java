@@ -13,9 +13,13 @@ public abstract class GameActionResolver {
         // The Game could be started
         if (game.getGameState() == GameState.STARTED && game.getPlayers().size() == 4) {
             actions.add(GameActions.START_GAME);
-        } else {
+        }
+        if (game.getGameState() == GameState.STARTED && game.getPlayers().size() < 4) {
             actions.add(GameActions.JOIN_TO_GAME);
             actions.add(GameActions.ADD_BOT);
+        }
+        if (game.getGameState() == GameState.IN_PROGRESS) {
+            ///
         }
 
         // Timer could be started/ended

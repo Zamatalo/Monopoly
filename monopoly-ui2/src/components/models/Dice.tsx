@@ -1,5 +1,4 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {Object3D} from "three";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
 
 export class Dice {

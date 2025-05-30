@@ -2,7 +2,7 @@ package com.example.application.handlers.lobby;
 
 import com.example.application.entity.Player;
 import com.example.application.services.GameService;
-import com.example.application.types.GameState;
+import com.example.application.util.enums.GameState;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
