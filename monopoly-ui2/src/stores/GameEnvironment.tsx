@@ -69,18 +69,54 @@ export function updateGame(newGameRaw: GameDTO) {
     CurrentPlayerSingleton.update(currentPlayer);
 }
 
-export function diceUpdate(dicePosAndRot:any){
-    const world = WorldSingleton.getInstance();
-    const pos = JSON.parse(dicePosAndRot.pos);
-    const rot = JSON.parse(dicePosAndRot.rot);
+export const diceUpdate = (() => {
+    const queue: any[] = [];
+    let intervalId: any = null;
+    let world: any = null;
 
-    world.scene.children.forEach(child => {
-        if (child.userData.isDice) {
-            child.position.set(pos.x, pos.y, pos.z);
-            child.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+    function startInterval() {
+        if (intervalId !== null) return;
+
+        intervalId = setInterval(() => {
+            if (!world) {
+                try {
+                    world = WorldSingleton.getInstance();
+                } catch {
+                    return;
+                }
+            }
+
+            if (queue.length === 0) {
+                clearInterval(intervalId);
+                intervalId = null;
+                return;
+            }
+
+            const update = queue.shift();
+
+            world.scene.children.forEach((child: any) => {
+                if (child.userData.isDice) {
+                    child.position.set(update.pos.x, update.pos.y, update.pos.z);
+                    child.quaternion.set(update.rot.x, update.rot.y, update.rot.z, update.rot.w);
+                }
+            });
+        }, 25);
+    }
+
+    return function diceUpdate(dicePosAndRot: any) {
+        queue.push(dicePosAndRot);
+        if (!world) {
+            try {
+                world = WorldSingleton.getInstance();
+            } catch {
+            }
         }
-    })
-}
+        startInterval();
+    };
+})();
+
+
+
 
 export function resetGameEnvironment() {
     const world = WorldSingleton.hasInstance() ? WorldSingleton.getInstance() : null;

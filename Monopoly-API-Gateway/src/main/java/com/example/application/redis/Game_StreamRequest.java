@@ -26,6 +26,10 @@ public class Game_StreamRequest {
 
     public void complete(String correlationId, String response) {
         FutureWrapper<?> wrapper = futures.remove(correlationId);
+        if (response.contains("Invalid action")) {
+            wrapper.future.cancel(true);
+        }
+
         if (wrapper != null) {
             try {
                 var json = objectMapper.readTree(response).asText();

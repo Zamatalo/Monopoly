@@ -1,6 +1,7 @@
 package com.example.application.components.publishers;
 
 import com.example.application.types.DicePosition;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -21,14 +22,24 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class DicePublisher {
     private final Map<String, Sinks.Many<DicePosition>> sinksMap = new ConcurrentHashMap<>();
-    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+    private final ReactiveRedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
     private volatile boolean isActive = true;
 
 
     @PostConstruct
     public void init() {
         redisTemplate.listenTo(ChannelTopic.of("game:diceUpdate"))
-                .doOnNext(stringObjectMessage -> log.info("Redis subscription received {}", stringObjectMessage.getMessage()))
+                .doOnNext(stringObjectMessage -> {
+                    try {
+                        publish(
+                                objectMapper.readValue(stringObjectMessage.getMessage(), DicePosition.class)
+                        );
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+
                 .doOnError(e -> log.error("Redis subscription error", e))
                 .subscribe();
 

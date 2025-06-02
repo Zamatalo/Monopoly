@@ -19,16 +19,14 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Player {
     @Id
-    @EqualsAndHashCode.Include
     private UUID playerId;
 
     private String playerName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id", nullable = false)
+    @JoinColumn(name = "game_id")
     private Game game;
 
     @Enumerated(EnumType.STRING)

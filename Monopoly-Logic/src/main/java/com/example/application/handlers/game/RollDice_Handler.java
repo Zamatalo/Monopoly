@@ -14,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -53,10 +55,14 @@ public class RollDice_Handler implements GameActionHandler {
             game.setCurrentPlayerIndex(nextPlayer);
             player.setPosition(newPosition);
 
+            List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
+                    .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
+                    .toList();
+            game.setPlayers(updatedPlayers);
+
             gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
             redisService.publishGameUpd(gameService.findById(gameId).get());
             ctx.respond(rolledResult);
-            isNextPlayerBot(game, nextPlayer);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -70,27 +76,4 @@ public class RollDice_Handler implements GameActionHandler {
                 .orElse(null);
     }
 
-    /// later should be in BotService with scheduler
-    private void isNextPlayerBot(GameDTO game, Integer playerIndex) {
-        var nextPlayer = game.getPlayers().get(playerIndex);
-        if (nextPlayer.getIsBot()) {
-            var rolledResult = diceService.rollDice(game.getGameId()).join();
-
-
-            int newPosition = (nextPlayer.getPosition() + rolledResult) % 40;
-            PropertyData steppedOn = steppedOnAnotherPlayerField(UUID.fromString(game.getGameId()), newPosition);
-            if (steppedOn != null) {
-                nextPlayer.setBalance(nextPlayer.getBalance() - steppedOn.cost());
-            }
-
-            int nextPlayerIndex = (game.getCurrentPlayerIndex() + 1) % game.getPlayers().size();
-
-            game.setCurrentPlayerIndex(nextPlayerIndex);
-
-            nextPlayer.setPosition(newPosition);
-            gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
-            playerService.savePlayer(GameMapper.INSTANCE.dtoToPlayer(nextPlayer));
-            isNextPlayerBot(game, nextPlayerIndex);
-        }
-    }
 }

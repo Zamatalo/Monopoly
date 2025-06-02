@@ -129,8 +129,8 @@ public class GameRequestStreamListener {
                 "CREATE_GAME".equals(action) ||
                 "findGameByPlayerId".equals(action) ||
                 "findGameById".equals(action) ||
-                "getPlayer".equals(action) ||
-                "ROLL_DICE".equals(action)) {
+                "getPlayer".equals(action)
+        ){
             return true;
         }
         /// first checking gameActions then playerActions
