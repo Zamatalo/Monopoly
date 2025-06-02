@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class RedisStreamResponseHandler {
+public class Game_StreamRequest {
     private final Map<String, FutureWrapper<?>> futures = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 

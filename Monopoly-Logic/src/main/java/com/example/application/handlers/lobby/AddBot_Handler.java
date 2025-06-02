@@ -2,8 +2,8 @@ package com.example.application.handlers.lobby;
 
 import com.example.application.entity.Player;
 import com.example.application.services.GameService;
-import com.example.application.util.enums.GameState;
-import com.example.application.util.enums.PlayerColors;
+import com.example.application.services.RedisService;
+import com.example.application.types.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AddBot_Handler implements GameActionHandler {
     private final GameService gameService;
+    private final RedisService redisService;
 
     @Override
     public String getAction() {
@@ -30,15 +31,10 @@ public class AddBot_Handler implements GameActionHandler {
     public void handle(RequestContextRedis ctx) {
         try {
             var gameId = ctx.body().get("gameId");
-
             var game = gameService.findById(UUID.fromString(gameId)).get();
 
-            if ((game.getPlayers().size() >= 4) || !game.getGameState().equals(GameState.STARTED)) {
-                throw new IllegalArgumentException("Already 4 players");
-            }
-
             var allColors = PlayerColors.values();
-            var usedColors = new ArrayList<>();
+            var usedColors = new ArrayList<PlayerColors>();
 
             game.getPlayers().forEach(p -> usedColors.add(p.getColor()));
 
@@ -53,13 +49,15 @@ public class AddBot_Handler implements GameActionHandler {
             Player bot = new Player();
             bot.setPlayerId(UUID.randomUUID());
             bot.setPlayerName("Bot " + LocalTime.now().getSecond());
-            bot.setBot(true);
-            bot.setColor(color.get());
+            bot.setIsBot(true);
+            bot.setColor(com.example.application.util.enums.PlayerColors.valueOf(color.get().toString()));
 
-            var gameDTO =gameService.addPlayerToGame(bot, UUID.fromString(gameId));
+            var gameDTO = gameService.addPlayerToGame(bot, UUID.fromString(gameId));
+            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)).get());
             ctx.respond(gameDTO);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
 }

@@ -163,6 +163,13 @@ export const LobbyView = () => {
                                 </div>
                             </div>
 
+                            {/*<div>*/}
+                            {/*    isNameEntered: {isNameEntered ? 'yes' : 'no'} <br />*/}
+                            {/*    rejoinAvailable: {rejoinAvailable ? 'yes' : 'no'} <br />*/}
+                            {/*    isRejoinGame: {rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'yes' : 'no'} <br />*/}
+                            {/*    canJoinGame: {game.gameActions?.includes(GameActions.JOIN_TO_GAME) ? 'yes' : 'no'}*/}
+                            {/*</div>*/}
+
                             <button
                                 className={`button ${rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'rejoinButton' : 'joinButton'}`}
                                 onClick={(e) => {
@@ -175,9 +182,10 @@ export const LobbyView = () => {
                                         setShowColorDialog(true);
                                     }
                                 }}
-                                disabled={!isNameEntered &&
-                                    !(rejoinAvailable &&game.gameId === foundGameForPlayer?.gameId) &&
-                                    game.gameActions?.includes(GameActions.JOIN_TO_GAME)}
+                                disabled={
+                                    !(rejoinAvailable && game.gameId === foundGameForPlayer?.gameId) &&
+                                    (!isNameEntered || !game.gameActions?.includes(GameActions.JOIN_TO_GAME))
+                                }
                             >
 
                                 {rejoinAvailable && game.gameId === foundGameForPlayer?.gameId ? 'Rejoin' : 'Join'}

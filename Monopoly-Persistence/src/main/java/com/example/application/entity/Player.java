@@ -1,10 +1,14 @@
 package com.example.application.entity;
 
+import com.example.application.entity.Game;
 import com.example.application.util.PropertyData;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.util.enums.PlayerState;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,37 +19,39 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Player {
     @Id
-    //@GeneratedValue(strategy = GenerationType.AUTO)
+    @EqualsAndHashCode.Include
     private UUID playerId;
 
-    private  String playerName;
+    private String playerName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id")
-    @ToString.Exclude
+    @JoinColumn(name = "game_id", nullable = false)
     private Game game;
 
     @Enumerated(EnumType.STRING)
     private PlayerColors color;
 
-    private int balance = 1500;
+    private Integer balance = 1500;
 
-    private int position = 0;
+    private Integer position = 0;
 
-    private boolean inJail = false;
+    @Column(nullable = false)
+    private Boolean inJail = false;
 
-    private boolean isBot = false;
+    @Column(nullable = false)
+    private Boolean isBot = false;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "ownedProperties", joinColumns = @JoinColumn(name = "player_id"))
+    @CollectionTable(name = "owned_properties", joinColumns = @JoinColumn(name = "player_id"))
     private List<PropertyData> ownedProperties = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private PlayerState playerState = PlayerState.IDLE;
 
-    private String createdTime = LocalDateTime.now().toString();
+    private LocalDateTime createdTime = LocalDateTime.now();
 
     public void addProperty(PropertyData property) {
         if (property != null) {
@@ -54,5 +60,4 @@ public class Player {
             throw new IllegalArgumentException("Invalid property");
         }
     }
-
 }

@@ -3,10 +3,11 @@ package com.example.application.handlers.lobby;
 import com.example.application.entity.Player;
 import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
+import com.example.application.services.RedisService;
+import com.example.application.types.GameState;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class JoinToGame_Handler implements GameActionHandler {
     private final GameService gameService;
     private final PlayerService playerService;
+    private final RedisService redisService;
 
     @Override
     public String getAction() {
@@ -30,26 +32,27 @@ public class JoinToGame_Handler implements GameActionHandler {
         try {
             var gameId = ctx.body().get("gameId");
             var playerId = ctx.body().get("playerId");
-            var playerColor = ctx.body().get("playerColor");
             var playerName = ctx.body().get("playerName");
-            var playerDTO =playerService.findById(UUID.fromString(playerId));
-            if(playerDTO.isPresent()) {
+            var playerColor = ctx.body().get("playerColor");
+
+            var existing = playerService.findById(UUID.fromString(playerId));
+            if (existing.isPresent()) {
                 ctx.respond("Player already exists");
                 return;
             }
 
-            Player player = new Player();
-            player.setPlayerName(playerName);
+            var player = new Player();
             player.setPlayerId(UUID.fromString(playerId));
-            player.setColor(PlayerColors.valueOf(playerColor.toString()));
+            player.setPlayerName(playerName);
+            player.setColor(PlayerColors.valueOf(playerColor));
 
-            var updGame =gameService.addPlayerToGame(player, UUID.fromString(gameId));
+            var updatedGame = gameService.addPlayerToGame(player, UUID.fromString(gameId));
+            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)).get());
+            ctx.respond(updatedGame);
 
-            ctx.respond(updGame);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to join game", e);
+            ctx.respond("Internal error");
         }
     }
-
-
 }

@@ -30,6 +30,7 @@ export class GameDTO {
 
     updateFromRaw(raw: any): void {
         this.gameState = raw.gameState;
+        this.gameActions = raw.gameActions;
         this.currentPlayerIndex = raw.currentPlayerIndex;
         this.players = raw.players.map((player: any) => PlayerDTO.fromRaw(player));
     }

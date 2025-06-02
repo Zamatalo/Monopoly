@@ -265,3 +265,33 @@ export const START_GAME = gql(`
         }
     }
 `);
+
+export const ADD_BOT = gql`
+    mutation AddBotToGame($gameId: ID!) {
+        addBotToGame(gameId: $gameId) {
+            gameId
+            currentPlayerIndex
+            gameState
+            createdTime
+            gameActions
+            players {
+                playerId
+                playerName
+                color
+                balance
+                position
+                inJail
+                isBot
+                playerState
+                playerActions
+                ownedProperties {
+                    displayName
+                    boardPosition
+                    isOwned
+                    cost
+                    upgradable
+                }
+            }
+        }
+    }
+`

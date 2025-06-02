@@ -6,7 +6,6 @@ import com.example.application.service.GameGatewayService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerColors;
 import com.example.application.types.PlayerDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -17,12 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/// #TODO: add proper exceptions, and handle futures gracefully
+/// #TODO: add proper exceptions, and handle futures. Also make more controllers
 @RequiredArgsConstructor
 @Controller
 public class GatewayController {
     private final GameGatewayService redisRequestReplyService;
-    private final GamePublisher gamePublisher;
 
     @MutationMapping
     public GameDTO createNewGame() {
@@ -59,7 +57,7 @@ public class GatewayController {
                               @Argument("playerColor") PlayerColors playerColor,
                               @Argument("playerId") UUID playerId) {
 
-        GameDTO game = redisRequestReplyService.sendAction(
+        return redisRequestReplyService.sendAction(
                         "JOIN_TO_GAME",
                         Map.of("gameId", gameId.toString(),
                                 "playerName", playerName,
@@ -67,19 +65,15 @@ public class GatewayController {
                                 "playerId", playerId.toString()),
                         GameDTO.class)
                 .join();
-        gamePublisher.publish(game);
-        return game;
     }
 
     @MutationMapping
     public GameDTO addBotToGame(@Argument("gameId") UUID gameId) {
-        GameDTO game = redisRequestReplyService.sendAction(
+        return redisRequestReplyService.sendAction(
                         "ADD_BOT",
                         Map.of("gameId", gameId.toString()),
                         GameDTO.class)
                 .join();
-        gamePublisher.publish(game);
-        return game;
     }
 
     @QueryMapping
@@ -94,12 +88,23 @@ public class GatewayController {
 
     @MutationMapping
     public GameDTO startGame(@Argument("gameId") UUID gameId) {
-        GameDTO game = redisRequestReplyService.sendAction(
+        return redisRequestReplyService.sendAction(
                         "START_GAME",
                         Map.of("gameId", gameId.toString()),
                         GameDTO.class)
                 .join();
-        gamePublisher.publish(game);
-        return game;
     }
+
+    @MutationMapping
+    public Integer rollDice(
+            @Argument("gameId") UUID gameId,
+            @Argument("playerId") UUID playerId) {
+        return redisRequestReplyService.sendAction(
+                        "ROLL_DICE",
+                        Map.of("gameId", gameId.toString(),
+                                "playerId", playerId.toString()),
+                        Integer.class)
+                .join();
+    }
+
 }

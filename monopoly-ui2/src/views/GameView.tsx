@@ -41,6 +41,7 @@ export const GameView = () => {
         onData: ({data}) => {
             const updatedGame = data?.data?.gameUpdated;
             if (updatedGame && gameInitialized) {
+                console.log("updated game", updatedGame);
                 updateGame(updatedGame);
             }
         }
