@@ -83,7 +83,7 @@ public class GameRequestStreamListener {
     private void handleMessage(MapRecord<String, String, String> message) {
         try {
             Map<String, String> body = message.getValue();
-            String action = body.get("action");
+            String action = body.get("action").replaceAll("^\"|\"$", "");
             String correlationId = body.get("correlationId");
 
             RequestContextRedis ctx = new RequestContextRedis(correlationId, body, message, redisOp, objectMapper);

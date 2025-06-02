@@ -1,11 +1,9 @@
 package com.example.application.utility;
 
-import com.example.application.util.RedisResponse;
 import com.example.application.util.exceptions.RedisResponseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisOperations;
 
@@ -33,6 +31,7 @@ public record RequestContextRedis(
                     .ofMap(body)
                     .withStreamKey(RESPONSE_STREAM);
 
+
             redisOp.opsForStream().add(record);
             log.info("Sent response to Redis stream for correlationId: {}", correlationId);
         } catch (Exception e) {
@@ -40,9 +39,4 @@ public record RequestContextRedis(
             throw new RedisResponseException("Failed to send response to Redis", e);
         }
     }
-    /// if its from bot, record should be ack
-//    public boolean isFromBot(){
-//
-//    }
-
 }

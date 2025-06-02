@@ -28,9 +28,10 @@ export class World {
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
+            antialias: false,
             powerPreference: "high-performance"
         });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         this.renderer.setSize(container.clientWidth, container.clientHeight);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -56,19 +57,50 @@ export class World {
         this.renderer.setAnimationLoop(this.animate);
     }
 
+    // private setupLighting() {
+    //     let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    //     this.scene.add(ambientLight);
+    //
+    //     // const color = 0xFFCC33;
+    //     // const intensity2 = 75000;
+    //     // const light2 = new THREE.PointLight(color, intensity2);
+    //     // light2.castShadow = true;
+    //     // light2.position.set(100, 100, -260);
+    //     // light2.shadow.bias = -0.001;
+    //     // light2.shadow.mapSize.width = 1024;
+    //     // light2.shadow.mapSize.height = 1024;
+    //     const color = 0xFFCC33;
+    //     const dirLight = new THREE.DirectionalLight(color, 1.5);
+    //     dirLight.castShadow = true;
+    //     dirLight.shadow.bias = -0.001;
+    //     dirLight.shadow.mapSize.width = 1024;
+    //     dirLight.shadow.mapSize.height = 1024;
+    //     dirLight.position.set(50, 50, -100);
+    //     this.scene.add(dirLight);
+    //
+    //     this.scene.add(dirLight);
+    // }
     private setupLighting() {
-        let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);
 
         const color = 0xFFCC33;
-        const intensity2 = 75000;
-        const light2 = new THREE.PointLight(color, intensity2);
-        light2.castShadow = true;
-        light2.position.set(100, 100, -260);
-        light2.shadow.bias = -0.001;
-        light2.shadow.mapSize.width = 4096;
-        light2.shadow.mapSize.height = 4096;
-        this.scene.add(light2);
+        const dirLight = new THREE.DirectionalLight(color, 1.2);
+        dirLight.position.set(10, 10, -26);
+        dirLight.castShadow = true;
+
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.bias = -0.001;
+        const d = 50;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 200;
+
+        this.scene.add(dirLight);
     }
 
     addToScene(object: THREE.Object3D) {

@@ -1,5 +1,6 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
+import {Mesh} from "three";
 
 export class Dice {
     async loadDice(loader:GLTFLoader): Promise<void> {
@@ -14,11 +15,10 @@ export class Dice {
                     model.userData = {isDice: true};
                     model.position.y = 0.36;
                     model.traverse((obj: any) => {
-                        if (obj.castShadow !== undefined) {
+                        if (obj instanceof Mesh) {
                             obj.castShadow = true;
-                            obj.receiveShadow = true;
                         }
-                    })
+                    });
                     world.scene.add(model);
                     resolve()
                     console.log('Dice model loaded');

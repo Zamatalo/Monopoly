@@ -1,4 +1,3 @@
-// BotService.java
 package com.example.application.services;
 
 import com.example.application.types.GameDTO;
@@ -12,28 +11,34 @@ import dev.langchain4j.service.SystemMessage;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.ReactiveSubscription;
+import org.springframework.data.redis.connection.stream.StreamRecords;
+import org.springframework.data.redis.connection.stream.StringRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Service
 @Slf4j
 public class BotService {
     private final MonopolyLLMBot llmBot;
     private final ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
-    private final RedisService redisService;
     private final ObjectMapper objectMapper;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ConcurrentLinkedQueue<GameDTO> updateQueue = new ConcurrentLinkedQueue<>();
 
     public BotService(ReactiveRedisTemplate<String, Object> reactiveRedisTemplate,
-                      RedisService redisService,
+                      RedisTemplate<String, String> redisTemplate,
                       ObjectMapper objectMapper) {
         this.reactiveRedisTemplate = reactiveRedisTemplate;
-        this.redisService = redisService;
+        this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
 
         ChatLanguageModel model = OllamaChatModel.builder()
@@ -46,55 +51,84 @@ public class BotService {
     }
 
     @PostConstruct
-    public void subscribeToGameUpdates() {
+    public void init() {
+        subscribeToGameUpdates();
+        startQueueProcessor();
+    }
+
+    private void subscribeToGameUpdates() {
         reactiveRedisTemplate.listenToChannel("game:gameUpdate")
                 .map(ReactiveSubscription.Message::getMessage)
                 .cast(GameDTO.class)
-                .subscribe(this::handleGameUpdate);
+                .subscribe(this::enqueueGameUpdate);
+    }
+
+    private void enqueueGameUpdate(GameDTO gameDTO) {
+        updateQueue.add(gameDTO);
+        log.debug("Enqueued game update for game: {}", gameDTO.getGameId());
+    }
+
+    private void startQueueProcessor() {
+        Flux.interval(Duration.ofMillis(5000))
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe(tick -> processQueue());
+    }
+
+    private void processQueue() {
+        try {
+            GameDTO gameDTO = updateQueue.poll();
+            if (gameDTO != null) {
+                handleGameUpdate(gameDTO);
+            }
+        } catch (Exception e) {
+            log.error("Error processing game update from queue", e);
+        }
     }
 
     public void handleGameUpdate(GameDTO gameDTO) {
-        try {
-            PlayerDTO currentPlayer = getCurrentPlayer(gameDTO);
-            if (currentPlayer.getIsBot()) {
-                log.info("Bot turn for player: {}", currentPlayer.getPlayerName());
-                String gameStateJson = "Game state: " + objectMapper.writeValueAsString(gameDTO);
+        PlayerDTO currentPlayer = getCurrentPlayer(gameDTO);
+        if (Boolean.TRUE.equals(currentPlayer.getIsBot())) {
+            log.info("Bot turn for player: {}", currentPlayer.getPlayerName());
+            try {
+                String gameStateJson = objectMapper.writeValueAsString(gameDTO);
 
                 decideMoveAsync(gameStateJson)
-                        .flatMap(action ->
-                                reactiveRedisTemplate.opsForStream().add("game.request",
-                                        Map.of(
-                                                "action", action,
-                                                "gameId", gameDTO.getGameId(),
-                                                "playerId", currentPlayer.getPlayerId(),
-                                                "correlationId", UUID.randomUUID(),
-                                                "sentFromBot", true
-                                        )
-                                )
-                        )
+                        .doOnNext(action -> sendBotAction(gameDTO, currentPlayer, action))
                         .subscribe();
+            } catch (JsonProcessingException e) {
+                log.error("Failed to serialize gameDTO for bot decision", e);
             }
-        } catch (JsonProcessingException e) {
-            log.error("Failed to serialize gameDTO for bot decision", e);
         }
+    }
+
+    private void sendBotAction(GameDTO gameDTO, PlayerDTO player, String action) {
+        Map<String, String> body = Map.of(
+                "action", action,
+                "gameId", gameDTO.getGameId(),
+                "playerId", player.getPlayerId(),
+                "correlationId", UUID.randomUUID().toString(),
+                "sentFromBot", "true"
+        );
+
+        StringRecord record = StreamRecords.string(body).withStreamKey("game.request");
+        redisTemplate.opsForStream().add(record);
+        log.info("Sent action '{}' for bot player '{}'", action, player.getPlayerName());
     }
 
     private Mono<String> decideMoveAsync(String gameStateJson) {
         return Mono.fromCallable(() -> {
             log.debug("Sending to LLM: {}", gameStateJson);
-            String response = llmBot.decideAction(gameStateJson);
+            String response = llmBot.decideAction(gameStateJson).trim();
             log.debug("Received from LLM: {}", response);
             return response;
         }).subscribeOn(Schedulers.boundedElastic());
     }
-
 
     private PlayerDTO getCurrentPlayer(GameDTO gameDTO) {
         return gameDTO.getPlayers().get(gameDTO.getCurrentPlayerIndex());
     }
 
     public interface MonopolyLLMBot {
-
         @SystemMessage("You are a bot playing Monopoly. You receive the full game state as JSON and possible actions. " +
                 "Respond *only* with the exact action name as a plain string, like ROLL_DICE, BUY_PROPERTY, or END_TURN. " +
                 "Do not include quotes, explanations, or any other text.")
