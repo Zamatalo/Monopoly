@@ -40,7 +40,9 @@ public record RequestContextRedis(
             throw new RedisResponseException("Failed to send response to Redis", e);
         }
     }
-
-
+    /// if its from bot, record should be ack
+//    public boolean isFromBot(){
+//
+//    }
 
 }

@@ -6,6 +6,8 @@ import lombok.SneakyThrows;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class RedisService {
@@ -14,7 +16,7 @@ public class RedisService {
     @SneakyThrows
     public void publishGameUpd(GameDTO gameDTO) {
         var channel = "game:gameUpdate";
-       // var message = objectMapper.writeValueAsString(gameDTO);
         redisTemplate.convertAndSend(channel, gameDTO).subscribe();
     }
+
 }

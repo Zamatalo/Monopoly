@@ -4,15 +4,17 @@ import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@Mapper(componentModel = "spring", uses = GameIdMapper.class)
+@Mapper(componentModel = "spring")
 public interface GameMapper {
 
     GameMapper INSTANCE = Mappers.getMapper(GameMapper.class);
@@ -25,18 +27,14 @@ public interface GameMapper {
     @Mapping(target = "playerActions", ignore = true)
     PlayerDTO playerToDto(Player player);
 
-    @Mapping(source = "gameId", target = "game")
     Player dtoToPlayer(PlayerDTO playerDTO);
 
-}
-@Component
-class GameIdMapper {
-    public Game map(UUID gameId) {
-        if (gameId == null) {
-            return null;
+    @AfterMapping
+    default void linkPlayers(@MappingTarget Game game) {
+        if (game.getPlayers() != null) {
+            for (Player player : game.getPlayers()) {
+                player.setGame(game);
+            }
         }
-        Game game = new Game();
-        game.setGameId(gameId);
-        return game;
     }
 }

@@ -5,6 +5,18 @@ type Subscription {
 
 type DicePosition{
     gameId: ID!,
-    pos:String,
-    rot:String
+    pos:Vector3,
+    rot:Quaternion
+}
+type Vector3{
+    x:Float,
+    y:Float,
+    z:Float
+}
+
+type Quaternion{
+    x:Float,
+    y:Float,
+    z:Float,
+    w:Float
 }

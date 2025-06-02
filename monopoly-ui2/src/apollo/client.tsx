@@ -3,22 +3,22 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 
+
 // HTTP link for queries and mutations
 const httpLink = new HttpLink({
     uri: 'http://localhost:8083/api/v1/graphql',
-    headers: {
-        'Content-Type': 'application/json',
-    }
+    // headers: {
+    //     'Content-Type': 'application/json',
+    // }
 });
 
-// WebSocket link for subscriptions
 const wsLink = new GraphQLWsLink(
     createClient({
         url: 'ws://localhost:8083/api/v1/graphql',
-        connectionParams: {}, // No auth params needed
-        retryAttempts: 5,
-        shouldRetry: () => true,
-        connectionAckWaitTimeout: 5000, // 5 seconds
+        // connectionParams: {}, // No auth params needed
+        // retryAttempts: 5,
+        // shouldRetry: () => true,
+        // connectionAckWaitTimeout: 5000, // 5 seconds
     })
 );
 
@@ -40,7 +40,7 @@ export const client = new ApolloClient({
     cache: new InMemoryCache(),
     defaultOptions: {
         watchQuery: {
-            fetchPolicy: 'cache-and-network',
+            fetchPolicy: 'network-only',
         },
     }
 });
