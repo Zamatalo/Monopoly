@@ -22,4 +22,5 @@ public interface GameRepo extends JpaRepository<Game, UUID> {
 
     @Query("SELECT g FROM Game g JOIN g.players p WHERE p.playerId = :playerId")
     Optional<Game> findGameByPlayerId(@Param("playerId") UUID playerId);
+
 }

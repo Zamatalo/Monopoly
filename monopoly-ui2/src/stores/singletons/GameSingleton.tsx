@@ -21,6 +21,7 @@ class GameSingleton {
         if (!this.instance) {
             throw new Error("Game not initialized. Call initialize() first.");
         }
+        console.log(rawGameData);
         this.instance.updateFromRaw(rawGameData);
         return this.instance;
     }

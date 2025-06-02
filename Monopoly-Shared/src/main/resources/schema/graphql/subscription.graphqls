@@ -4,6 +4,7 @@ type Subscription {
 }
 
 type DicePosition{
+    gameId: ID!,
     pos:String,
     rot:String
 }

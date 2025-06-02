@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import "../../styles/StartGameDialog.css"
-import {GameState} from "../../components/utils/constants";
+import {GameActions, GameState} from "../../components/utils/constants";
 import GameSingleton from "../../stores/singletons/GameSingleton";
 import {useMutation} from "@apollo/client";
-import {START_GAME} from "../../graphql/queries";
+import {ADD_BOT, START_GAME} from "../../graphql/queries";
 
 
 const StartGameDialog: React.FC = () => {
@@ -12,11 +12,14 @@ const StartGameDialog: React.FC = () => {
     const [startGame] = useMutation(START_GAME);
     const [playerFull, setPlayerFull] = useState(false);
 
+    const [addBot] = useMutation(ADD_BOT);
+
     const handleStartGame = () => {
         startGame({variables: {gameId: game?.gameId}})
-
     }
-
+    const handleAddBot = () => {
+        addBot({variables: {gameId: game?.gameId}})
+    }
     const getStatusClass = () => {
         switch (game?.gameState) {
             case GameState.STARTED:
@@ -52,10 +55,10 @@ const StartGameDialog: React.FC = () => {
                 {game?.players.map(player => (
                     <div
                         key={player.playerId}
-                        // className={`player-tag ${player ? 'bot' : ''}`}
+                        className={`player-tag ${player ? 'bot' : ''}`}
                     >
                         {player.playerName}
-                        {/*{player.isBot && <span className="bot-icon">🤖</span>}*/}
+                        {player.isBot && <span className="bot-icon">🤖</span>}
                     </div>
                 ))}
             </div>
@@ -64,11 +67,18 @@ const StartGameDialog: React.FC = () => {
                 <button
                     className="btn start-btn"
                     onClick={handleStartGame}
-                    disabled={game?.players.length !== 4}
+                    disabled={!game?.gameActions.includes(GameActions.START_GAME)}
                 >
                     {isLoading ? "Starting..." : "Start Game"}
                 </button>
 
+                <button
+                    className="btn start-btn"
+                    onClick={handleAddBot}
+                    disabled={!game?.gameActions.includes(GameActions.ADD_BOT)}
+                >
+                    Add Bot
+                </button>
             </div>
         </div>
     );

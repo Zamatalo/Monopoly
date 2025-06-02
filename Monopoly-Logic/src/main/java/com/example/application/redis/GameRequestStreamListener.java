@@ -14,6 +14,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -29,11 +30,15 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class GameRequestStreamListener {
-    private static final String REQUEST_STREAM = "game.request";
-    private static final String RESPONSE_STREAM = "game.response";
-    private static final String BACKEND_GROUP = "backend";
+    @Value("${spring.data.redis.gameRequestStream}")
+    private String REQUEST_STREAM;
+    @Value("${spring.data.redis.gameResponseStream}")
+    private String RESPONSE_STREAM;
+    @Value("${spring.data.redis.backendGroup}")
+    private String BACKEND_GROUP;
+    @Value("${spring.data.redis.gatewayGroup}")
+    private String GATEWAY_GROUP;
     private static final String CONSUMER_NAME = "backend-1";
-    private static final String GATEWAY_GROUP = "gateway";
 
     private final List<GameActionHandler> handlers;
     private final GameService gameService;
@@ -124,33 +129,38 @@ public class GameRequestStreamListener {
                 "CREATE_GAME".equals(action) ||
                 "findGameByPlayerId".equals(action) ||
                 "findGameById".equals(action) ||
-                "getPlayer".equals(action)) {
+                "getPlayer".equals(action) ||
+                "ROLL_DICE".equals(action)) {
             return true;
         }
-
-        if (body.get("gameId") != null && !action.isEmpty() && body.get("playerId") == null) {
+        /// first checking gameActions then playerActions
+        if (body.get("gameId") != null) {
             UUID gameId = UUID.fromString(body.get("gameId"));
             Optional<GameDTO> game = gameService.findById(gameId);
             if (game.isEmpty()) return false;
 
-            List<GameActions> actions = GameActionResolver.resolveGameActions(game.get());
-            return actions.contains(GameActions.valueOf(action));
+            List<GameActions> gameActionsList = GameActionResolver.resolveGameActions(game.get());
+            try {
+                GameActions gameAction = GameActions.valueOf(action);
+                if (gameActionsList.contains(gameAction)) {
+                    return true;
+                }
+            } catch (IllegalArgumentException _) {
+            }
+
+            if (body.get("playerId") != null) {
+                Optional<PlayerDTO> player = playerService.findById(UUID.fromString(body.get("playerId")));
+                if (player.isEmpty()) return false;
+
+                List<PlayerActions> playerActionsList = GameActionResolver.resolvePlayerActions(game.get(), player.get());
+                try {
+                    PlayerActions playerAction = PlayerActions.valueOf(action);
+                    return playerActionsList.contains(playerAction);
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
+            }
         }
-
-        if (body.get("gameId") != null && !action.isEmpty() && body.get("playerId") != null) {
-            UUID gameId = UUID.fromString(body.get("gameId"));
-            UUID playerId = UUID.fromString(body.get("playerId"));
-
-            Optional<GameDTO> game = gameService.findById(gameId);
-            if (game.isEmpty()) return false;
-
-            Optional<PlayerDTO> player = playerService.findById(playerId);
-            if (player.isEmpty()) return false;
-
-            List<PlayerActions> actions = GameActionResolver.resolvePlayerActions(game.get(), player.get());
-            return actions.contains(PlayerActions.valueOf(action));
-        }
-
         return false;
     }
 

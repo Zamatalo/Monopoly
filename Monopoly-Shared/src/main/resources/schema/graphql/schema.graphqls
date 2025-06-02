@@ -57,6 +57,7 @@ type GameDTO {
 
 type PlayerDTO {
     playerId: ID
+    gameId:ID
     playerName: String
     color: PlayerColors
     balance: Int

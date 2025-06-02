@@ -1,11 +1,9 @@
 package com.example.application.entity;
 
+import com.example.application.entity.Player;
 import com.example.application.util.enums.GameState;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,30 +15,47 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @EqualsAndHashCode.Include
     private UUID gameId;
 
     @Column(name = "game_state", nullable = false)
     @Enumerated(EnumType.STRING)
-    private  GameState gameState = GameState.STARTED;
+    private GameState gameState = GameState.STARTED;
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private  List<Player> players = new ArrayList<>();
+    @OneToMany(
+            mappedBy = "game",
+            cascade = {CascadeType.ALL},
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
+    )
+    @ToString.Exclude
+    private List<Player> players = new ArrayList<>();
 
-    private  int currentPlayerIndex = 0;
+    private int currentPlayerIndex = 0;
 
-    private  String createdTime = LocalDateTime.now().toString();
+    private String createdTime = LocalDateTime.now().toString();
 
     public void addPlayer(Player player) {
-        if (!this.players.contains(player) && this.players.size() < 4) {
+        if (player == null) return;
+
+        if (this.players.size() >= 4) {
+            throw new IllegalStateException("Maximum players reached");
+        }
+
+        if (!this.players.contains(player)) {
             player.setGame(this);
-            players.add(player);
+            this.players.add(player);
         }
     }
 
     public Player getCurrentPlayer() {
+        if (players == null || players.isEmpty()) {
+            return null;
+        }
         return players.get(currentPlayerIndex);
     }
 }

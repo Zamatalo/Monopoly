@@ -5,12 +5,15 @@ import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
 import com.example.application.types.GameDTO;
+import com.example.application.util.PropertyData;
 import com.example.application.util.enums.GameState;
 import com.example.application.utility.GameMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,6 +66,20 @@ public class GameService {
     @Transactional(readOnly = true)
     public Optional<GameDTO> findGameByPlayerId(UUID playerId) {
         return gameRepo.findGameByPlayerId(playerId).map(this::toEnrichedGameDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PropertyData> findAllProperties(UUID gameId) {
+        Game game = gameRepo.findById(gameId)
+                .orElseThrow(() -> new EntityNotFoundException("Game not found with id: " + gameId));
+
+        List<PropertyData> allProperties = new ArrayList<>();
+
+        for (Player player : game.getPlayers()) {
+            allProperties.addAll(player.getOwnedProperties());
+        }
+
+        return allProperties;
     }
 
     private GameDTO toEnrichedGameDTO(Game game) {

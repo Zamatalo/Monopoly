@@ -1,4 +1,4 @@
-import { createClient } from "redis";
+import {createClient} from "redis";
 import * as RAPIER from "@dimforge/rapier3d-compat";
 
 await RAPIER.init();
@@ -102,9 +102,9 @@ class DiceGame {
         const x = quat.x, y = quat.y, z = quat.z, w = quat.w;
         const vx = vec.x, vy = vec.y, vz = vec.z;
 
-        const ix =  w * vx + y * vz - z * vy;
-        const iy =  w * vy + z * vx - x * vz;
-        const iz =  w * vz + x * vy - y * vx;
+        const ix = w * vx + y * vz - z * vy;
+        const iy = w * vy + z * vx - x * vz;
+        const iz = w * vz + x * vy - y * vx;
         const iw = -x * vx - y * vy - z * vz;
 
         return new RAPIER.Vector3(
@@ -116,12 +116,12 @@ class DiceGame {
 
     getTopFaceFromQuaternion(quat) {
         const faceNormals = [
-            { face: 1, normal: new RAPIER.Vector3(0, 0, -1) },  // 1
-            { face: 2, normal: new RAPIER.Vector3(1, 0, 0) },   // 2
-            { face: 3, normal: new RAPIER.Vector3(0, 1, 0) },   // 3
-            { face: 4, normal: new RAPIER.Vector3(0, -1, 0) },  // 4
-            { face: 5, normal: new RAPIER.Vector3(-1, 0, 0) },  // 5
-            { face: 6, normal: new RAPIER.Vector3(0, 0, 1) },   // 6
+            {face: 1, normal: new RAPIER.Vector3(0, 0, -1)},  // 1
+            {face: 2, normal: new RAPIER.Vector3(1, 0, 0)},   // 2
+            {face: 3, normal: new RAPIER.Vector3(0, 1, 0)},   // 3
+            {face: 4, normal: new RAPIER.Vector3(0, -1, 0)},  // 4
+            {face: 5, normal: new RAPIER.Vector3(-1, 0, 0)},  // 5
+            {face: 6, normal: new RAPIER.Vector3(0, 0, 1)},   // 6
         ];
 
         const up = new RAPIER.Vector3(0, 1, 0);
@@ -129,7 +129,7 @@ class DiceGame {
         let maxDot = -Infinity;
         let topFace = 1;
 
-        for (const { face, normal } of faceNormals) {
+        for (const {face, normal} of faceNormals) {
             const rotated = this.rotateVectorByQuaternion(normal, quat);
             const dot = rotated.x * up.x + rotated.y * up.y + rotated.z * up.z;
 
@@ -149,15 +149,18 @@ class DiceGame {
             const pos = this.dice.translation();
             const rot = this.dice.rotation();
 
-            pub.publish(`game:${this.gameId}:dice-update`, JSON.stringify({
-                pos, rot
+            pub.publish(`game:diceUpdate`, JSON.stringify({
+                gameId:this.gameId,
+                pos: {x: pos.x, y: pos.y, z: pos.z},
+                rot: {x: rot.x, y: rot.y, z: rot.z, w: rot.w}
             }));
         } else if (!this.resultSent) {
             const topFace = this.getTopFaceFromQuaternion(this.dice.rotation());
-            pub.publish(`game:${this.gameId}:dice-topFace`, JSON.stringify({
+            pub.publish(`game:diceResult`,JSON.stringify( {
                 gameId: this.gameId,
-                value: topFace
-            }));
+                diceResult: topFace
+            }))
+
             this.resultSent = true;
         }
     }
