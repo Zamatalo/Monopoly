@@ -62,12 +62,11 @@ export class PlayerDTO {
                         color: this.color,
                     };
 
-                    model.traverse((obj) => {
+                    model.traverse((obj: any) => {
                         if (obj.castShadow !== undefined) {
                             obj.castShadow = true;
-                            obj.receiveShadow = true;
                         }
-                    });
+                    })
                     world.addToScene(model);
                     console.log(`Loaded model for ${this.color} player`);
                     resolve();

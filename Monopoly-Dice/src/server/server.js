@@ -1,7 +1,8 @@
-import {createClient} from "redis";
+import { createClient } from "redis";
 import * as RAPIER from "@dimforge/rapier3d-compat";
 
 await RAPIER.init();
+
 const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0);
 const world = new RAPIER.World(gravity);
 const games = new Map();
@@ -10,7 +11,6 @@ const sub = createClient();
 const pub = createClient();
 await sub.connect();
 await pub.connect();
-
 
 await sub.pSubscribe('game:*:dice-roll-action', async (message, channel) => {
     const match = channel.match(/^game:(.*):dice-roll-action$/);
@@ -30,8 +30,12 @@ class DiceGame {
         this.gameId = gameId;
         this.dice = null;
         this.resultSent = false;
+        this.hasThrown = false;
+        this.lastUpdateTime = 0;
+        this.UPDATE_INTERVAL_MS = 14;
         this.setupPhysics();
-        setInterval(() => this.update(), 13);
+
+        setInterval(() => this.physicsLoop(), 13);
     }
 
     setupPhysics() {
@@ -97,7 +101,6 @@ class DiceGame {
         );
     }
 
-
     rotateVectorByQuaternion(vec, quat) {
         const x = quat.x, y = quat.y, z = quat.z, w = quat.w;
         const vx = vec.x, vy = vec.y, vz = vec.z;
@@ -116,12 +119,12 @@ class DiceGame {
 
     getTopFaceFromQuaternion(quat) {
         const faceNormals = [
-            {face: 1, normal: new RAPIER.Vector3(0, 0, -1)},  // 1
-            {face: 2, normal: new RAPIER.Vector3(1, 0, 0)},   // 2
-            {face: 3, normal: new RAPIER.Vector3(0, 1, 0)},   // 3
-            {face: 4, normal: new RAPIER.Vector3(0, -1, 0)},  // 4
-            {face: 5, normal: new RAPIER.Vector3(-1, 0, 0)},  // 5
-            {face: 6, normal: new RAPIER.Vector3(0, 0, 1)},   // 6
+            { face: 1, normal: new RAPIER.Vector3(0, 0, -1) },
+            { face: 2, normal: new RAPIER.Vector3(1, 0, 0) },
+            { face: 3, normal: new RAPIER.Vector3(0, 1, 0) },
+            { face: 4, normal: new RAPIER.Vector3(0, -1, 0) },
+            { face: 5, normal: new RAPIER.Vector3(-1, 0, 0) },
+            { face: 6, normal: new RAPIER.Vector3(0, 0, 1) }
         ];
 
         const up = new RAPIER.Vector3(0, 1, 0);
@@ -129,7 +132,7 @@ class DiceGame {
         let maxDot = -Infinity;
         let topFace = 1;
 
-        for (const {face, normal} of faceNormals) {
+        for (const { face, normal } of faceNormals) {
             const rotated = this.rotateVectorByQuaternion(normal, quat);
             const dot = rotated.x * up.x + rotated.y * up.y + rotated.z * up.z;
 
@@ -142,24 +145,34 @@ class DiceGame {
         return topFace;
     }
 
-    update() {
+
+    physicsLoop() {
         world.step();
 
+        const now = Date.now();
+        if (now - this.lastUpdateTime >= this.UPDATE_INTERVAL_MS) {
+            this.lastUpdateTime = now;
+            this.sendUpdate();
+        }
+    }
+
+    sendUpdate() {
         if (!this.dice.isSleeping()) {
             const pos = this.dice.translation();
             const rot = this.dice.rotation();
 
             pub.publish(`game:diceUpdate`, JSON.stringify({
-                gameId:this.gameId,
-                pos: {x: pos.x, y: pos.y, z: pos.z},
-                rot: {x: rot.x, y: rot.y, z: rot.z, w: rot.w}
+                gameId: this.gameId,
+                pos: { x: pos.x, y: pos.y, z: pos.z },
+                rot: { x: rot.x, y: rot.y, z: rot.z, w: rot.w }
             }));
         } else if (!this.resultSent) {
             const topFace = this.getTopFaceFromQuaternion(this.dice.rotation());
-            pub.publish(`game:diceResult`,JSON.stringify( {
+
+            pub.publish(`game:diceResult`, JSON.stringify({
                 gameId: this.gameId,
                 diceResult: topFace
-            }))
+            }));
 
             this.resultSent = true;
         }

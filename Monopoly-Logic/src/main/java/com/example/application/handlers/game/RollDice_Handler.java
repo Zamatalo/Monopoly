@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -62,7 +61,9 @@ public class RollDice_Handler implements GameActionHandler {
 
             gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
             redisService.publishGameUpd(gameService.findById(gameId).get());
-            ctx.respond(rolledResult);
+            if (!isFromBot(ctx)) {
+                ctx.respond(rolledResult);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -76,4 +77,9 @@ public class RollDice_Handler implements GameActionHandler {
                 .orElse(null);
     }
 
+    /// if its from bot, record should be ack
+    public boolean isFromBot(RequestContextRedis ctx) {
+        var a = ctx.body().get("isFromBot");
+        return a != null && a.equals("true");
+    }
 }

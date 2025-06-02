@@ -74,46 +74,40 @@ export const diceUpdate = (() => {
     let intervalId: any = null;
     let world: any = null;
 
-    function startInterval() {
-        if (intervalId !== null) return;
-
-        intervalId = setInterval(() => {
-            if (!world) {
-                try {
-                    world = WorldSingleton.getInstance();
-                } catch {
-                    return;
-                }
-            }
-
-            if (queue.length === 0) {
-                clearInterval(intervalId);
-                intervalId = null;
-                return;
-            }
-
-            const update = queue.shift();
-
-            world.scene.children.forEach((child: any) => {
-                if (child.userData.isDice) {
-                    child.position.set(update.pos.x, update.pos.y, update.pos.z);
-                    child.quaternion.set(update.rot.x, update.rot.y, update.rot.z, update.rot.w);
-                }
-            });
-        }, 25);
-    }
-
-    return function diceUpdate(dicePosAndRot: any) {
-        queue.push(dicePosAndRot);
+    function applyUpdate(update: any) {
         if (!world) {
             try {
                 world = WorldSingleton.getInstance();
             } catch {
+                return;
             }
         }
+
+        world.scene.children.forEach((child: any) => {
+            if (child.userData.isDice) {
+                child.position.set(update.pos.x, update.pos.y, update.pos.z);
+                child.quaternion.set(update.rot.x, update.rot.y, update.rot.z, update.rot.w);
+            }
+        });
+    }
+
+    function startInterval() {
+        if (intervalId !== null) return;
+
+        intervalId = setInterval(() => {
+            if (queue.length === 0) return;
+
+            const update = queue.shift();
+            applyUpdate(update);
+        }, 14);
+    }
+
+    return function enqueue(update: any) {
+        queue.push(update);
         startInterval();
     };
 })();
+
 
 
 
