@@ -1,5 +1,6 @@
 package com.example.application.services;
 
+import com.example.application.components.GameActionResolver;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -92,6 +93,7 @@ public class BotService {
 
             log.info("Bot turn for player: {}", currentPlayer.getPlayerName());
             try {
+                var possibleActions = GameActionResolver.resolvePlayerActions(gameDTO,currentPlayer);
                 String gameStateJson = objectMapper.writeValueAsString(gameDTO);
 
                 decideMoveAsync(gameStateJson)
@@ -126,9 +128,11 @@ public class BotService {
     }
 
     public interface MonopolyLLMBot {
-        @SystemMessage("You are a bot playing Monopoly. You receive the full game state as JSON and possible actions. " +
-                "Respond *only* with the exact action name as a plain string"+
-                "Do not include quotes, explanations, or any other text.")
+        @SystemMessage(
+                "You are a bot playing Monopoly. You receive the full game state as JSON, including a list of possible actions. " +
+                        "Choose exactly one valid action from the list and respond *only* with that action as a plain string. " +
+                        "Do not include quotes, explanations, or any other text."
+        )
         String decideAction(String gameStateJson);
     }
 }
