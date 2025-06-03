@@ -28,7 +28,7 @@ export class World {
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.renderer = new THREE.WebGLRenderer({
-            antialias: false,
+            antialias: true,
             powerPreference: "high-performance"
         });
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));

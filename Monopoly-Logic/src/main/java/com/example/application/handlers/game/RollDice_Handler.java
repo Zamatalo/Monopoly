@@ -14,7 +14,10 @@ import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -60,10 +63,28 @@ public class RollDice_Handler implements GameActionHandler {
 
             gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
             redisService.publishGameUpd(gameService.findById(gameId));
+
             if (!isFromBot(ctx)) {
                 ctx.respond(rolledResult);
             }else {
-                redisService.publishToBot(gameService.findById(gameId));
+                long start = System.nanoTime();
+
+                Mono.fromCallable(() -> gameService.findById(gameId))
+                        .delayElement(Duration.ofSeconds(2))
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .doOnSuccess(gameDTO -> {
+                            long end = System.nanoTime();
+                            long durationInMs = (end - start) / 1_000_000;
+                            log.info("Handled gameService.findById in {} ms", durationInMs);
+
+                            redisService.publishToBot(gameDTO);
+                        })
+                        .doOnError(e -> {
+                            log.error("Failed to fetch game by ID", e);
+                            ctx.respond("Error: " + e.getMessage());
+                        })
+                        .subscribe();
+
             }
         } catch (Exception e) {
             e.printStackTrace();

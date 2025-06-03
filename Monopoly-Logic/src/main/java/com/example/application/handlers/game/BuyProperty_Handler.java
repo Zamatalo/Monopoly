@@ -35,7 +35,6 @@ public class BuyProperty_Handler implements GameActionHandler {
             var gameId = UUID.fromString(ctx.body().get("gameId"));
             var playerId = UUID.fromString(ctx.body().get("playerId"));
 
-            GameDTO game = gameService.findById(gameId);
             PlayerDTO player = playerService.findById(playerId).orElseThrow();
 
             var whichCellIsPlayerStandingOn_Property = PropertyData.ofPos(player.getPosition());
