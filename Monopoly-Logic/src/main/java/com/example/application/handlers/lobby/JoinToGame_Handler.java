@@ -47,7 +47,7 @@ public class JoinToGame_Handler implements GameActionHandler {
             player.setColor(PlayerColors.valueOf(playerColor));
 
             var updatedGame = gameService.addPlayerToGame(player, UUID.fromString(gameId));
-            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)).get());
+            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)));
             ctx.respond(updatedGame);
 
         } catch (Exception e) {

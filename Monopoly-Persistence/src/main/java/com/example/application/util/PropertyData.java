@@ -71,12 +71,11 @@ public record PropertyData(
 
     );
 
-    public static PropertyData ofPos(Integer pos){
-        return Objects.requireNonNull(ALL.entrySet()
-                .stream()
-                .filter(e -> e.getValue().boardPosition == pos)
+    public static PropertyData ofPos(int pos) {
+        return ALL.values().stream()
+                .filter(p -> p.boardPosition() == pos)
                 .findFirst()
-                .orElse(null))
-                .getValue();
+                .orElseThrow(() -> new IllegalArgumentException("Invalid board position: " + pos));
     }
+
 }

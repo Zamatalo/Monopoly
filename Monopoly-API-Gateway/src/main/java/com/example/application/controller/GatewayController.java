@@ -1,7 +1,6 @@
 package com.example.application.controller;
 
 
-import com.example.application.components.publishers.GamePublisher;
 import com.example.application.service.GameGatewayService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerColors;
@@ -107,4 +106,23 @@ public class GatewayController {
                 .join();
     }
 
+    @MutationMapping
+    public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId){
+        return redisRequestReplyService.sendAction(
+                        "BUY_PROPERTY",
+                        Map.of("gameId", gameId.toString(),
+                                "playerId", playerId.toString()),
+                        GameDTO.class)
+                .join();
+    }
+
+    @MutationMapping
+    public GameDTO endTurn(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId) {
+        return redisRequestReplyService.sendAction(
+                        "END_TURN",
+                        Map.of("gameId", gameId.toString(),
+                                "playerId", playerId.toString()),
+                        GameDTO.class)
+                .join();
+    }
 }

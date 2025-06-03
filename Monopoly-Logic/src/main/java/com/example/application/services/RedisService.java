@@ -13,10 +13,16 @@ import java.util.Map;
 public class RedisService {
     private final ReactiveRedisTemplate<String, Object> redisTemplate;
 
-    @SneakyThrows
     public void publishGameUpd(GameDTO gameDTO) {
         var channel = "game:gameUpdate";
         redisTemplate.convertAndSend(channel, gameDTO).subscribe();
     }
-
+    public void publishTurnEnd(GameDTO gameDTO) {
+        var channel = "game:turnEnd";
+        redisTemplate.convertAndSend(channel, gameDTO).subscribe();
+    }
+    public void publishToBot(GameDTO gameDTO) {
+        var channel = "game:botDecision";
+        redisTemplate.convertAndSend(channel, gameDTO).subscribe();
+    }
 }

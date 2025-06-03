@@ -4,6 +4,8 @@ package com.example.application.services;
 import com.example.application.entity.Player;
 import com.example.application.repo.PlayerRepo;
 import com.example.application.types.PlayerDTO;
+import com.example.application.util.PropertyData;
+import com.example.application.util.enums.PlayerState;
 import com.example.application.utility.GameMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,4 +30,11 @@ public class PlayerService {
         playerRepository.save(player);
     }
 
+    @Transactional
+    public void addPropertyToPlayer(UUID playerId, PropertyData propertyData) {
+        Player player = playerRepository.findById(playerId).orElseThrow(EntityNotFoundException::new);
+        player.addProperty(propertyData);
+        player.setBalance(player.getBalance() - propertyData.cost());
+        playerRepository.save(player);
+    }
 }

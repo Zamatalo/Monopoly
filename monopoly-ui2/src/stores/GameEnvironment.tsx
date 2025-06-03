@@ -99,7 +99,7 @@ export const diceUpdate = (() => {
 
             const update = queue.shift();
             applyUpdate(update);
-        }, 14);
+        }, 16);
     }
 
     return function enqueue(update: any) {

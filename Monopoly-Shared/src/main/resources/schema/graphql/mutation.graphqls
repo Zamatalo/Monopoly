@@ -7,5 +7,6 @@ type Mutation {
 #    makeGameAction(gameId:ID!,action:GameActions!):String
     startGame(gameId:ID!):GameDTO
     addBotToGame(gameId:ID!):GameDTO
+    endTurn(gameId:ID,playerId:ID):GameDTO
 }
 

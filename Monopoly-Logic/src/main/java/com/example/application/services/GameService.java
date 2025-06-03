@@ -33,8 +33,10 @@ public class GameService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<GameDTO> findById(UUID id) {
-        return gameRepo.findById(id).map(this::toEnrichedGameDTO);
+    public GameDTO findById(UUID id) {
+        var game = gameRepo.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+        return toEnrichedGameDTO(game);
     }
 
     @Transactional

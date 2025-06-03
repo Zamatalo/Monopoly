@@ -3,7 +3,6 @@ package com.example.application.handlers.lobby;
 import com.example.application.services.GameService;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

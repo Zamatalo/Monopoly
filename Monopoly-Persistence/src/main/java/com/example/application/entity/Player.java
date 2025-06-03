@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -42,20 +43,24 @@ public class Player {
     @Column(nullable = false)
     private Boolean isBot = false;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "owned_properties", joinColumns = @JoinColumn(name = "player_id"))
     private List<PropertyData> ownedProperties = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private PlayerState playerState = PlayerState.IDLE;
 
-    private LocalDateTime createdTime = LocalDateTime.now();
+    @Column(updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdTime;
 
     public void addProperty(PropertyData property) {
-        if (property != null) {
-            ownedProperties.add(property);
-        } else {
+        if (property == null) {
             throw new IllegalArgumentException("Invalid property");
         }
+        if (!ownedProperties.contains(property)) {
+            ownedProperties.add(property);
+        }
     }
+
 }
