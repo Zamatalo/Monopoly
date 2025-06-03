@@ -57,7 +57,9 @@ public class BotService {
     }
 
     private void subscribeToGameUpdates() {
-        reactiveRedisTemplate.listenToChannel("game:gameUpdate")
+        Flux.merge(
+                        reactiveRedisTemplate.listenToChannel("game:turnEnd"),
+                        reactiveRedisTemplate.listenToChannel("game:botDecision"))
                 .map(ReactiveSubscription.Message::getMessage)
                 .cast(GameDTO.class)
                 .subscribe(this::enqueueGameUpdate);
@@ -65,13 +67,12 @@ public class BotService {
 
     private void enqueueGameUpdate(GameDTO gameDTO) {
         updateQueue.add(gameDTO);
-        log.debug("Enqueued game update for game: {}", gameDTO.getGameId());
     }
 
     private void startQueueProcessor() {
         Flux.interval(Duration.ofMillis(5000))
                 .subscribeOn(Schedulers.boundedElastic())
-                .subscribe(tick -> processQueue());
+                .subscribe(_ -> processQueue());
     }
 
     private void processQueue() {
@@ -88,6 +89,7 @@ public class BotService {
     public void handleGameUpdate(GameDTO gameDTO) {
         PlayerDTO currentPlayer = getCurrentPlayer(gameDTO);
         if (Boolean.TRUE.equals(currentPlayer.getIsBot())) {
+
             log.info("Bot turn for player: {}", currentPlayer.getPlayerName());
             try {
                 String gameStateJson = objectMapper.writeValueAsString(gameDTO);
@@ -112,16 +114,11 @@ public class BotService {
 
         StringRecord record = StreamRecords.string(body).withStreamKey("game.request");
         redisTemplate.opsForStream().add(record);
-        log.info("Sent action '{}' for bot player '{}'", action, player.getPlayerName());
     }
 
     private Mono<String> decideMoveAsync(String gameStateJson) {
-        return Mono.fromCallable(() -> {
-            log.debug("Sending to LLM: {}", gameStateJson);
-            String response = llmBot.decideAction(gameStateJson).trim();
-            log.debug("Received from LLM: {}", response);
-            return response;
-        }).subscribeOn(Schedulers.boundedElastic());
+        return Mono.fromCallable(() -> llmBot.decideAction(gameStateJson)
+                .trim()).subscribeOn(Schedulers.boundedElastic());
     }
 
     private PlayerDTO getCurrentPlayer(GameDTO gameDTO) {
@@ -130,7 +127,7 @@ public class BotService {
 
     public interface MonopolyLLMBot {
         @SystemMessage("You are a bot playing Monopoly. You receive the full game state as JSON and possible actions. " +
-                "Respond *only* with the exact action name as a plain string, like ROLL_DICE, BUY_PROPERTY, or END_TURN. " +
+                "Respond *only* with the exact action name as a plain string"+
                 "Do not include quotes, explanations, or any other text.")
         String decideAction(String gameStateJson);
     }

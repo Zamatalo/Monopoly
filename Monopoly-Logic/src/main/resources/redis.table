@@ -1,2 +1,0 @@
-XGROUP CREATE game.request backend $ MKSTREAM
-XGROUP CREATE game.response gateway $ MKSTREAM

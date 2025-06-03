@@ -59,7 +59,7 @@ public abstract class GameActionResolver {
         }
 
         // player moved
-        if (player.getPlayerState() == PlayerState.MOVED) {
+        if (player.getPlayerState() == PlayerState.AWAITING_DECISION) {
             if (canBuy(player.getPosition(), game)) {
                 actions.add(PlayerActions.BUY_PROPERTY);
             }

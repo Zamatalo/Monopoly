@@ -1,5 +1,5 @@
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
-import {PlayerColor, positions} from "../utils/constants";
+import {PlayerActions, PlayerColor, PlayerState, positions} from "../utils/constants";
 import gsap from "gsap";
 import {PropertyDTO} from "./PropertyDTO";
 import {Object3D} from "three";
@@ -9,13 +9,26 @@ export class PlayerDTO {
     playerId: string;
     playerName: string;
     color: PlayerColor;
-    inJail: boolean;
-    isBot:boolean;
     balance: number;
     position: number;
+    inJail: boolean;
+    isBot: boolean;
+    playerState: PlayerState;
+    playerActions: PlayerActions;
     ownedProperties: PropertyDTO[];
 
-    constructor({playerId, color, inJail, balance, position, ownedProperties, playerName,isBot}: PlayerDTO) {
+    constructor({
+                    playerId,
+                    color,
+                    inJail,
+                    balance,
+                    position,
+                    ownedProperties,
+                    playerName,
+                    isBot,
+                    playerState,
+                    playerActions
+                }: PlayerDTO) {
         this.playerId = playerId;
         this.color = color;
         this.playerName = playerName;
@@ -23,6 +36,8 @@ export class PlayerDTO {
         this.isBot = isBot;
         this.balance = balance;
         this.position = position;
+        this.playerState = playerState;
+        this.playerActions = playerActions;
         this.ownedProperties = ownedProperties;
     }
 
@@ -38,10 +53,12 @@ export class PlayerDTO {
         this.inJail = raw.inJail;
         this.balance = raw.balance;
         this.position = raw.position;
+        this.playerActions = raw.playerActions;
+        this.playerState = raw.playerState;
         this.ownedProperties = raw.ownedProperties || [];
     }
 
-    async loadPlayerModel(loader:GLTFLoader): Promise<void> {
+    async loadPlayerModel(loader: GLTFLoader): Promise<void> {
         const playerPath = `/assets/models/${this.color}_pawn.glb`;
         const world = WorldSingleton.getInstance();
 
@@ -80,7 +97,8 @@ export class PlayerDTO {
         });
     }
 
-    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {}): void {
+    animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {
+    }): void {
         if (!model) {
             console.error('Model not loaded yet!');
             return;

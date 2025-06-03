@@ -236,6 +236,8 @@ export const BUY_PROPERTY_MUTATION = gql`
                 position
                 inJail
                 isBot
+                playerActions
+                playerState
                 ownedProperties {
                     cost
                     upgradable
@@ -302,6 +304,13 @@ export const ADD_BOT = gql`
                     upgradable
                 }
             }
+        }
+    }
+`
+export const END_TURN = gql`
+    mutation EndTurn($gameId: ID!,$playerId: ID!) {
+        endTurn(gameId: $gameId, playerId: $playerId) {
+            gameId
         }
     }
 `

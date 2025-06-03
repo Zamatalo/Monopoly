@@ -6,6 +6,7 @@ import com.example.application.services.PlayerService;
 import com.example.application.services.RedisService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
+import com.example.application.types.PlayerState;
 import com.example.application.util.PropertyData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
@@ -40,7 +41,7 @@ public class RollDice_Handler implements GameActionHandler {
             CompletableFuture<Integer> future = diceService.rollDice(gameId.toString());
             var rolledResult = future.join();
 
-            GameDTO game = gameService.findById(gameId).orElseThrow();
+            GameDTO game = gameService.findById(gameId);
             PlayerDTO player = playerService.findById(playerId).orElseThrow();
 
             int newPosition = (player.getPosition() + rolledResult) % 40;
@@ -49,9 +50,7 @@ public class RollDice_Handler implements GameActionHandler {
                 player.setBalance(player.getBalance() - steppedOn.cost());
             }
 
-            int nextPlayer = (game.getCurrentPlayerIndex() + 1) % game.getPlayers().size();
-
-            game.setCurrentPlayerIndex(nextPlayer);
+            player.setPlayerState(PlayerState.AWAITING_DECISION);
             player.setPosition(newPosition);
 
             List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
@@ -60,9 +59,11 @@ public class RollDice_Handler implements GameActionHandler {
             game.setPlayers(updatedPlayers);
 
             gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
-            redisService.publishGameUpd(gameService.findById(gameId).get());
+            redisService.publishGameUpd(gameService.findById(gameId));
             if (!isFromBot(ctx)) {
                 ctx.respond(rolledResult);
+            }else {
+                redisService.publishToBot(gameService.findById(gameId));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -79,7 +80,7 @@ public class RollDice_Handler implements GameActionHandler {
 
     /// if its from bot, record should be ack
     public boolean isFromBot(RequestContextRedis ctx) {
-        var a = ctx.body().get("isFromBot");
+        var a = ctx.body().get("sentFromBot");
         return a != null && a.equals("true");
     }
 }

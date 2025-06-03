@@ -31,7 +31,7 @@ public class AddBot_Handler implements GameActionHandler {
     public void handle(RequestContextRedis ctx) {
         try {
             var gameId = ctx.body().get("gameId");
-            var game = gameService.findById(UUID.fromString(gameId)).get();
+            var game = gameService.findById(UUID.fromString(gameId));
 
             var allColors = PlayerColors.values();
             var usedColors = new ArrayList<PlayerColors>();
@@ -53,7 +53,7 @@ public class AddBot_Handler implements GameActionHandler {
             bot.setColor(com.example.application.util.enums.PlayerColors.valueOf(color.get().toString()));
 
             var gameDTO = gameService.addPlayerToGame(bot, UUID.fromString(gameId));
-            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)).get());
+            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)));
             ctx.respond(gameDTO);
         } catch (Exception e) {
             e.printStackTrace();

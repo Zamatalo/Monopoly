@@ -9,10 +9,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface GameMapper {
@@ -22,11 +18,14 @@ public interface GameMapper {
     @Mapping(target = "gameActions", ignore = true)
     GameDTO GameToGameDTO(Game game);
 
+    @Mapping(target = "createdTime", ignore = true)
     Game GameDTOtoGame(GameDTO gameDTO);
 
     @Mapping(target = "playerActions", ignore = true)
     PlayerDTO playerToDto(Player player);
 
+    @Mapping(target = "game", ignore = true)
+    @Mapping(target = "createdTime", ignore = true)
     Player dtoToPlayer(PlayerDTO playerDTO);
 
     @AfterMapping

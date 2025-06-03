@@ -25,13 +25,22 @@ public class GamePublisher {
 
     @PostConstruct
     public void init() {
-        redisTemplate.listenTo(ChannelTopic.of("game:gameUpdate"))
-                //.cast(GameDTO.class)
-                .doOnNext(stringObjectMessage ->
-                        publish((GameDTO) stringObjectMessage.getMessage()))
+        Flux.merge(
+                        redisTemplate.listenTo(ChannelTopic.of("game:gameUpdate")),
+                        redisTemplate.listenTo(ChannelTopic.of("game:turnEnd"))
+                )
+                .doOnNext(stringObjectMessage -> {
+                    Object message = stringObjectMessage.getMessage();
+                    if (message instanceof GameDTO) {
+                        publish((GameDTO) message);
+                    } else {
+                        log.warn("Unknown message type: " + message.getClass());
+                    }
+                })
                 .doOnError(e -> log.error("Redis subscription error", e))
                 .subscribe();
     }
+
 
 
     public void publish(GameDTO gameDTO) {

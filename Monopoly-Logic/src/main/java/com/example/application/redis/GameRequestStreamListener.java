@@ -136,10 +136,9 @@ public class GameRequestStreamListener {
         /// first checking gameActions then playerActions
         if (body.get("gameId") != null) {
             UUID gameId = UUID.fromString(body.get("gameId"));
-            Optional<GameDTO> game = gameService.findById(gameId);
-            if (game.isEmpty()) return false;
+            GameDTO game = gameService.findById(gameId);
 
-            List<GameActions> gameActionsList = GameActionResolver.resolveGameActions(game.get());
+            List<GameActions> gameActionsList = GameActionResolver.resolveGameActions(game);
             try {
                 GameActions gameAction = GameActions.valueOf(action);
                 if (gameActionsList.contains(gameAction)) {
@@ -152,9 +151,9 @@ public class GameRequestStreamListener {
                 Optional<PlayerDTO> player = playerService.findById(UUID.fromString(body.get("playerId")));
                 if (player.isEmpty()) return false;
 
-                List<PlayerActions> playerActionsList = GameActionResolver.resolvePlayerActions(game.get(), player.get());
+                var playerActionsList = GameActionResolver.resolvePlayerActions(game, player.get());
                 try {
-                    PlayerActions playerAction = PlayerActions.valueOf(action);
+                    var playerAction = PlayerActions.valueOf(action);
                     return playerActionsList.contains(playerAction);
                 } catch (IllegalArgumentException e) {
                     return false;

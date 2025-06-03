@@ -30,6 +30,11 @@ export enum GameState {
     IN_PROGRESS = 'IN_PROGRESS',
     FINISHED = 'FINISHED',
 }
+export enum PlayerState {
+    AWAITING_DECISION='AWAITING_DECISION',
+    IDLE = 'IDLE',
+}
+
 export enum PlayerActions{
     ROLL_DICE= 'ROLL_DICE',
     BUY_PROPERTY=`BUY_PROPERTY`,
