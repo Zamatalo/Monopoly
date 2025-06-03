@@ -26,21 +26,27 @@ public class Game_StreamRequest {
 
     public void complete(String correlationId, String response) {
         FutureWrapper<?> wrapper = futures.remove(correlationId);
-        if (response.contains("Invalid action")) {
-            wrapper.future.cancel(true);
+
+        if (wrapper == null) {
+            log.warn("No future found for correlationId: {}", correlationId);
+            return;
         }
 
-        if (wrapper != null) {
-            try {
-                var json = objectMapper.readTree(response).asText();
-                var object =objectMapper.readValue(json,wrapper.javaType);
-                CompletableFuture<Object> future = (CompletableFuture<Object>) wrapper.future;
-                future.complete(object);
-            } catch (Exception e) {
-                wrapper.future.completeExceptionally(e);
-            }
+        if (response.contains("Invalid action") || response.contains("Internal Server Error")) {
+            wrapper.future.cancel(true);
+            return;
+        }
+
+        try {
+            var json = objectMapper.readTree(response).asText();
+            var object = objectMapper.readValue(json, wrapper.javaType);
+            CompletableFuture<Object> future = (CompletableFuture<Object>) wrapper.future;
+            future.complete(object);
+        } catch (Exception e) {
+            wrapper.future.completeExceptionally(e);
         }
     }
+
 
     private static class FutureWrapper<T> {
         final JavaType javaType;

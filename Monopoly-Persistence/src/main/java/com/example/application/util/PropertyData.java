@@ -55,21 +55,31 @@ public record PropertyData(
             Map.entry(PropertyNames.BLUE_2, new PropertyData("Salt Lake", 39, 350, true,false)),
 
             // Railroads
-            Map.entry(PropertyNames.RAILROAD_1, new PropertyData("Water Works", 5,  60, false,false)),
-            Map.entry(PropertyNames.RAILROAD_2, new PropertyData("Short Line", 15,  200, false,false)),
-            Map.entry(PropertyNames.RAILROAD_3, new PropertyData("Beverly Railroad", 25,  200, false,false)),
-            Map.entry(PropertyNames.RAILROAD_4, new PropertyData("Manhattan Railroad", 35,  200, false,false)),
+            Map.entry(PropertyNames.RAILROAD_1, new PropertyData("Beverly Railroad", 5,  60, false,false)),
+            Map.entry(PropertyNames.RAILROAD_2, new PropertyData("Manhattan Railroad", 15,  200, false,false)),
+            Map.entry(PropertyNames.RAILROAD_3, new PropertyData("Water Works", 25,  200, false,false)),
+            Map.entry(PropertyNames.RAILROAD_4, new PropertyData("Short Line", 35,  200, false,false)),
 
             // Special Tiles
             // #TODO START should not be added as property
             Map.entry(PropertyNames.START, new PropertyData("Start", 0,  0, false,false)),
-            Map.entry(PropertyNames.COMMUNITY_CHEST, new PropertyData("Community Chest", 2, 0,false,false)),
-            Map.entry(PropertyNames.CHANCE, new PropertyData("Chance", 7,  0, false,false)),
+            Map.entry(PropertyNames.COMMUNITY_CHEST1, new PropertyData("Community Chest1", 2, 0,false,false)),
+            Map.entry(PropertyNames.COMMUNITY_CHEST2, new PropertyData("Community Chest2", 17, 0,false,false)),
+            Map.entry(PropertyNames.COMMUNITY_CHEST3, new PropertyData("Community Chest3", 33, 0,false,false)),
+
+            Map.entry(PropertyNames.CHANCE1, new PropertyData("Chance1", 7,  0, false,false)),
+            Map.entry(PropertyNames.CHANCE2, new PropertyData("Chance2", 22,  0, false,false)),
+            Map.entry(PropertyNames.CHANCE3, new PropertyData("Chance3", 36,  0, false,false)),
+
+            Map.entry(PropertyNames.INCOME_TAX, new PropertyData("Income Tax", 4,  0, false,false)),
             Map.entry(PropertyNames.JAIL, new PropertyData("Jail", 10,  0, false,false)),
             Map.entry(PropertyNames.FREE_PARKING, new PropertyData("Free Parking", 20, 0, false,false)),
-            Map.entry(PropertyNames.GO_TO_JAIL, new PropertyData("Go to Jail", 30,  0, false,false))
+            Map.entry(PropertyNames.GO_TO_JAIL, new PropertyData("Go to Jail", 30,  0, false,false)),
 
-    );
+            Map.entry(PropertyNames.CAR_COMPANY, new PropertyData("CAR_COMPANY", 12,  150, false,false)),
+            Map.entry(PropertyNames.RAILROAD5, new PropertyData("Railroad", 28,  130, false,false))
+
+            );
 
     public static PropertyData ofPos(int pos) {
         return ALL.values().stream()

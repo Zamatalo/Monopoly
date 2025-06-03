@@ -2,6 +2,7 @@ package com.example.application.services;
 
 import com.example.application.components.GameActionResolver;
 import com.example.application.types.GameDTO;
+import com.example.application.types.PlayerActions;
 import com.example.application.types.PlayerDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +23,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -71,7 +74,7 @@ public class BotService {
     }
 
     private void startQueueProcessor() {
-        Flux.interval(Duration.ofMillis(5000))
+        Flux.interval(Duration.ofMillis(3000))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe(_ -> processQueue());
     }
@@ -88,22 +91,35 @@ public class BotService {
     }
 
     public void handleGameUpdate(GameDTO gameDTO) {
-        PlayerDTO currentPlayer = getCurrentPlayer(gameDTO);
+        PlayerDTO currentPlayer = gameDTO.getPlayers().get(gameDTO.getCurrentPlayerIndex());
         if (Boolean.TRUE.equals(currentPlayer.getIsBot())) {
 
             log.info("Bot turn for player: {}", currentPlayer.getPlayerName());
             try {
-                var possibleActions = GameActionResolver.resolvePlayerActions(gameDTO,currentPlayer);
+                List<PlayerActions> possibleActions = GameActionResolver.resolvePlayerActions(gameDTO, currentPlayer);
                 String gameStateJson = objectMapper.writeValueAsString(gameDTO);
-
-                decideMoveAsync(gameStateJson)
-                        .doOnNext(action -> sendBotAction(gameDTO, currentPlayer, action))
+                chooseRandomAction(possibleActions)
+                        .doOnNext(randomAction ->
+                                sendBotAction(gameDTO, currentPlayer, randomAction))
                         .subscribe();
+
+//                decideMoveAsync(gameStateJson)
+//                        .doOnNext(action -> sendBotAction(gameDTO, currentPlayer, action))
+//                        .subscribe();
             } catch (JsonProcessingException e) {
                 log.error("Failed to serialize gameDTO for bot decision", e);
             }
         }
     }
+
+    /// sending to LLM takes too much time
+    private Mono<String> chooseRandomAction(List<PlayerActions> possibleActions) {
+        return Mono.fromCallable(() -> {
+            int index = new Random().nextInt(possibleActions.size());
+            return possibleActions.get(index).toString();
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
 
     private void sendBotAction(GameDTO gameDTO, PlayerDTO player, String action) {
         Map<String, String> body = Map.of(
@@ -121,10 +137,6 @@ public class BotService {
     private Mono<String> decideMoveAsync(String gameStateJson) {
         return Mono.fromCallable(() -> llmBot.decideAction(gameStateJson)
                 .trim()).subscribeOn(Schedulers.boundedElastic());
-    }
-
-    private PlayerDTO getCurrentPlayer(GameDTO gameDTO) {
-        return gameDTO.getPlayers().get(gameDTO.getCurrentPlayerIndex());
     }
 
     public interface MonopolyLLMBot {

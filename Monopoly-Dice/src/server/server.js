@@ -32,7 +32,7 @@ class DiceGame {
         this.resultSent = false;
         this.hasThrown = false;
         this.lastUpdateTime = 0;
-        this.UPDATE_INTERVAL_MS = 16;
+        this.UPDATE_INTERVAL_MS = 30;
         this.setupPhysics();
 
         setInterval(() => this.physicsLoop(), 13);

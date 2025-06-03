@@ -14,7 +14,19 @@ public enum PropertyNames {
     // Special Tiles
     JAIL,GO_TO_JAIL,
     FREE_PARKING,
-    COMMUNITY_CHEST,
-    CHANCE,
-    START
+    START,
+    INCOME_TAX,
+    CAR_COMPANY,
+    RAILROAD5,
+
+    //chest
+    COMMUNITY_CHEST1,
+    COMMUNITY_CHEST2,
+    COMMUNITY_CHEST3,
+
+    //chance
+    CHANCE1,
+    CHANCE2,
+    CHANCE3
+
 }

@@ -34,6 +34,7 @@ public class PlayerService {
     public void addPropertyToPlayer(UUID playerId, PropertyData propertyData) {
         Player player = playerRepository.findById(playerId).orElseThrow(EntityNotFoundException::new);
         player.addProperty(propertyData);
+        player.setPlayerState(PlayerState.IDLE);
         player.setBalance(player.getBalance() - propertyData.cost());
         playerRepository.save(player);
     }

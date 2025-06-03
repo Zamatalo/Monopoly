@@ -5,6 +5,7 @@ import {Object3D} from "three";
 import CurrentPlayerSingleton from "./singletons/CurrentPlayerSingleton";
 import {Dice} from "../components/models/Dice";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
+import {PlayerDTO} from "../components/models/PlayerDTO";
 
 const loader = new GLTFLoader();
 
@@ -65,8 +66,13 @@ export function updateGame(newGameRaw: GameDTO) {
 
     console.log(world.scene.children);
     GameSingleton.update(newGame);
-    const currentPlayer = newGame.players[newGame.currentPlayerIndex];
-    CurrentPlayerSingleton.update(currentPlayer);
+    const currentPlayer: PlayerDTO | undefined = newGame.players.find(
+        p => p.playerId === CurrentPlayerSingleton.getInstance()?.playerId
+    );
+
+    if (currentPlayer) {
+        CurrentPlayerSingleton.update(currentPlayer);
+    }
 }
 
 export const diceUpdate = (() => {
@@ -99,7 +105,7 @@ export const diceUpdate = (() => {
 
             const update = queue.shift();
             applyUpdate(update);
-        }, 16);
+        }, 30);
     }
 
     return function enqueue(update: any) {
@@ -107,9 +113,6 @@ export const diceUpdate = (() => {
         startInterval();
     };
 })();
-
-
-
 
 
 export function resetGameEnvironment() {
