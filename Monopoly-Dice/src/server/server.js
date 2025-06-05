@@ -1,18 +1,28 @@
-import { createClient } from "redis";
+import {createClient} from "redis";
 import * as RAPIER from "@dimforge/rapier3d-compat";
 
 await RAPIER.init();
 
 const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0);
-const world = new RAPIER.World(gravity);
 const games = new Map();
 
-const sub = createClient();
-const pub = createClient();
-await sub.connect();
-await pub.connect();
+const pub = createClient({
+    socket: {
+        host: "redis",
+        port: 6379,
+    }
+});
+const sub = createClient({
+    socket: {
+        host: "redis",
+        port: 6379,
+    }
+});
 
-await sub.pSubscribe('game:*:dice-roll-action', async (message, channel) => {
+await pub.connect();
+await sub.connect();
+
+sub.pSubscribe('game:*:dice-roll-action', async (message, channel) => {
     const match = channel.match(/^game:(.*):dice-roll-action$/);
     if (!match) return;
     const gameId = match[1];
@@ -32,6 +42,7 @@ class DiceGame {
         this.resultSent = false;
         this.hasThrown = false;
         this.lastUpdateTime = 0;
+        this.world = new RAPIER.World(gravity);
         this.UPDATE_INTERVAL_MS = 30;
         this.setupPhysics();
 
@@ -39,14 +50,14 @@ class DiceGame {
     }
 
     setupPhysics() {
-        const groundBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+        const groundBody = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
         const groundCollider = RAPIER.ColliderDesc.cuboid(11, 0.1, 11).setTranslation(0, 0.1, 0);
-        world.createCollider(groundCollider, groundBody);
+        this.world.createCollider(groundCollider, groundBody);
 
-        this.dice = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0.4, 0));
+        this.dice = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0.4, 0));
         const diceCollider = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
             .setFriction(3).setMass(1).setRestitution(0.3);
-        world.createCollider(diceCollider, this.dice);
+        this.world.createCollider(diceCollider, this.dice);
 
         this.createInboundBox();
     }
