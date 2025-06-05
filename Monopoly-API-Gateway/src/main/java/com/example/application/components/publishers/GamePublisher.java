@@ -34,7 +34,7 @@ public class GamePublisher {
                     if (message instanceof GameDTO) {
                         publish((GameDTO) message);
                     } else {
-                        log.warn("Unknown message type: " + message.getClass());
+                        log.warn("Unknown message type: {}", message.getClass());
                     }
                 })
                 .doOnError(e -> log.error("Redis subscription error", e))

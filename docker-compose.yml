@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-net
+
+  dice-server:
+    build:
+      context: ./Monopoly-Dice/
+    container_name: dice-server
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    networks:
+      - app-net
+
+  api-gateway:
+    build:
+      context: ./Monopoly-API-Gateway/
+    container_name: api-gateway
+    ports:
+      - "8083:8083"
+    depends_on:
+      - redis
+    networks:
+      - app-net
+
+  ui:
+    build:
+      context: ./monopoly-ui2
+    ports:
+      - "80:80"
+    networks:
+      - app-net
+    restart: unless-stopped
+
+networks:
+  app-net:
+    driver: bridge

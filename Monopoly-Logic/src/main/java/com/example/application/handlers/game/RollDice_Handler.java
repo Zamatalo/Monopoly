@@ -84,7 +84,6 @@ public class RollDice_Handler implements GameActionHandler {
                             ctx.respond("Error: " + e.getMessage());
                         })
                         .subscribe();
-
             }
         } catch (Exception e) {
             e.printStackTrace();
