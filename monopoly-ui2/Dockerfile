@@ -1,20 +1,17 @@
-FROM node:lts-alpine3.22
+FROM node:lts-bullseye AS builder
 LABEL authors="vtu"
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-
-RUN npm ci --omit=dev && \
-    npm cache clean --force
+RUN rm -rf node_modules package-lock.json && npm install && npm cache clean --force
 
 COPY . .
+RUN npm run build
 
-RUN npm install
+FROM nginx:stable-perl
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-#FROM nginx:alpine
-#COPY --from=0 /app/dist /usr/share/nginx/html
-#COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 5173
-CMD ["npm", "run", "dev"]
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,21 +1,28 @@
-version: "3.9"
 services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "6379:6379"
     networks:
       - app-net
 
-  dice-server:
+  backend:
     build:
-      context: ./Monopoly-Dice/
-    container_name: dice-server
+      context: ./Monopoly-Logic
+    container_name: backend
     ports:
-      - "3000:3000"
+      - "8081:8081"
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      database:
+         condition: service_healthy
     networks:
       - app-net
 
@@ -38,6 +45,34 @@ services:
     networks:
       - app-net
     restart: unless-stopped
+
+  database:
+    image: 'postgres:latest'
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    networks:
+      - app-net
+
+  dice-server:
+    build:
+      context: ./Monopoly-Dice/
+    container_name: dice-server
+    ports:
+      - "3000:3000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app-net
 
 networks:
   app-net:
