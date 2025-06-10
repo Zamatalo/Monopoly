@@ -65,7 +65,7 @@ class DiceGame {
     createInboundBox() {
         const wallThickness = 0.2;
         const boxSize = 9;
-        const rigidBodyBox = world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
+        const rigidBodyBox = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
 
         const walls = [
             RAPIER.ColliderDesc.cuboid(boxSize, wallThickness, boxSize).setTranslation(0, boxSize, 0),
@@ -75,7 +75,7 @@ class DiceGame {
             RAPIER.ColliderDesc.cuboid(boxSize, boxSize / 2, wallThickness).setTranslation(0, boxSize / 2, boxSize)
         ];
 
-        walls.forEach(desc => world.createCollider(desc, rigidBodyBox));
+        walls.forEach(desc => this.world.createCollider(desc, rigidBodyBox));
     }
 
     throwDice() {
@@ -158,7 +158,7 @@ class DiceGame {
 
 
     physicsLoop() {
-        world.step();
+        this.world.step();
 
         const now = Date.now();
         if (now - this.lastUpdateTime >= this.UPDATE_INTERVAL_MS) {

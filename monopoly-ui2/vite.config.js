@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.glb','**/*.png'],
   server: {
-    host: '0.0.0.0',
-    port: 5173,
-    strictPort: true,
+    port: 3001,
   },
+  base: "/",
 })
+

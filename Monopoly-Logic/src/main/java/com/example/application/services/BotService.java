@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Service
 @Slf4j
 public class BotService {
-    private final MonopolyLLMBot llmBot;
+//    private final MonopolyLLMBot llmBot;
     private final ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, String> redisTemplate;
@@ -45,13 +45,13 @@ public class BotService {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
 
-        ChatLanguageModel model = OllamaChatModel.builder()
-                .baseUrl("http://localhost:11434/")
-                .modelName("llama3")
-                .timeout(Duration.ofSeconds(120))
-                .build();
-
-        this.llmBot = AiServices.create(MonopolyLLMBot.class, model);
+//        ChatLanguageModel model = OllamaChatModel.builder()
+//                .baseUrl("http://localhost:11434/")
+//                .modelName("llama3")
+//                .timeout(Duration.ofSeconds(120))
+//                .build();
+//
+//        this.llmBot = AiServices.create(MonopolyLLMBot.class, model);
     }
 
     @PostConstruct
@@ -134,10 +134,10 @@ public class BotService {
         redisTemplate.opsForStream().add(record);
     }
 
-    private Mono<String> decideMoveAsync(String gameStateJson) {
-        return Mono.fromCallable(() -> llmBot.decideAction(gameStateJson)
-                .trim()).subscribeOn(Schedulers.boundedElastic());
-    }
+//    private Mono<String> decideMoveAsync(String gameStateJson) {
+//        return Mono.fromCallable(() -> llmBot.decideAction(gameStateJson)
+//                .trim()).subscribeOn(Schedulers.boundedElastic());
+//    }
 
     public interface MonopolyLLMBot {
         @SystemMessage(
