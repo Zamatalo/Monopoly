@@ -3,7 +3,7 @@ LABEL authors="vtu"
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 RUN rm -rf node_modules package-lock.json && npm install && npm cache clean --force
 
 COPY . .

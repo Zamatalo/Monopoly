@@ -1,4 +1,4 @@
-import {createClient} from "redis";
+import { createClient } from "redis";
 import * as RAPIER from "@dimforge/rapier3d-compat";
 
 await RAPIER.init();
@@ -6,16 +6,19 @@ await RAPIER.init();
 const gravity = new RAPIER.Vector3(0.0, -9.81, 0.0);
 const games = new Map();
 
+const redisHost = process.env.REDIS_HOST || 'localhost';
+const redisPort = parseInt(process.env.REDIS_PORT || '6379');
+
 const pub = createClient({
     socket: {
-        host: "redis",
-        port: 6379,
+        host: redisHost,
+        port: redisPort,
     }
 });
 const sub = createClient({
     socket: {
-        host: "redis",
-        port: 6379,
+        host: redisHost,
+        port: redisPort,
     }
 });
 
@@ -43,10 +46,10 @@ class DiceGame {
         this.hasThrown = false;
         this.lastUpdateTime = 0;
         this.world = new RAPIER.World(gravity);
-        this.UPDATE_INTERVAL_MS = 30;
+        this.UPDATE_INTERVAL_MS = 13;
         this.setupPhysics();
 
-        setInterval(() => this.physicsLoop(), 13);
+        setInterval(() => this.physicsLoop(), 12);
     }
 
     setupPhysics() {
