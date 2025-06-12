@@ -17,6 +17,7 @@ import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.connection.stream.StringRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -37,13 +38,14 @@ public class BotService {
     private final ObjectMapper objectMapper;
     private final RedisTemplate<String, String> redisTemplate;
     private final ConcurrentLinkedQueue<GameDTO> updateQueue = new ConcurrentLinkedQueue<>();
-
+    private final GameService gameService;
     public BotService(ReactiveRedisTemplate<String, Object> reactiveRedisTemplate,
                       RedisTemplate<String, String> redisTemplate,
-                      ObjectMapper objectMapper) {
+                      ObjectMapper objectMapper, GameService gameService) {
         this.reactiveRedisTemplate = reactiveRedisTemplate;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.gameService = gameService;
 
 //        ChatLanguageModel model = OllamaChatModel.builder()
 //                .baseUrl("http://localhost:11434/")
@@ -52,6 +54,17 @@ public class BotService {
 //                .build();
 //
 //        this.llmBot = AiServices.create(MonopolyLLMBot.class, model);
+    }
+    @Scheduled(fixedRate = 15000)
+    public void checkForStuckBotTurns() {
+        List<GameDTO> games = gameService.findAll();
+        for (GameDTO game : games) {
+            PlayerDTO currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+
+            if (currentPlayer.getIsBot() ) {
+                this.updateQueue.add(game);
+            }
+        }
     }
 
     @PostConstruct
@@ -62,8 +75,7 @@ public class BotService {
 
     private void subscribeToGameUpdates() {
         Flux.merge(
-                        reactiveRedisTemplate.listenToChannel("game:turnEnd"),
-                        reactiveRedisTemplate.listenToChannel("game:botDecision"))
+                        reactiveRedisTemplate.listenToChannel("game:gameUpdate"))
                 .map(ReactiveSubscription.Message::getMessage)
                 .cast(GameDTO.class)
                 .subscribe(this::enqueueGameUpdate);
@@ -72,6 +84,7 @@ public class BotService {
     private void enqueueGameUpdate(GameDTO gameDTO) {
         updateQueue.add(gameDTO);
     }
+
 
     private void startQueueProcessor() {
         Flux.interval(Duration.ofMillis(3000))
