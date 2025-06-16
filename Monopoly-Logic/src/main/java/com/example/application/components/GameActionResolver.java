@@ -68,6 +68,10 @@ public abstract class GameActionResolver {
         return actions;
     }
 
+    private boolean steppedOnChest(Integer playerPos){
+        return false;
+    }
+
     private static boolean canBuy(Integer playerPosition, GameDTO game) {
         List<Integer> allPositions = getAllOwnedPropertyPositions(game);
         return !allPositions.contains(playerPosition);

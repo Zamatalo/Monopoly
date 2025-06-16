@@ -1,9 +1,6 @@
 package com.example.application.handlers.game;
 
-import com.example.application.services.DiceService;
-import com.example.application.services.GameService;
-import com.example.application.services.PlayerService;
-import com.example.application.services.RedisService;
+import com.example.application.services.*;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
 import com.example.application.types.PlayerState;
@@ -27,6 +24,7 @@ public class RollDice_Handler implements GameActionHandler {
     private final GameService gameService;
     private final PlayerService playerService;
     private final RedisService redisService;
+    private final BotService botService;
 
     @Override
     public String getAction() {
@@ -62,6 +60,9 @@ public class RollDice_Handler implements GameActionHandler {
 
             if (!isFromBot(ctx)) {
                 ctx.respond(rolledResult);
+            }else{
+                GameDTO updatedGame = gameService.findById(gameId);
+                botService.handelAfterRollAction(updatedGame);
             }
     }
 
