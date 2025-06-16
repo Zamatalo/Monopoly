@@ -1,19 +1,18 @@
 package com.example.application.handlers.game;
 
-import com.example.application.services.*;
-import com.example.application.types.GameDTO;
+import com.example.application.services.GameService;
+import com.example.application.services.PlayerService;
+import com.example.application.services.RedisService;
+import com.example.application.services.TurnService;
 import com.example.application.types.PlayerDTO;
 import com.example.application.util.PropertyData;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.utility.GameMapper;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
@@ -47,10 +46,10 @@ public class BuyProperty_Handler implements GameActionHandler {
 
             playerService.addPropertyToPlayer(playerId,whichCellIsPlayerStandingOn_Property);
             redisService.publishGameUpd(gameService.findById(gameId));
-            turnService.endTurn(gameId);
             if (!isFromBot(ctx)) {
                 ctx.respond(gameService.findById(gameId));
             }
+            turnService.endTurn(gameId);
         } catch (Exception e) {
             e.printStackTrace();
         }

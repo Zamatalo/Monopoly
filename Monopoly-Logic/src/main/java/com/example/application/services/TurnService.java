@@ -15,6 +15,7 @@ import java.util.UUID;
 public class TurnService {
     private final GameService gameService;
     private final RedisService redisService;
+    private final BotService botService;
 
     public void endTurn(UUID gameId) {
         GameDTO game = gameService.findById(gameId);
@@ -31,9 +32,13 @@ public class TurnService {
                 .toList();
         game.setPlayers(updatedPlayers);
 
-
         gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
         redisService.publishTurnEnd(gameService.findById(gameId));
+        /// check if the next player is bot
+        var nextPlayer = game.getPlayers().get(nextPlayerIndex);
+        if (Boolean.TRUE.equals(nextPlayer.getIsBot())) {
+            botService.startBotTurn(gameId);
+        }
     }
 
 }

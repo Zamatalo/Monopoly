@@ -32,7 +32,7 @@ const UIGameInterface: React.FC = () => {
             const {data} = await rollDice({
                 variables: {
                     gameId: game.gameId,
-                    playerId: currentPlayer.playerId
+                    playerId: currentPlayerSingleton?.playerId
                 }
             });
             const value = data?.rollDice;
