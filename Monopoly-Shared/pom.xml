@@ -30,6 +30,7 @@
                         <path>src/main/resources/schema/graphql/mutation.graphqls</path>
                         <path>src/main/resources/schema/graphql/query.graphqls</path>
                         <path>src/main/resources/schema/graphql/subscription.graphqls</path>
+                        <path>src/main/resources/schema/graphql/enums.graphqls</path>
                     </schemaPaths>
                     <generateDocs>true</generateDocs>
                     <packageName>com.example.application</packageName>

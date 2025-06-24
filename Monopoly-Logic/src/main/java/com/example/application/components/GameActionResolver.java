@@ -1,11 +1,12 @@
 package com.example.application.components;
 
 import com.example.application.types.*;
+import com.example.application.util.data.PropertyData;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class GameActionResolver {
+public class GameActionResolver {
 
     public static List<GameActions> resolveGameActions(GameDTO game) {
         List<GameActions> actions = new ArrayList<>();
@@ -60,21 +61,28 @@ public abstract class GameActionResolver {
 
         // player moved
         if (player.getPlayerState() == PlayerState.AWAITING_DECISION) {
-            if (canBuy(player.getPosition(), game)) {
+            if (canBuy(player, game)) {
                 actions.add(PlayerActions.BUY_PROPERTY);
+            } else if (steppedOnUniqueTile(player.getPosition())) {
+                actions.add(PlayerActions.SPECIAL_TILE);
+                return actions;
             }
             actions.add(PlayerActions.END_TURN);
         }
+
         return actions;
     }
 
-    private boolean steppedOnChest(Integer playerPos){
-        return false;
+    private static boolean steppedOnUniqueTile(Integer playerPos) {
+        var property = PropertyData.ofPos(playerPos);
+        return property.cost() == 0;
     }
 
-    private static boolean canBuy(Integer playerPosition, GameDTO game) {
+    private static boolean canBuy(PlayerDTO playerDTO, GameDTO game) {
         List<Integer> allPositions = getAllOwnedPropertyPositions(game);
-        return !allPositions.contains(playerPosition);
+        var playerPos=  playerDTO.getPosition();
+        var property = PropertyData.ofPos(playerPos);
+        return !allPositions.contains(playerPos) && property.cost() != 0 && playerDTO.getBalance() > property.cost();
     }
 
     private static List<Integer> getAllOwnedPropertyPositions(GameDTO game) {

@@ -17,7 +17,7 @@ export const GET_ACTIVE_GAMES = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -36,7 +36,7 @@ export const GET_PLAYER = gql`
             color
             balance
             position
-            inJail
+            inJail_Turns
             isBot
             playerState
             playerActions
@@ -62,7 +62,7 @@ export const GET_FIND_BY_ID = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -91,7 +91,7 @@ export const GAME_UPDATED_SUBSCRIPTION = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -120,7 +120,7 @@ export const JOIN_GAME_MUTATION = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -149,7 +149,7 @@ export const CREATE_GAME_MUTATION = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -178,7 +178,7 @@ export const GET_GAME_BY_PLAYER_ID = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -203,12 +203,23 @@ export const DICE_UPDATED_SUBSCRIPTION = gql`
     subscription DiceUpdated($gameId: ID!) {
         diceUpdated(gameId: $gameId) {
             gameId
-            pos {
+            pos_dice1 {
                 x
                 y
                 z
             }
-            rot {
+            rot_dice1 {
+                x
+                y
+                z
+                w
+            }
+            pos_dice2 {
+                x
+                y
+                z
+            }
+            rot_dice2 {
                 x
                 y
                 z
@@ -234,7 +245,7 @@ export const BUY_PROPERTY_MUTATION = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerActions
                 playerState
@@ -263,7 +274,7 @@ export const START_GAME = gql(`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -292,7 +303,7 @@ export const ADD_BOT = gql`
                 color
                 balance
                 position
-                inJail
+                inJail_Turns
                 isBot
                 playerState
                 playerActions
@@ -312,5 +323,10 @@ export const END_TURN = gql`
         endTurn(gameId: $gameId, playerId: $playerId) {
             gameId
         }
+    }
+`
+export const SPECIAL_TILE = gql`
+    mutation ResolveSpecialTile($gameId: ID!,$playerId: ID!) {
+        resolveSpecialTile(gameId: $gameId, playerId: $playerId)
     }
 `

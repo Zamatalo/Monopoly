@@ -14,7 +14,7 @@
     color
     balance
     position
-    inJail
+    inJail_Turns
     isBot
     playerState
     playerActions

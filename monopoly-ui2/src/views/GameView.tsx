@@ -53,6 +53,7 @@ export const GameView = () => {
         onData: ({data}) => {
             const updatedDicePos = data?.data?.diceUpdated;
             if (updatedDicePos && gameInitialized) {
+                console.log(updatedDicePos)
                 diceUpdate(updatedDicePos);
             }
         }
@@ -62,7 +63,7 @@ export const GameView = () => {
         if (gameData && !sceneInitialized && findPlayer) {
             const container = containerRef.current;
             if (!container) return;
-            WorldSingleton.getInstance(container);
+            WorldSingleton.initialize(container);
 
             const initializedGame = gameData?.findGameById;
             GameSingleton.initialize(initializedGame);

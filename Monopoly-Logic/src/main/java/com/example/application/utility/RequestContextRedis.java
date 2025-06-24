@@ -33,7 +33,7 @@ public record RequestContextRedis(
 
 
             redisOp.opsForStream().add(record);
-            log.info("Sent response to Redis stream for correlationId: {}", correlationId);
+            //log.info("Sent response to Redis stream for correlationId: {}", correlationId);
         } catch (Exception e) {
             log.error("Failed to send response to Redis for correlationId: {}", correlationId, e);
             throw new RedisResponseException("Failed to send response to Redis", e);

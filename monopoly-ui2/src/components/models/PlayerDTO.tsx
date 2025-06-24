@@ -11,7 +11,7 @@ export class PlayerDTO {
     color: PlayerColor;
     balance: number;
     position: number;
-    inJail: boolean;
+    inJail_Turns: number;
     isBot: boolean;
     playerState: PlayerState;
     playerActions: PlayerActions;
@@ -20,7 +20,7 @@ export class PlayerDTO {
     constructor({
                     playerId,
                     color,
-                    inJail,
+                    inJail_Turns,
                     balance,
                     position,
                     ownedProperties,
@@ -32,7 +32,7 @@ export class PlayerDTO {
         this.playerId = playerId;
         this.color = color;
         this.playerName = playerName;
-        this.inJail = inJail;
+        this.inJail_Turns = inJail_Turns;
         this.isBot = isBot;
         this.balance = balance;
         this.position = position;
@@ -50,7 +50,7 @@ export class PlayerDTO {
     }
 
     updateFromRaw(raw: any): void {
-        this.inJail = raw.inJail;
+        this.inJail_Turns = raw.inJail_Turns;
         this.balance = raw.balance;
         this.position = raw.position;
         this.playerActions = raw.playerActions;
@@ -112,10 +112,31 @@ export class PlayerDTO {
         const {xOffset, zOffset} = this.helperSwitch(this.color);
         let currentStep = this.position;
 
+        //if more than six, just move to targeted pos. For GO_TO_JAIL or goToStart
+        // const steps = (targetPosition - currentStep + positions.length) % positions.length;
+        // if (steps > 6) {
+        //     const finalPosition = positions[targetPosition];
+        //     if (!finalPosition) {
+        //         console.error('Invalid position data.');
+        //         return;
+        //     }
+        //
+        //     model.position.set(
+        //         finalPosition.x + xOffset,
+        //         0.26,
+        //         finalPosition.z + zOffset
+        //     );
+        //
+        //     this.position = targetPosition;
+        //     callback();
+        //     return;
+        // }
+
         const moveNext = () => {
             if (currentStep !== targetPosition) {
                 currentStep = (currentStep + 1) % positions.length;
-                const nextPosition = positions[currentStep];
+
+                let nextPosition = positions[currentStep];
                 if (!nextPosition) {
                     console.error('Invalid position data.');
                     return;

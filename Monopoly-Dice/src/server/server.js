@@ -41,12 +41,13 @@ sub.pSubscribe('game:*:dice-roll-action', async (message, channel) => {
 class DiceGame {
     constructor(gameId) {
         this.gameId = gameId;
-        this.dice = null;
+        this.dice_1 = null;
+        this.dice_2 = null;
         this.resultSent = false;
         this.hasThrown = false;
         this.lastUpdateTime = 0;
         this.world = new RAPIER.World(gravity);
-        this.UPDATE_INTERVAL_MS = 25;
+        this.UPDATE_INTERVAL_MS = 22;
         this.setupPhysics();
 
         setInterval(() => this.physicsLoop(), 12);
@@ -57,17 +58,20 @@ class DiceGame {
         const groundCollider = RAPIER.ColliderDesc.cuboid(11, 0.1, 11).setTranslation(0, 0.1, 0);
         this.world.createCollider(groundCollider, groundBody);
 
-        this.dice = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0.4, 0));
-        const diceCollider = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
+        this.dice_1 = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0.4, 0));
+        this.dice_2 = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(1, 0.4, 1));
+
+        const dice_Collider = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
             .setFriction(3).setMass(1).setRestitution(0.3);
-        this.world.createCollider(diceCollider, this.dice);
+        this.world.createCollider(dice_Collider, this.dice_1);
+        this.world.createCollider(dice_Collider, this.dice_2);
 
         this.createInboundBox();
     }
 
     createInboundBox() {
         const wallThickness = 0.2;
-        const boxSize = 9;
+        const boxSize = 8;
         const rigidBodyBox = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed());
 
         const walls = [
@@ -82,12 +86,12 @@ class DiceGame {
     }
 
     throwDice() {
-        if (this.hasThrown && !this.dice.isSleeping()) return;
+        if (this.hasThrown && !this.dice_1.isSleeping() && !this.dice_2.isSleeping()) return;
 
         this.hasThrown = true;
         this.resultSent = false;
 
-        const throwStrength = 6;
+        const throwStrength = 4;
         const angleVariation = Math.PI / 4;
 
         const direction = new RAPIER.Vector3(
@@ -96,7 +100,13 @@ class DiceGame {
             (Math.random() - 0.5) * angleVariation
         );
 
-        this.dice.setLinvel(
+        const direction_2 = new RAPIER.Vector3(
+            (Math.random() - 1.2) * angleVariation,
+            0.7 + Math.random() * 0.6,
+            (Math.random() - 0.5) * angleVariation
+        );
+
+        this.dice_1.setLinvel(
             new RAPIER.Vector3(
                 direction.x * throwStrength,
                 direction.y * throwStrength,
@@ -105,7 +115,24 @@ class DiceGame {
             true
         );
 
-        this.dice.setAngvel(
+        this.dice_1.setAngvel(
+            new RAPIER.Vector3(
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 15
+            ),
+            true
+        );
+        this.dice_2.setLinvel(
+            new RAPIER.Vector3(
+                direction_2.x * throwStrength,
+                direction_2.y * throwStrength,
+                direction_2.z * throwStrength
+            ),
+            true
+        );
+
+        this.dice_2.setAngvel(
             new RAPIER.Vector3(
                 (Math.random() - 0.5) * 15,
                 (Math.random() - 0.5) * 15,
@@ -171,21 +198,25 @@ class DiceGame {
     }
 
     sendUpdate() {
-        if (!this.dice.isSleeping()) {
-            const pos = this.dice.translation();
-            const rot = this.dice.rotation();
+        if (!this.dice_1.isSleeping()) {
+            const pos_1 = this.dice_1.translation();
+            const rot_1 = this.dice_1.rotation();
 
+            const pos_2 = this.dice_2.translation();
+            const rot_2 = this.dice_2.rotation();
             pub.publish(`game:diceUpdate`, JSON.stringify({
                 gameId: this.gameId,
-                pos: { x: pos.x, y: pos.y, z: pos.z },
-                rot: { x: rot.x, y: rot.y, z: rot.z, w: rot.w }
+                pos_dice1: { x: pos_1.x, y: pos_1.y, z: pos_1.z },
+                rot_dice1: { x: rot_1.x, y: rot_1.y, z: rot_1.z, w: rot_1.w },
+                pos_dice2: { x: pos_2.x, y: pos_2.y, z: pos_2.z },
+                rot_dice2: { x: rot_2.x, y: rot_2.y, z: rot_2.z, w: rot_2.w }
             }));
         } else if (!this.resultSent) {
-            const topFace = this.getTopFaceFromQuaternion(this.dice.rotation());
-
+            const topFace1 = this.getTopFaceFromQuaternion(this.dice_1.rotation());
+            const topFace2 = this.getTopFaceFromQuaternion(this.dice_2.rotation());
             pub.publish(`game:diceResult`, JSON.stringify({
                 gameId: this.gameId,
-                diceResult: topFace
+                diceResult: topFace1+topFace2
             }));
 
             this.resultSent = true;

@@ -5,6 +5,7 @@ import com.example.application.service.GameGatewayService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerColors;
 import com.example.application.types.PlayerDTO;
+import com.example.application.types.SpecialTileEffect;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /// #TODO: add proper exceptions, and handle futures. Also make more controllers
+/// #TODO: if more then one game, then thread will be blocked, should find workaround
 @RequiredArgsConstructor
 @Controller
 public class GatewayController {
@@ -123,6 +125,16 @@ public class GatewayController {
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
                         GameDTO.class)
+                .join();
+    }
+
+    @MutationMapping
+    public SpecialTileEffect resolveSpecialTile(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId) {
+        return redisRequestReplyService.sendAction(
+                        "SPECIAL_TILE",
+                        Map.of("gameId", gameId.toString(),
+                                "playerId", playerId.toString()),
+                        SpecialTileEffect.class)
                 .join();
     }
 }

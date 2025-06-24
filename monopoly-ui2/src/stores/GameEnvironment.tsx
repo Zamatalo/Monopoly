@@ -8,7 +8,6 @@ import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader.js";
 import {PlayerDTO} from "../components/models/PlayerDTO";
 
 const loader = new GLTFLoader();
-
 export function initGame() {
     const game = GameSingleton.getInstance();
 
@@ -26,8 +25,11 @@ export function initGame() {
         });
     });
 
-    const dice = new Dice();
-    dice.loadDice(loader);
+    const dice_1 = new Dice();
+    dice_1.loadDice(loader,0,0,1);
+
+    const dice_2 = new Dice();
+    dice_2.loadDice(loader,1,1,2);
 }
 
 export function updateGame(newGameRaw: GameDTO) {
@@ -88,11 +90,14 @@ export const diceUpdate = (() => {
                 return;
             }
         }
-
         world.scene.children.forEach((child: any) => {
-            if (child.userData.isDice) {
-                child.position.set(update.pos.x, update.pos.y, update.pos.z);
-                child.quaternion.set(update.rot.x, update.rot.y, update.rot.z, update.rot.w);
+            if (child?.userData?.dice===1) {
+                child.position.set(update.pos_dice1.x, update.pos_dice1.y, update.pos_dice1.z);
+                child.quaternion.set(update.rot_dice1.x, update.rot_dice1.y, update.rot_dice1.z, update.rot_dice1.w);
+            }
+            if (child?.userData?.dice===2) {
+                child.position.set(update.pos_dice2.x, update.pos_dice2.y, update.pos_dice2.z);
+                child.quaternion.set(update.rot_dice2.x, update.rot_dice2.y, update.rot_dice2.z, update.rot_dice2.w);
             }
         });
     }

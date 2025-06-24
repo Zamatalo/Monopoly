@@ -21,6 +21,10 @@ public class TurnService {
         GameDTO game = gameService.findById(gameId);
         PlayerDTO currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
 
+        //If in jail
+        if (currentPlayer.getInJail_Turns() > 0) {
+            currentPlayer.setInJail_Turns(currentPlayer.getInJail_Turns() - 1);
+        }
 
         int nextPlayerIndex = (game.getCurrentPlayerIndex() + 1) % game.getPlayers().size();
         game.setCurrentPlayerIndex(nextPlayerIndex);
@@ -31,6 +35,7 @@ public class TurnService {
                 .map(p -> p.getPlayerId().equals(currentPlayer.getPlayerId()) ? currentPlayer : p)
                 .toList();
         game.setPlayers(updatedPlayers);
+
 
         gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
         redisService.publishTurnEnd(gameService.findById(gameId));

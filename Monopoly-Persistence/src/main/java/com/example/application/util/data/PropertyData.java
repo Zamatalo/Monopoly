@@ -1,10 +1,9 @@
-package com.example.application.util;
+package com.example.application.util.data;
 
 import com.example.application.util.enums.PropertyNames;
 import jakarta.persistence.Embeddable;
 
 import java.util.Map;
-import java.util.Objects;
 
 @Embeddable
 public record PropertyData(
@@ -51,7 +50,7 @@ public record PropertyData(
             Map.entry(PropertyNames.GREEN_3, new PropertyData("Riverside", 34,  320, true,false)),
 
             // Blue
-            Map.entry(PropertyNames.BLUE_1, new PropertyData("Folklore Heights", 38,  400, true,false)),
+            Map.entry(PropertyNames.BLUE_1, new PropertyData("Folklore Heights", 37,  400, true,false)),
             Map.entry(PropertyNames.BLUE_2, new PropertyData("Salt Lake", 39, 350, true,false)),
 
             // Railroads
@@ -59,6 +58,10 @@ public record PropertyData(
             Map.entry(PropertyNames.RAILROAD_2, new PropertyData("Manhattan Railroad", 15,  200, false,false)),
             Map.entry(PropertyNames.RAILROAD_3, new PropertyData("Water Works", 25,  200, false,false)),
             Map.entry(PropertyNames.RAILROAD_4, new PropertyData("Short Line", 35,  200, false,false)),
+
+            //Multip
+            Map.entry(PropertyNames.CAR_COMPANY, new PropertyData("CAR_COMPANY", 12,  150, false,false)),
+            Map.entry(PropertyNames.RAILROAD5, new PropertyData("Railroad", 28,  130, false,false)),
 
             // Special Tiles
             // #TODO START should not be added as property
@@ -72,13 +75,10 @@ public record PropertyData(
             Map.entry(PropertyNames.CHANCE3, new PropertyData("Chance3", 36,  0, false,false)),
 
             Map.entry(PropertyNames.INCOME_TAX, new PropertyData("Income Tax", 4,  0, false,false)),
+            Map.entry(PropertyNames.INCOME_TAX2, new PropertyData("Luxury Tax", 38,  0, false,false)),
             Map.entry(PropertyNames.JAIL, new PropertyData("Jail", 10,  0, false,false)),
             Map.entry(PropertyNames.FREE_PARKING, new PropertyData("Free Parking", 20, 0, false,false)),
-            Map.entry(PropertyNames.GO_TO_JAIL, new PropertyData("Go to Jail", 30,  0, false,false)),
-
-            Map.entry(PropertyNames.CAR_COMPANY, new PropertyData("CAR_COMPANY", 12,  150, false,false)),
-            Map.entry(PropertyNames.RAILROAD5, new PropertyData("Railroad", 28,  130, false,false))
-
+            Map.entry(PropertyNames.GO_TO_JAIL, new PropertyData("Go to Jail", 30,  0, false,false))
             );
 
     public static PropertyData ofPos(int pos) {

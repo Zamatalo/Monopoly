@@ -25,16 +25,17 @@ public class BotService {
     private final GameService gameService;
     private final Random random = new Random();
 
-    //@Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000)
     @PostConstruct
     public void checkForStuckBotTurns() {
         List<GameDTO> games = gameService.findAll();
         for (GameDTO game : games) {
-            PlayerDTO currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
-
-            if (currentPlayer.getIsBot() ) {
-                handelAfterRollAction(game);
-            }
+            List<PlayerDTO> currentPlayer = game.getPlayers();
+            currentPlayer.forEach(player -> {
+                if (player.getIsBot()) {
+                    handelAfterRollAction(game);
+                }
+            });
         }
     }
 
@@ -64,10 +65,11 @@ public class BotService {
         PlayerDTO botPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
 
         List<PlayerActions> possibleActions = GameActionResolver.resolvePlayerActions(game, botPlayer);
-
-        PlayerActions chosenAction = possibleActions.get(random.nextInt(possibleActions.size()));
-        CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS)
-                .execute(() -> executeAction(game, botPlayer, chosenAction));
+        if (!possibleActions.isEmpty()) {
+            PlayerActions chosenAction = possibleActions.get(random.nextInt(possibleActions.size()));
+            CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS)
+                    .execute(() -> executeAction(game, botPlayer, chosenAction));
+        }
     }
 
     private void executeAction(GameDTO game, PlayerDTO botPlayer, PlayerActions action) {

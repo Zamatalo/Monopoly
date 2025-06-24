@@ -1,9 +1,9 @@
-import { World } from "../../components/models/World";
+import {World} from "../../components/models/World";
 
 class WorldSingleton {
     private static instance: World | null = null;
 
-    static getInstance(container?: HTMLElement): World {
+    static initialize(container?: HTMLElement): World {
         if (!this.instance && container) {
             this.instance = new World(container);
         }
@@ -12,6 +12,13 @@ class WorldSingleton {
         }
         if (container && this.instance.renderer.domElement.parentElement !== container) {
             this.instance.reattachCanvas(container);
+        }
+        return this.instance;
+    }
+
+    static getInstance(): World {
+        if (!this.instance) {
+            throw new Error("Game not initialized. Call initialize() first.");
         }
         return this.instance;
     }

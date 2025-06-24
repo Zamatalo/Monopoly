@@ -39,7 +39,8 @@ export enum PlayerActions{
     ROLL_DICE= 'ROLL_DICE',
     BUY_PROPERTY=`BUY_PROPERTY`,
     END_TURN= 'END_TURN',
-    START_GAME = `START_GAME`
+    START_GAME = `START_GAME`,
+    SPECIAL_TILE = `SPECIAL_TILE`
 }
 export enum GameActions {
     START_GAME="START_GAME",

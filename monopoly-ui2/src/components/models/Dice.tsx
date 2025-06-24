@@ -3,7 +3,10 @@ import WorldSingleton from "../../stores/singletons/WorldSingleton";
 import {Mesh} from "three";
 
 export class Dice {
-    async loadDice(loader:GLTFLoader): Promise<void> {
+    async loadDice(loader:GLTFLoader,
+                   posX:number,
+                   poxZ:number,
+                   diceId:number): Promise<void> {
         const boardPath = "/assets/models/dice3.glb";
         const world = WorldSingleton.getInstance();
 
@@ -12,8 +15,11 @@ export class Dice {
                 boardPath,
                 (gltf: any) => {
                     const model = gltf.scene;
-                    model.userData = {isDice: true};
+                    model.userData = {dice: diceId};
                     model.position.y = 0.36;
+                    model.position.z = poxZ;
+                    model.position.x= posX;
+
                     model.traverse((obj: any) => {
                         if (obj instanceof Mesh) {
                             obj.castShadow = true;

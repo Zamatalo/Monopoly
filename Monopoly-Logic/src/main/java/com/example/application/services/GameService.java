@@ -5,7 +5,7 @@ import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
 import com.example.application.types.GameDTO;
-import com.example.application.util.PropertyData;
+import com.example.application.util.data.PropertyData;
 import com.example.application.util.enums.GameState;
 import com.example.application.utility.GameMapper;
 import jakarta.persistence.EntityNotFoundException;
