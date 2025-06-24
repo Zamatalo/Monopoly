@@ -1,13 +1,11 @@
 package com.example.application.entity;
 
-import com.example.application.entity.Game;
-import com.example.application.util.PropertyData;
+import com.example.application.util.data.PropertyData;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.util.enums.PlayerState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -38,7 +36,7 @@ public class Player {
     private Integer position = 0;
 
     @Column(nullable = false)
-    private Boolean inJail = false;
+    private Integer inJail_Turns = 0;
 
     @Column(nullable = false)
     private Boolean isBot = false;

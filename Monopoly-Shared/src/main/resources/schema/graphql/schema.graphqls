@@ -1,52 +1,3 @@
-enum GameState {
-    STARTED
-    IN_PROGRESS
-    FINISHED
-}
-
-enum PlayerState {
-    AWAITING_DECISION,
-    IDLE
-}
-
-enum PlayerColors {
-    PLAYER_RED
-    PLAYER_BLUE
-    PLAYER_YELLOW
-    PLAYER_GREEN
-}
-
-enum GameActions {
-    START_GAME,
-    END_GAME,
-    CREATE_GAME,
-    JOIN_TO_GAME,
-    ADD_BOT
-}
-
-enum PlayerActions{
-    ROLL_DICE,
-    BUY_PROPERTY,
-    END_TURN
-}
-
-enum PropertyNames {
-    BROWN_1 BROWN_2
-    LIGHTBLUE_1 LIGHTBLUE_2 LIGHTBLUE_3
-    PINK_1 PINK_2 PINK_3
-    ORANGE_1 ORANGE_2 ORANGE_3
-    RED_1 RED_2 RED_3
-    YELLOW_1 YELLOW_2 YELLOW_3
-    GREEN_1 GREEN_2 GREEN_3
-    BLUE_1 BLUE_2
-    RAILROAD_1 RAILROAD_2 RAILROAD_3 RAILROAD_4
-    START JAIL FREE_PARKING GO_TO_JAIL INCOME_TAX CAR_COMPANY RAILROAD5
-    COMMUNITY_CHEST1 COMMUNITY_CHEST2 COMMUNITY_CHEST3
-    CHANCE1 CHANCE2 CHANCE3
-
-}
-
-
 type GameDTO {
     gameId: ID
     players: [PlayerDTO]
@@ -62,7 +13,7 @@ type PlayerDTO {
     color: PlayerColors
     balance: Int
     position: Int
-    inJail: Boolean
+    inJail_Turns: Int
     isBot:Boolean
     playerState:PlayerState
     playerActions:[PlayerActions]

@@ -16,6 +16,7 @@ public enum PropertyNames {
     FREE_PARKING,
     START,
     INCOME_TAX,
+    INCOME_TAX2,
     CAR_COMPANY,
     RAILROAD5,
 

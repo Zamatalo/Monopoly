@@ -4,7 +4,7 @@ package com.example.application.services;
 import com.example.application.entity.Player;
 import com.example.application.repo.PlayerRepo;
 import com.example.application.types.PlayerDTO;
-import com.example.application.util.PropertyData;
+import com.example.application.util.data.PropertyData;
 import com.example.application.util.enums.PlayerState;
 import com.example.application.utility.GameMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,5 +37,12 @@ public class PlayerService {
         player.setPlayerState(PlayerState.IDLE);
         player.setBalance(player.getBalance() - propertyData.cost());
         playerRepository.save(player);
+    }
+
+    @Transactional(readOnly = true)
+    public PlayerDTO getPlayer_forProperty_forGame(UUID gameId, PropertyData property) {
+        Player player = playerRepository.findPlayerByGameIdAndProperty(gameId, property)
+                .orElseThrow(() -> new EntityNotFoundException("Player for property not found"));
+        return GameMapper.INSTANCE.playerToDto(player);
     }
 }

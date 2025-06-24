@@ -5,7 +5,7 @@ import com.example.application.services.PlayerService;
 import com.example.application.services.RedisService;
 import com.example.application.services.TurnService;
 import com.example.application.types.PlayerDTO;
-import com.example.application.util.PropertyData;
+import com.example.application.util.data.PropertyData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;

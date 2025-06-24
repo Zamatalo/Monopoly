@@ -1,10 +1,11 @@
 package com.example.application.handlers.game;
 
+import com.example.application.config.GameConfig;
 import com.example.application.services.*;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
 import com.example.application.types.PlayerState;
-import com.example.application.util.PropertyData;
+import com.example.application.util.data.PropertyData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
 import com.example.application.utility.RequestContextRedis;
@@ -33,37 +34,61 @@ public class RollDice_Handler implements GameActionHandler {
 
     @Override
     public void handle(RequestContextRedis ctx) {
-            var gameId = UUID.fromString(ctx.body().get("gameId"));
-            var playerId = UUID.fromString(ctx.body().get("playerId"));
-            CompletableFuture<Integer> future = diceService.rollDice(gameId.toString());
-            var rolledResult = future.join();
+        var gameId = UUID.fromString(ctx.body().get("gameId"));
+        var playerId = UUID.fromString(ctx.body().get("playerId"));
+        CompletableFuture<Integer> future = diceService.rollDice(gameId.toString());
+        var rolledResult = future.join();
+        GameDTO game = gameService.findById(gameId);
+        PlayerDTO player = playerService.findById(playerId).orElseThrow();
 
-            GameDTO game = gameService.findById(gameId);
-            PlayerDTO player = playerService.findById(playerId).orElseThrow();
+        int newPosition = (player.getPosition() + rolledResult) % 40;
+        PropertyData steppedOn = steppedOnAnotherPlayerField(gameId, newPosition);
+        if (steppedOn != null) {
+            player.setBalance(player.getBalance() - steppedOn.cost());
+            PlayerDTO player_toPayTo = playerService.getPlayer_forProperty_forGame(gameId, steppedOn);
+            PlayerDTO palyer_otPayTo_inGame= game
+                    .getPlayers().stream()
+                    .filter(e->e.getPlayerId().equals(player_toPayTo.getPlayerId()))
+                    .findFirst()
+                    .orElse(null);
+            assert palyer_otPayTo_inGame != null;
+            palyer_otPayTo_inGame.setBalance(player_toPayTo.getBalance() + steppedOn.cost());
+        }
 
-            int newPosition = (player.getPosition() + rolledResult) % 40;
-            PropertyData steppedOn = steppedOnAnotherPlayerField(gameId, newPosition);
-            if (steppedOn != null) {
-                player.setBalance(player.getBalance() - steppedOn.cost());
+
+        player.setPlayerState(PlayerState.AWAITING_DECISION);
+        player.setPosition(newPosition);
+        player.setBalance(steppedOnSpecialTile(player));
+
+        List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
+                .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
+                .toList();
+        game.setPlayers(updatedPlayers);
+
+        gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
+        redisService.publishGameUpd(gameService.findById(gameId));
+
+        if (!isFromBot(ctx)) {
+            ctx.respond(rolledResult);
+        }else{
+            GameDTO updatedGame = gameService.findById(gameId);
+            botService.handelAfterRollAction(updatedGame);
+        }
+    }
+
+    /// not for every Special tile, only for easy ones.
+    /// the ones with complex logic should have dedicated Handler
+    private Integer steppedOnSpecialTile(PlayerDTO player) {
+        var property = PropertyData.ofPos(player.getPosition());
+        if (property.cost() == 0) {
+            if (property.boardPosition() == 0) { //Start Tile
+                player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
             }
-
-            player.setPlayerState(PlayerState.AWAITING_DECISION);
-            player.setPosition(newPosition);
-
-            List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
-                    .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
-                    .toList();
-            game.setPlayers(updatedPlayers);
-
-            gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
-            redisService.publishGameUpd(gameService.findById(gameId));
-
-            if (!isFromBot(ctx)) {
-                ctx.respond(rolledResult);
-            }else{
-                GameDTO updatedGame = gameService.findById(gameId);
-                botService.handelAfterRollAction(updatedGame);
-            }
+//            if (property.boardPosition() == 4) { //Income Tax
+//                player.setBalance(player.getBalance() - GameConfig.INCOME_TAX);
+//            }
+        }
+        return player.getBalance();
     }
 
     private PropertyData steppedOnAnotherPlayerField(UUID gameId, Integer playerPos) {

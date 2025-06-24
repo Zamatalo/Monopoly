@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import GameSingleton from "../../stores/singletons/GameSingleton";
-import {useMutation, useQuery} from "@apollo/client";
-import {BUY_PROPERTY_MUTATION, END_TURN, ROLL_DICE} from "../../graphql/queries";
+import {useMutation} from "@apollo/client";
+import {BUY_PROPERTY_MUTATION, END_TURN, ROLL_DICE, SPECIAL_TILE} from "../../graphql/queries";
 import {PlayerDTO} from "../../components/models/PlayerDTO";
 import CurrentPlayerSingleton from "../../stores/singletons/CurrentPlayerSingleton";
 import {ColorHexMap, GameState, PlayerActions} from "../../components/utils/constants";
@@ -12,6 +12,7 @@ const UIGameInterface: React.FC = () => {
     const [rollDice, {error}] = useMutation(ROLL_DICE);
     const [buyProperty] = useMutation(BUY_PROPERTY_MUTATION);
     const [endTurn] = useMutation(END_TURN);
+    const [specialTile] = useMutation(SPECIAL_TILE);
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [currentPlayerSingleton, setCurrentPlayerSingleton] = useState<PlayerDTO | null>(null);
     const [rolledValue, setRolledValue] = useState<number | null>(null);
@@ -25,6 +26,20 @@ const UIGameInterface: React.FC = () => {
         setCurrentPlayer(current);
     }, [game.currentPlayerIndex]);
 
+    const handleSpecialTile = async () => {
+        if (!game?.gameId || !currentPlayer?.playerId) return;
+
+        try {
+            await specialTile({
+                variables: {
+                    gameId: game.gameId,
+                    playerId: currentPlayerSingleton?.playerId
+                }
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
     const handleRollDice = async () => {
         if (!game?.gameId || !currentPlayer?.playerId) return;
@@ -48,7 +63,7 @@ const UIGameInterface: React.FC = () => {
         if (!game?.gameId || !currentPlayer?.playerId) return;
 
         try {
-            await buyProperty({
+            const {data: response} = await buyProperty({
                 variables: {
                     gameId: game.gameId,
                     playerId: currentPlayerSingleton?.playerId
@@ -83,9 +98,14 @@ const UIGameInterface: React.FC = () => {
     return (
         <div className="game-interface compact">
             <div className="current-player">
+                <span
+                    style={{color: "red"}}>DEBUG_POSSIBLE_ACTIONS: {JSON.stringify(currentPlayerSingleton?.playerActions)}
+                </span>
                 <div className="player-info">
                     <span className="name">Name: {currentPlayerSingleton?.playerName}</span>
                     <span className="balance">${currentPlayerSingleton?.balance.toLocaleString()}</span>
+
+
                 </div>
                 <div className="position">
                     <span>Pos: {currentPlayerSingleton?.position}</span>
@@ -93,7 +113,10 @@ const UIGameInterface: React.FC = () => {
                         color: ColorHexMap[currentPlayerSingleton?.color || "RED"],
                         marginLeft: "auto"
                     }}>Color: {currentPlayerSingleton?.color}</span>
-                    {currentPlayer?.inJail && <span className="jail">in Jail</span>}
+
+                    {(currentPlayerSingleton?.inJail_Turns ?? 0) > 0 && (
+                        <span className="jail">in Jail</span>
+                    )}
                 </div>
             </div>
 
@@ -107,11 +130,17 @@ const UIGameInterface: React.FC = () => {
             )}
 
             <div className="action-buttons">
-                {!currentPlayer?.inJail && (
+                {(currentPlayerSingleton?.inJail_Turns ?? 0) === 0 && (
                     <button onClick={handleRollDice} className="btn dice">
                         Roll Dice
                     </button>
                 )}
+                <button onClick={handleSpecialTile} className="btn special-tile"
+                        disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.SPECIAL_TILE)}
+                >
+                    Special Tile
+                </button>
+
                 <button onClick={handleBuyProperty} className="btn buy"
                         disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.BUY_PROPERTY)}>
                     Buy Property
@@ -127,11 +156,11 @@ const UIGameInterface: React.FC = () => {
                         key={player.playerId}
                         className={`player-chip ${index === game.currentPlayerIndex ? 'active' : ''}`}
                         style={{
-                            backgroundColor: `${ColorHexMap[player.color]}20`,
+                            backgroundColor: `${ColorHexMap[player.color]}30`,
                             borderColor: ColorHexMap[player.color],
                         }}
                     >
-                        <span>Player: {player.playerName}</span>
+                        <span>{player.playerName}</span>
                         <span>${player.balance.toLocaleString()}</span>
                     </div>
                 ))}

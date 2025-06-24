@@ -5,12 +5,12 @@ import com.example.application.services.GameService;
 import com.example.application.services.RedisService;
 import com.example.application.types.PlayerColors;
 import com.example.application.utility.GameActionHandler;
+import com.example.application.utility.RandomNameGenerator;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -48,7 +48,7 @@ public class AddBot_Handler implements GameActionHandler {
 
             Player bot = new Player();
             bot.setPlayerId(UUID.randomUUID());
-            bot.setPlayerName("Bot " + LocalTime.now().getSecond());
+            bot.setPlayerName(RandomNameGenerator.generateName());
             bot.setIsBot(true);
             bot.setColor(com.example.application.util.enums.PlayerColors.valueOf(color.get().toString()));
 

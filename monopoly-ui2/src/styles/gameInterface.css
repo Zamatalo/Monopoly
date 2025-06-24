@@ -133,25 +133,37 @@
     background-color: #f44336;
     color: white;
 }
-
+.special-tile{
+    background-color: #ffce00;
+    color: white;
+}
 .players-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .player-chip {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.7rem;
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 400;
     display: flex;
     align-items: center;
-    gap: 4px;
-    border: 1px solid;
+    justify-content: space-between;
+    gap: 6px;
+    border: 2px solid;
 }
 
 .player-chip.active {
-    font-weight: bold;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(250, 220, 74, 0.3),
+    0 4px 12px rgba(250, 220, 74, 0.4);
+    transform: scaleY(1.05);
+    gap: 12px;
+    transition-duration: 0.8s;
+    font-size: 0.9rem;
+    font-weight: 550;
+    position: relative;
 }
+
 
