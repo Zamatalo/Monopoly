@@ -26,9 +26,9 @@ public class PlayerService {
         return GameMapper.INSTANCE.playerToDto(player);
     }
 
-    @Transactional
-    public void savePlayer(Player player) {
-        playerRepository.save(player);
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID playerId) {
+        return playerRepository.existsById(playerId);
     }
 
     @Transactional
