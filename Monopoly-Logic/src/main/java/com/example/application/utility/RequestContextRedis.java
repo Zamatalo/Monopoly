@@ -1,6 +1,6 @@
 package com.example.application.utility;
 
-import com.example.application.util.exceptions.RedisResponseException;
+import util.exceptions.RedisResponseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;

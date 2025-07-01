@@ -8,6 +8,6 @@ type Mutation {
     startGame(gameId:ID!):GameDTO
     addBotToGame(gameId:ID!):GameDTO
     endTurn(gameId:ID,playerId:ID):GameDTO
-    resolveSpecialTile(gameId:ID!,playerId:ID!):SpecialTileEffect
+    resolveSpecialTile(gameId:ID!,playerId:ID!):SpecialTileData
 }
 

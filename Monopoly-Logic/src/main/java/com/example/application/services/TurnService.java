@@ -39,6 +39,7 @@ public class TurnService {
 
         gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
         redisService.publishTurnEnd(gameService.findById(gameId));
+
         /// check if the next player is bot
         var nextPlayer = game.getPlayers().get(nextPlayerIndex);
         if (Boolean.TRUE.equals(nextPlayer.getIsBot())) {

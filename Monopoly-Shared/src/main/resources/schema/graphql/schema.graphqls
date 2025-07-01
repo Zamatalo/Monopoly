@@ -28,3 +28,8 @@ type PropertyDTO {
     upgradable: Boolean
 }
 
+type SpecialTileData{
+    text:String,
+    effect:SpecialTileEffect,
+    amount:Int
+}

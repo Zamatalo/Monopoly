@@ -327,6 +327,10 @@ export const END_TURN = gql`
 `
 export const SPECIAL_TILE = gql`
     mutation ResolveSpecialTile($gameId: ID!,$playerId: ID!) {
-        resolveSpecialTile(gameId: $gameId, playerId: $playerId)
+        resolveSpecialTile(gameId: $gameId, playerId: $playerId){
+            text
+            effect
+            amount
+        }
     }
 `

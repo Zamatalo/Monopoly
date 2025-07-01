@@ -1,4 +1,4 @@
-package com.example.application.util.enums;
+package util.enums;
 
 public enum GameActions {
     START_GAME,

@@ -1,7 +1,8 @@
-package com.example.application.util.data;
+package data;
 
-import com.example.application.config.GameConfig;
-import com.example.application.util.enums.SpecialTileEffect;
+
+import config.GameConfig;
+import util.enums.SpecialTileEffect;
 
 import java.util.List;
 
@@ -30,7 +31,7 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
     public static final List<SpecialTileData> CHANCE_CARDS = List.of(
             //Chance
             new SpecialTileData("Chance_1", SpecialTileEffect.MOVE_TO_GO_AND_COLLECT, 200),
-            new SpecialTileData("Chance_2", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
+            //new SpecialTileData("Chance_2", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
             //new SpecialTileData("Chance_3", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
             // new SpecialTileData("Chance_4", SpecialTileEffect.MOVE_TO_NEAREST_UTILITY, 0),
             //  new SpecialTileData("Chance_5", SpecialTileEffect.MOVE_TO_NEAREST_RAILROAD, 0),
@@ -39,9 +40,9 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
             //new SpecialTileData("Chance_8", SpecialTileEffect.MOVE_BACKWARD, 3),
             new SpecialTileData("Chance_9", SpecialTileEffect.GO_TO_JAIL, 0),
             //new SpecialTileData("Chance_10", SpecialTileEffect.PAY_REPAIRS, 0),
-            new SpecialTileData("Chance_11", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
+           // new SpecialTileData("Chance_11", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
             new SpecialTileData("Chance_12", SpecialTileEffect.PAY, 15),
-            new SpecialTileData("Chance_13", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
+           // new SpecialTileData("Chance_13", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
             new SpecialTileData("Chance_14", SpecialTileEffect.PAY_TO_EACH_PLAYER, 50),
             new SpecialTileData("Chance_15", SpecialTileEffect.COLLECT, 150)
     );
@@ -50,4 +51,6 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
 
     public static final SpecialTileData LUXURY_TAX =
             new SpecialTileData("Luxury_tax", SpecialTileEffect.PAY, 200);
+    public static final SpecialTileData JAIL =
+            new SpecialTileData("Jail", SpecialTileEffect.GO_TO_JAIL, 0);
 }

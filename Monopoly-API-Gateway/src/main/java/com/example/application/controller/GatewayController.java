@@ -6,6 +6,7 @@ import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerColors;
 import com.example.application.types.PlayerDTO;
 import com.example.application.types.SpecialTileEffect;
+import data.SpecialTileData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -129,12 +130,12 @@ public class GatewayController {
     }
 
     @MutationMapping
-    public SpecialTileEffect resolveSpecialTile(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId) {
+    public SpecialTileData resolveSpecialTile(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId) {
         return redisRequestReplyService.sendAction(
                         "SPECIAL_TILE",
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
-                        SpecialTileEffect.class)
+                        SpecialTileData.class)
                 .join();
     }
 }

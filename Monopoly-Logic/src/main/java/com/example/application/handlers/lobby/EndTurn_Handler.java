@@ -35,8 +35,8 @@ public class EndTurn_Handler implements GameActionHandler {
             turnService.endTurn(gameId);
             ctx.respond(updatedGame);
         } catch (Exception e) {
-            log.error("Failed to end turn", e);
-            ctx.respond("Internal error");
+            ctx.respond("Internal Server Error");
+            log.error(e.getMessage());
         }
     }
 }

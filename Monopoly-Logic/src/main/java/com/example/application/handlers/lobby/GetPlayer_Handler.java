@@ -1,5 +1,7 @@
 package com.example.application.handlers.lobby;
 
+import com.example.application.components.GameActionResolver;
+import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
@@ -15,6 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GetPlayer_Handler implements GameActionHandler {
     private final PlayerService playerService;
+    private final GameService gameService;
 
     @Override
     public String getAction() {
@@ -26,14 +29,13 @@ public class GetPlayer_Handler implements GameActionHandler {
         try {
             var playerId = ctx.body().get("playerId");
             var player = playerService.findById(UUID.fromString(playerId));
-            if (player.isEmpty()) {
-                ctx.respond("Player not found");
-                return;
-            }
+            var game = gameService.findGameByPlayerId(UUID.fromString(playerId));
+            player.setPlayerActions(GameActionResolver.resolvePlayerActions(game.get(),player));
 
-            ctx.respond(player.get());
+            ctx.respond(player);
         } catch (Exception e) {
-            e.printStackTrace();
+            ctx.respond("Player not found");
+            log.error(e.getMessage());
         }
     }
 }

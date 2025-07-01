@@ -28,7 +28,8 @@ public class FindGameById_Handler implements GameActionHandler {
 
             ctx.respond(game);
         } catch (Exception e) {
-            e.printStackTrace();
+            ctx.respond("Internal Server Error");
+            log.error(e.getMessage());
         }
     }
 }

@@ -4,7 +4,6 @@ import com.example.application.entity.Player;
 import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.services.RedisService;
-import com.example.application.types.GameState;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
@@ -35,11 +34,8 @@ public class JoinToGame_Handler implements GameActionHandler {
             var playerName = ctx.body().get("playerName");
             var playerColor = ctx.body().get("playerColor");
 
-            var existing = playerService.findById(UUID.fromString(playerId));
-            if (existing.isPresent()) {
-                ctx.respond("Player already exists");
-                return;
-            }
+             playerService.findById(UUID.fromString(playerId));
+
 
             var player = new Player();
             player.setPlayerId(UUID.fromString(playerId));
@@ -51,8 +47,8 @@ public class JoinToGame_Handler implements GameActionHandler {
             ctx.respond(updatedGame);
 
         } catch (Exception e) {
-            log.error("Failed to join game", e);
-            ctx.respond("Internal error");
+            ctx.respond("Internal Server Error");
+            log.error(e.getMessage());
         }
     }
 }

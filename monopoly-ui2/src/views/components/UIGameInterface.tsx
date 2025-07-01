@@ -16,7 +16,7 @@ const UIGameInterface: React.FC = () => {
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [currentPlayerSingleton, setCurrentPlayerSingleton] = useState<PlayerDTO | null>(null);
     const [rolledValue, setRolledValue] = useState<number | null>(null);
-
+    const [specialTileEffet,setSpecialTileEffet] = useState<String | null>(null);
     useEffect(() => {
         setCurrentPlayerSingleton(CurrentPlayerSingleton.getInstance());
     }, [game]);
@@ -30,12 +30,13 @@ const UIGameInterface: React.FC = () => {
         if (!game?.gameId || !currentPlayer?.playerId) return;
 
         try {
-            await specialTile({
+            const {data:specialEffect} = await specialTile({
                 variables: {
                     gameId: game.gameId,
                     playerId: currentPlayerSingleton?.playerId
                 }
             });
+            console.log(specialEffect);
         } catch (e) {
             console.error(e);
         }
@@ -130,22 +131,29 @@ const UIGameInterface: React.FC = () => {
             )}
 
             <div className="action-buttons">
-                {(currentPlayerSingleton?.inJail_Turns ?? 0) === 0 && (
-                    <button onClick={handleRollDice} className="btn dice">
-                        Roll Dice
-                    </button>
-                )}
-                <button onClick={handleSpecialTile} className="btn special-tile"
+                {/*{(currentPlayerSingleton?.inJail_Turns ?? 0) === 0 && (*/}
+                {/*    */}
+                {/*)}*/}
+                <button onClick={handleRollDice}
+                        disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.ROLL_DICE)}
+                        className="btn dice">
+                    Roll Dice
+                </button>
+                <button onClick={handleSpecialTile}
+                        className="btn special-tile"
                         disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.SPECIAL_TILE)}
                 >
                     Special Tile
                 </button>
 
-                <button onClick={handleBuyProperty} className="btn buy"
+                <button onClick={handleBuyProperty}
+                        className="btn buy"
                         disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.BUY_PROPERTY)}>
                     Buy Property
                 </button>
-                <button onClick={handleEndTurn} className="btn end">
+                <button onClick={handleEndTurn}
+                        disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.END_TURN)}
+                        className="btn end">
                     End Turn
                 </button>
             </div>

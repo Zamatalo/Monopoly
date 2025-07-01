@@ -14,7 +14,7 @@ import {diceUpdate, initGame, resetGameEnvironment, updateGame} from "../stores/
 import CurrentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
 import currentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton";
 import StartGameDialog from "./components/StartGameDialog";
-import {GameState, PlayerActions} from "../components/utils/constants";
+import {GameState} from "../components/utils/constants";
 import UIGameInterface from "./components/UIGameInterface";
 
 export const GameView = () => {
@@ -53,7 +53,6 @@ export const GameView = () => {
         onData: ({data}) => {
             const updatedDicePos = data?.data?.diceUpdated;
             if (updatedDicePos && gameInitialized) {
-                console.log(updatedDicePos)
                 diceUpdate(updatedDicePos);
             }
         }
@@ -93,7 +92,7 @@ export const GameView = () => {
             if (container && container.children.length > 0) {
                 container.remove();
             }
-            resetGameEnvironment();
+            //resetGameEnvironment();
         };
     }, []);
 
@@ -102,7 +101,6 @@ export const GameView = () => {
             <div ref={containerRef} className="canvas"/>
             {sceneInitialized && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState == GameState.STARTED) && (<StartGameDialog />)}
             {sceneInitialized && GameSingleton.hasInstance() && GameSingleton.getInstance().gameState === GameState.IN_PROGRESS &&<UIGameInterface/>}
-            {/*{sceneInitialized && <UIGameInterface />}*/}
         </div>
     );
 };

@@ -48,9 +48,11 @@ enum PropertyNames {
 }
 enum SpecialTileEffect {
     MOVE_TO_GO_AND_COLLECT,
-    COLLECT,
-    PAY,
-    GET_OUT_OF_JAIL_FREE,
-    COLLECT_FROM_EACH_PLAYER,
     GO_TO_JAIL,
+    PAY,
+    COLLECT,
+    COLLECT_FROM_EACH_PLAYER,
+    GET_OUT_OF_JAIL_FREE,
+    PAY_EACH_PLAYER,
+    PAY_TO_EACH_PLAYER
 }
