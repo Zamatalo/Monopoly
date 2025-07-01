@@ -18,6 +18,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+
+/// TODO: dedicated channel for each game
 @Service
 @RequiredArgsConstructor
 public class BotService {
@@ -43,7 +45,7 @@ public class BotService {
         GameDTO game = gameService.findById(gameId);
         PlayerDTO botPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
 
-        CompletableFuture.delayedExecutor(2, TimeUnit.SECONDS)
+        CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS)
                 .execute(() -> rollDice(game, botPlayer));
     }
 

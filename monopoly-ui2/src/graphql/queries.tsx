@@ -235,27 +235,10 @@ export const DICE_UPDATED_SUBSCRIPTION = gql`
 export const BUY_PROPERTY_MUTATION = gql`
     mutation BuyPropertyForPlayer($gameId: ID!,$playerId: ID!) {
         buyPropertyForPlayer(gameId: $gameId,playerId: $playerId) {
-            gameId
-            currentPlayerIndex
-            gameState
-            createdTime
-            players {
-                playerId
-                playerName
-                color
-                balance
-                position
-                inJail_Turns
-                isBot
-                playerActions
-                playerState
-                ownedProperties {
-                    cost
-                    upgradable
-                    displayName
-                    boardPosition
-                }
-            }
+            displayName
+            isOwned
+            boardPosition
+            upgradable
         }
     }
 `

@@ -157,6 +157,7 @@ public class SpecialTile_Handler implements GameActionHandler {
             turnService.endTurn(gameId);
 
             if (!isFromBot(ctx)) {
+                assert data != null;
                 log.info(data.toString());
                 ctx.respond(data);
             }

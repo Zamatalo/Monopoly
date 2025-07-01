@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useQuery, useSubscription} from "@apollo/client";
 import {
     DICE_UPDATED_SUBSCRIPTION,
@@ -16,12 +16,23 @@ import currentPlayerSingleton from "../stores/singletons/CurrentPlayerSingleton"
 import StartGameDialog from "./components/StartGameDialog";
 import {GameState} from "../components/utils/constants";
 import UIGameInterface from "./components/UIGameInterface";
+import GameNotification from "./components/GameNotification";
+import {NotificationProvider} from "./components/NotificationContextType";
 
 export const GameView = () => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [sceneInitialized, setSceneInitialized] = useState(false);
     const [gameInitialized, setGameInitialized] = useState(false);
     const {gameId} = useParams<{ gameId: string }>();
+    const [notification, setNotification] = useState<{
+        message: string;
+        type: 'info' | 'warning' | 'error' | 'success';
+        show: boolean;
+    }>({
+        message: '',
+        type: 'info',
+        show: false
+    });
 
     const {data: gameData} = useQuery(GET_FIND_BY_ID, {
         variables: {gameId},
@@ -95,12 +106,25 @@ export const GameView = () => {
             //resetGameEnvironment();
         };
     }, []);
+    const renderGameUI = () => {
+        if (!sceneInitialized || !GameSingleton.hasInstance()) return null;
 
+        const gameState = GameSingleton.getInstance().gameState;
+        switch(gameState) {
+            case GameState.STARTED:
+                return <StartGameDialog />;
+            case GameState.IN_PROGRESS:
+                return <UIGameInterface />;
+            default:
+                return null;
+        }
+    };
     return (
-        <div className="game-view">
-            <div ref={containerRef} className="canvas"/>
-            {sceneInitialized && GameSingleton.hasInstance() && (GameSingleton.getInstance().gameState == GameState.STARTED) && (<StartGameDialog />)}
-            {sceneInitialized && GameSingleton.hasInstance() && GameSingleton.getInstance().gameState === GameState.IN_PROGRESS &&<UIGameInterface/>}
-        </div>
+        <NotificationProvider>
+            <div className="game-view">
+                <div ref={containerRef} className="canvas"/>
+                {renderGameUI()}
+            </div>
+        </NotificationProvider>
     );
 };
