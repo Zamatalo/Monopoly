@@ -47,7 +47,7 @@ public class BuyProperty_Handler implements GameActionHandler {
             playerService.addPropertyToPlayer(playerId,whichCellIsPlayerStandingOn_Property);
             redisService.publishGameUpd(gameService.findById(gameId));
             if (!isFromBot(ctx)) {
-                ctx.respond(gameService.findById(gameId));
+                ctx.respond(whichCellIsPlayerStandingOn_Property);
             }
             turnService.endTurn(gameId);
         } catch (Exception e) {

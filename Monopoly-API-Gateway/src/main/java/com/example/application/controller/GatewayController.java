@@ -2,10 +2,7 @@ package com.example.application.controller;
 
 
 import com.example.application.service.GameGatewayService;
-import com.example.application.types.GameDTO;
-import com.example.application.types.PlayerColors;
-import com.example.application.types.PlayerDTO;
-import com.example.application.types.SpecialTileEffect;
+import com.example.application.types.*;
 import data.SpecialTileData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -110,12 +107,12 @@ public class GatewayController {
     }
 
     @MutationMapping
-    public GameDTO buyPropertyForPlayer(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId){
+    public PropertyDTO buyPropertyForPlayer(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId){
         return redisRequestReplyService.sendAction(
                         "BUY_PROPERTY",
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
-                        GameDTO.class)
+                        PropertyDTO.class)
                 .join();
     }
 

@@ -96,7 +96,7 @@ class DiceGame {
 
         const direction = new RAPIER.Vector3(
             (Math.random() - 0.5) * angleVariation,
-            0.2 + Math.random() * 0.3,
+            0.8 + Math.random() * 0.3,
             (Math.random() - 0.5) * angleVariation
         );
 

@@ -6,17 +6,19 @@ import {PlayerDTO} from "../../components/models/PlayerDTO";
 import CurrentPlayerSingleton from "../../stores/singletons/CurrentPlayerSingleton";
 import {ColorHexMap, GameState, PlayerActions} from "../../components/utils/constants";
 import '../../styles/gameInterface.css'
+import {useNotification} from "./NotificationContextType";
 
 const UIGameInterface: React.FC = () => {
     const game = GameSingleton.getInstance();
+    const { showNotification } = useNotification();
     const [rollDice, {error}] = useMutation(ROLL_DICE);
     const [buyProperty] = useMutation(BUY_PROPERTY_MUTATION);
     const [endTurn] = useMutation(END_TURN);
     const [specialTile] = useMutation(SPECIAL_TILE);
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [currentPlayerSingleton, setCurrentPlayerSingleton] = useState<PlayerDTO | null>(null);
-    const [rolledValue, setRolledValue] = useState<number | null>(null);
-    const [specialTileEffet,setSpecialTileEffet] = useState<String | null>(null);
+
+
     useEffect(() => {
         setCurrentPlayerSingleton(CurrentPlayerSingleton.getInstance());
     }, [game]);
@@ -25,6 +27,8 @@ const UIGameInterface: React.FC = () => {
         const current = game.players[game.currentPlayerIndex];
         setCurrentPlayer(current);
     }, [game.currentPlayerIndex]);
+
+
 
     const handleSpecialTile = async () => {
         if (!game?.gameId || !currentPlayer?.playerId) return;
@@ -36,7 +40,7 @@ const UIGameInterface: React.FC = () => {
                     playerId: currentPlayerSingleton?.playerId
                 }
             });
-            console.log(specialEffect);
+            showNotification(`Special effect: \n ${specialEffect.resolveSpecialTile.toString()}`);
         } catch (e) {
             console.error(e);
         }
@@ -45,15 +49,18 @@ const UIGameInterface: React.FC = () => {
     const handleRollDice = async () => {
         if (!game?.gameId || !currentPlayer?.playerId) return;
         try {
-            const {data} = await rollDice({
+            const {data:rollDiceData} = await rollDice({
                 variables: {
                     gameId: game.gameId,
                     playerId: currentPlayerSingleton?.playerId
                 }
             });
-            const value = data?.rollDice;
+            const value = rollDiceData?.rollDice;
             if (value != null) {
-                setRolledValue(value);
+                showNotification(`🎲 You rolled ${value}`);
+            }
+            if (value==0){
+                showNotification(`You are in Jail.\n Turns Left: ${currentPlayerSingleton?.inJail_Turns}`);
             }
         } catch (e) {
             console.error(e);
@@ -64,12 +71,13 @@ const UIGameInterface: React.FC = () => {
         if (!game?.gameId || !currentPlayer?.playerId) return;
 
         try {
-            const {data: response} = await buyProperty({
+            const {data: buyPropData} = await buyProperty({
                 variables: {
                     gameId: game.gameId,
                     playerId: currentPlayerSingleton?.playerId
                 }
             });
+            showNotification(`Bought:\n ${buyPropData.buyPropertyForPlayer.displayName}`);
         } catch (e) {
             console.error(e);
         }
@@ -85,6 +93,7 @@ const UIGameInterface: React.FC = () => {
                     playerId: currentPlayerSingleton?.playerId
                 }
             });
+            showNotification(`Turn ended`);
         } catch (e) {
             console.error(e);
         }
@@ -93,9 +102,6 @@ const UIGameInterface: React.FC = () => {
     if (!game?.gameId) {
         return <div className="game-interface loading">Loading game data...</div>;
     }
-
-    const currentGameState = typeof game.gameState === 'string' ? game.gameState : GameState[game.gameState];
-
     return (
         <div className="game-interface compact">
             <div className="current-player">
@@ -105,7 +111,6 @@ const UIGameInterface: React.FC = () => {
                 <div className="player-info">
                     <span className="name">Name: {currentPlayerSingleton?.playerName}</span>
                     <span className="balance">${currentPlayerSingleton?.balance.toLocaleString()}</span>
-
 
                 </div>
                 <div className="position">
@@ -121,9 +126,6 @@ const UIGameInterface: React.FC = () => {
                 </div>
             </div>
 
-            {rolledValue && !error && (
-                <div className="rolled-value">🎲 You rolled: {rolledValue}</div>
-            )}
             {error && (
                 <div className="error">
                     Not your turn. Current player is: {game.players[game.currentPlayerIndex].color}
@@ -131,9 +133,6 @@ const UIGameInterface: React.FC = () => {
             )}
 
             <div className="action-buttons">
-                {/*{(currentPlayerSingleton?.inJail_Turns ?? 0) === 0 && (*/}
-                {/*    */}
-                {/*)}*/}
                 <button onClick={handleRollDice}
                         disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.ROLL_DICE)}
                         className="btn dice">
@@ -168,8 +167,8 @@ const UIGameInterface: React.FC = () => {
                             borderColor: ColorHexMap[player.color],
                         }}
                     >
-                        <span>{player.playerName}</span>
-                        <span>${player.balance.toLocaleString()}</span>
+                        <span>{player.playerName}{player.inJail_Turns > 0 ? " (in Jail)" : ""}</span>
+                        <span>{player.balance.toLocaleString()}</span>
                     </div>
                 ))}
             </div>
