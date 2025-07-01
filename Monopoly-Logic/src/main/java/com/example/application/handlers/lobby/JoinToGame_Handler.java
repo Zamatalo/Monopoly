@@ -29,26 +29,29 @@ public class JoinToGame_Handler implements GameActionHandler {
     @Override
     public void handle(RequestContextRedis ctx) {
         try {
-            var gameId = ctx.body().get("gameId");
-            var playerId = ctx.body().get("playerId");
+            var gameId = UUID.fromString(ctx.body().get("gameId"));
+            var playerId = UUID.fromString(ctx.body().get("playerId"));
             var playerName = ctx.body().get("playerName");
-            var playerColor = ctx.body().get("playerColor");
+            var playerColor = PlayerColors.valueOf(ctx.body().get("playerColor"));
 
-             playerService.findById(UUID.fromString(playerId));
+            if (!playerService.existsById(playerId)) {
+                Player newPlayer = new Player();
+                newPlayer.setPlayerId(playerId);
+                newPlayer.setPlayerName(playerName);
+                newPlayer.setColor(playerColor);
 
+                var updatedGame = gameService.addPlayerToGame(newPlayer, gameId);
 
-            var player = new Player();
-            player.setPlayerId(UUID.fromString(playerId));
-            player.setPlayerName(playerName);
-            player.setColor(PlayerColors.valueOf(playerColor));
+                redisService.publishGameUpd(gameService.findById(gameId));
+                ctx.respond(updatedGame);
+                return;
+            }
 
-            var updatedGame = gameService.addPlayerToGame(player, UUID.fromString(gameId));
-            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)));
-            ctx.respond(updatedGame);
-
+            ctx.respond("Player already exists.");
         } catch (Exception e) {
             ctx.respond("Internal Server Error");
-            log.error(e.getMessage());
+            log.error("Error in handle(): {}", e.getMessage(), e);
         }
     }
+
 }
