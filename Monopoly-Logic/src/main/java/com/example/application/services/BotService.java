@@ -67,7 +67,7 @@ public class BotService {
         List<PlayerActions> possibleActions = GameActionResolver.resolvePlayerActions(game, botPlayer);
         if (!possibleActions.isEmpty()) {
             PlayerActions chosenAction = possibleActions.get(random.nextInt(possibleActions.size()));
-            CompletableFuture.delayedExecutor(3, TimeUnit.SECONDS)
+            CompletableFuture.delayedExecutor(4, TimeUnit.SECONDS)
                     .execute(() -> executeAction(game, botPlayer, chosenAction));
         }
     }

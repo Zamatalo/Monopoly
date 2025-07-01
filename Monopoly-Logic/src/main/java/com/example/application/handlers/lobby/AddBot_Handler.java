@@ -56,6 +56,8 @@ public class AddBot_Handler implements GameActionHandler {
             redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)));
             ctx.respond(gameDTO);
         } catch (Exception e) {
+            ctx.respond("Internal Server Error");
+            log.error(e.getMessage());
             e.printStackTrace();
         }
     }

@@ -1,5 +1,6 @@
 package com.example.application.util.data;
 
+
 import com.example.application.util.enums.PropertyNames;
 import jakarta.persistence.Embeddable;
 

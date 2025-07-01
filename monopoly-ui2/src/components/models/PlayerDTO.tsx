@@ -5,6 +5,7 @@ import {PropertyDTO} from "./PropertyDTO";
 import {Object3D} from "three";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
 
+let animating = false;
 export class PlayerDTO {
     playerId: string;
     playerName: string;
@@ -97,6 +98,7 @@ export class PlayerDTO {
         });
     }
 
+
     animatePlayerMovement(targetPosition: number, model: Object3D, callback: () => void = () => {
     }): void {
         if (!model) {
@@ -108,62 +110,61 @@ export class PlayerDTO {
             console.error('Invalid target position.');
             return;
         }
+        //if already animating, adding to queue
+        this.animationQueue.push(() => {
+            const { xOffset, zOffset } = this.helperSwitch(this.color);
+            let currentStep = this.position;
+            animating = true;
 
-        const {xOffset, zOffset} = this.helperSwitch(this.color);
-        let currentStep = this.position;
+            const moveNext = () => {
+                if (currentStep !== targetPosition) {
+                    currentStep = (currentStep + 1) % positions.length;
 
-        //if more than six, just move to targeted pos. For GO_TO_JAIL or goToStart
-        // const steps = (targetPosition - currentStep + positions.length) % positions.length;
-        // if (steps > 6) {
-        //     const finalPosition = positions[targetPosition];
-        //     if (!finalPosition) {
-        //         console.error('Invalid position data.');
-        //         return;
-        //     }
-        //
-        //     model.position.set(
-        //         finalPosition.x + xOffset,
-        //         0.26,
-        //         finalPosition.z + zOffset
-        //     );
-        //
-        //     this.position = targetPosition;
-        //     callback();
-        //     return;
-        // }
+                    const nextPosition = positions[currentStep];
+                    if (!nextPosition) {
+                        console.error('Invalid position data.');
+                        return;
+                    }
 
-        const moveNext = () => {
-            if (currentStep !== targetPosition) {
-                currentStep = (currentStep + 1) % positions.length;
-
-                let nextPosition = positions[currentStep];
-                if (!nextPosition) {
-                    console.error('Invalid position data.');
-                    return;
+                    gsap.to(model.position, {
+                        x: nextPosition.x + xOffset,
+                        z: nextPosition.z + zOffset,
+                        y: 0.7,
+                        duration: 0.33,
+                        ease: 'power1.inOut',
+                        onComplete: () => {
+                            gsap.to(model.position, {
+                                y: 0.13,
+                                duration: 0.33,
+                                ease: 'power1.inOut',
+                                onComplete: moveNext,
+                            });
+                        },
+                    });
+                } else {
+                    this.position = targetPosition;
+                   animating = false;
+                    callback();
+                    this.runNextAnimation();
                 }
+            };
 
-                gsap.to(model.position, {
-                    x: nextPosition.x + xOffset,
-                    z: nextPosition.z + zOffset,
-                    y: 0.7,
-                    duration: 0.33,
-                    ease: 'power1.inOut',
-                    onComplete: () => {
-                        gsap.to(model.position, {
-                            y: 0.13,
-                            duration: 0.33,
-                            ease: 'power1.inOut',
-                            onComplete: moveNext,
-                        });
-                    },
-                });
-            } else {
-                this.position = targetPosition;
-                callback();
-            }
-        };
-        moveNext();
+            moveNext();
+        });
+
+        if (!animating) {
+            this.runNextAnimation();
+        }
     }
+
+    private runNextAnimation() {
+        const next = this.animationQueue.shift();
+        if (next) {
+            next();
+        }
+    }
+
+    private animationQueue: (() => void)[] = [];
 
     private helperSwitch(name: string): { xOffset: number; zOffset: number } {
         const offset = 0.4;

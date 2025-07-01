@@ -24,7 +24,10 @@ import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -135,29 +138,29 @@ public class GameRequestStreamListener {
         }
         /// first checking gameActions then playerActions
         if (body.get("gameId") != null) {
-            UUID gameId = UUID.fromString(body.get("gameId"));
-            GameDTO game = gameService.findById(gameId);
-
-            List<GameActions> gameActionsList = GameActionResolver.resolveGameActions(game);
             try {
-                GameActions gameAction = GameActions.valueOf(action);
-                if (gameActionsList.contains(gameAction)) {
-                    return true;
+                UUID gameId = UUID.fromString(body.get("gameId"));
+                GameDTO game = gameService.findById(gameId);
+
+                List<GameActions> gameActionsList = GameActionResolver.resolveGameActions(game);
+                if (!gameActionsList.isEmpty()) {
+                    GameActions gameAction = GameActions.valueOf(action);
+                    if (gameActionsList.contains(gameAction)) {
+                        return true;
+                    }
                 }
-            } catch (IllegalArgumentException _) {
-            }
 
-            if (body.get("playerId") != null) {
-                Optional<PlayerDTO> player = playerService.findById(UUID.fromString(body.get("playerId")));
-                if (player.isEmpty()) return false;
 
-                var playerActionsList = GameActionResolver.resolvePlayerActions(game, player.get());
-                try {
+                if (body.get("playerId") != null) {
+                    PlayerDTO player = playerService.findById(UUID.fromString(body.get("playerId")));
+                    var playerActionsList = GameActionResolver.resolvePlayerActions(game, player);
+
                     var playerAction = PlayerActions.valueOf(action);
                     return playerActionsList.contains(playerAction);
-                } catch (IllegalArgumentException e) {
-                    return false;
+
                 }
+            } catch (IllegalArgumentException e) {
+                return false;
             }
         }
         return false;

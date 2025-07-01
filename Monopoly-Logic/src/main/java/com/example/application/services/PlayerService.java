@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -21,8 +20,10 @@ public class PlayerService {
     private final PlayerRepo playerRepository;
 
     @Transactional(readOnly = true)
-    public Optional<PlayerDTO> findById(UUID playerId) {
-        return playerRepository.findById(playerId).map(GameMapper.INSTANCE::playerToDto);
+    public PlayerDTO findById(UUID playerId) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new EntityNotFoundException("Player not found"));
+        return GameMapper.INSTANCE.playerToDto(player);
     }
 
     @Transactional

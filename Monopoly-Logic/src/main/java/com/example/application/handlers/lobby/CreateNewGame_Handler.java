@@ -27,6 +27,8 @@ public class CreateNewGame_Handler implements GameActionHandler {
             GameDTO savedGame = gameService.save(game);
             ctx.respond(savedGame);
         } catch (Exception e) {
+            ctx.respond("Internal Server Error");
+            log.error(e.getMessage());
             e.printStackTrace();
         }
     }

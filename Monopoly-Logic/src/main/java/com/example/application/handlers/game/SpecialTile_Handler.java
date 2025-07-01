@@ -1,14 +1,12 @@
 package com.example.application.handlers.game;
 
-import com.example.application.config.GameConfig;
 import com.example.application.services.GameService;
 import com.example.application.services.PlayerService;
 import com.example.application.services.RedisService;
 import com.example.application.services.TurnService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
-import com.example.application.util.data.PropertyData;
-import com.example.application.util.data.SpecialTileData;
+import data.SpecialTileData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
 import com.example.application.utility.RequestContextRedis;
@@ -41,7 +39,7 @@ public class SpecialTile_Handler implements GameActionHandler {
             var gameId = UUID.fromString(ctx.body().get("gameId"));
             var playerId = UUID.fromString(ctx.body().get("playerId"));
             GameDTO gameDTO = gameService.findById(gameId);
-            PlayerDTO player = playerService.findById(playerId).orElseThrow();
+            PlayerDTO player = playerService.findById(playerId);
 
             SpecialTileData data = null;
             var position = player.getPosition();
@@ -84,18 +82,18 @@ public class SpecialTile_Handler implements GameActionHandler {
                         player.setBalance(data.amount());
                         break;
                     }
-                    case MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO: {
-                        var randomTile = PropertyData.ALL.values().stream().filter(e -> e.cost() != 0).findAny();
-                        var currentPos = player.getPosition();
-                        assert randomTile.isPresent();
-
-                        boolean passedGo = randomTile.get().boardPosition() <= currentPos;
-                        if (passedGo) {
-                            player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
-                        }
-                        player.setPosition(randomTile.get().boardPosition());
-                        break;
-                    }
+//                    case MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO: {
+//                        var randomTile = PropertyData.ALL.values().stream().filter(e -> e.cost() != 0).findAny();
+//                        var currentPos = player.getPosition();
+//                        assert randomTile.isPresent();
+//
+//                        boolean passedGo = randomTile.get().boardPosition() <= currentPos;
+//                        if (passedGo) {
+//                            player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
+//                        }
+//                        player.setPosition(randomTile.get().boardPosition());
+//                        break;
+//                    }
 //                    case MOVE_TO_NEAREST_UTILITY: {
 //
 //                    }
@@ -138,6 +136,7 @@ public class SpecialTile_Handler implements GameActionHandler {
             }
 
             if (position.equals(30)) { //Go to jail
+                data = SpecialTileData.JAIL;
                 player.setPosition(10);
                 player.setInJail_Turns(4);
             }

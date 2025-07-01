@@ -54,6 +54,16 @@ public class GameActionResolver {
             return actions;
         }
 
+        //player in jail
+        if (player.getInJail_Turns() > 0) {
+            if (player.getPlayerState() == PlayerState.AWAITING_DECISION) {
+                actions.add(PlayerActions.END_TURN);
+                return actions;
+            }
+            actions.add(PlayerActions.ROLL_DICE);
+            return actions;
+        }
+
         // Waiting for player response
         if (player.getPlayerState() == PlayerState.IDLE) {
             actions.add(PlayerActions.ROLL_DICE);

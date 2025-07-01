@@ -32,7 +32,9 @@ public class Game_StreamRequest {
             return;
         }
 
-        if (response.contains("Invalid action") || response.contains("Internal Server Error")) {
+        if (response.contains("Invalid action") ||
+                response.contains("Internal Server Error") ||
+                response.contains("Player Not Found")) {
             wrapper.future.cancel(true);
             return;
         }

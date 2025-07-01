@@ -26,7 +26,8 @@ public class GetAllGames_Handler implements GameActionHandler {
             var games = gameService.findAll();
             ctx.respond(games);
         } catch (Exception e) {
-            e.printStackTrace();
+            ctx.respond("Internal Server Error");
+            log.error(e.getMessage());
         }
     }
 }

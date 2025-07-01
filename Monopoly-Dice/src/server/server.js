@@ -62,7 +62,7 @@ class DiceGame {
         this.dice_2 = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(1, 0.4, 1));
 
         const dice_Collider = RAPIER.ColliderDesc.cuboid(0.16, 0.16, 0.16)
-            .setFriction(3).setMass(1).setRestitution(0.3);
+            .setFriction(6).setMass(7).setRestitution(0.6);
         this.world.createCollider(dice_Collider, this.dice_1);
         this.world.createCollider(dice_Collider, this.dice_2);
 
@@ -91,18 +91,18 @@ class DiceGame {
         this.hasThrown = true;
         this.resultSent = false;
 
-        const throwStrength = 4;
+        const throwStrength = 7;
         const angleVariation = Math.PI / 4;
 
         const direction = new RAPIER.Vector3(
             (Math.random() - 0.5) * angleVariation,
-            0.7 + Math.random() * 0.3,
+            0.2 + Math.random() * 0.3,
             (Math.random() - 0.5) * angleVariation
         );
 
         const direction_2 = new RAPIER.Vector3(
-            (Math.random() - 1.2) * angleVariation,
-            0.7 + Math.random() * 0.6,
+            (Math.random() - 0.5) * angleVariation,
+            0.7 + Math.random() * 0.3,
             (Math.random() - 0.5) * angleVariation
         );
 

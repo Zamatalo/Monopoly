@@ -1,6 +1,6 @@
 package com.example.application.handlers.game;
 
-import com.example.application.config.GameConfig;
+import config.GameConfig;
 import com.example.application.services.*;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
@@ -39,22 +39,30 @@ public class RollDice_Handler implements GameActionHandler {
         CompletableFuture<Integer> future = diceService.rollDice(gameId.toString());
         var rolledResult = future.join();
         GameDTO game = gameService.findById(gameId);
-        PlayerDTO player = playerService.findById(playerId).orElseThrow();
+        PlayerDTO player = playerService.findById(playerId);
 
+        if (player.getInJail_Turns()>0){
+            rolledResult= 0;
+        }
         int newPosition = (player.getPosition() + rolledResult) % 40;
+
+
         PropertyData steppedOn = steppedOnAnotherPlayerField(gameId, newPosition);
         if (steppedOn != null) {
             player.setBalance(player.getBalance() - steppedOn.cost());
             PlayerDTO player_toPayTo = playerService.getPlayer_forProperty_forGame(gameId, steppedOn);
-            PlayerDTO palyer_otPayTo_inGame= game
+            PlayerDTO palyer_tpPayTo_inGame = game
                     .getPlayers().stream()
                     .filter(e->e.getPlayerId().equals(player_toPayTo.getPlayerId()))
                     .findFirst()
                     .orElse(null);
-            assert palyer_otPayTo_inGame != null;
-            palyer_otPayTo_inGame.setBalance(player_toPayTo.getBalance() + steppedOn.cost());
+            assert palyer_tpPayTo_inGame != null;
+            palyer_tpPayTo_inGame.setBalance(player_toPayTo.getBalance() + steppedOn.cost());
         }
 
+        if (passedGo(player.getPosition(), newPosition)) {
+            player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
+        }
 
         player.setPlayerState(PlayerState.AWAITING_DECISION);
         player.setPosition(newPosition);
@@ -75,6 +83,11 @@ public class RollDice_Handler implements GameActionHandler {
             botService.handelAfterRollAction(updatedGame);
         }
     }
+
+    private boolean passedGo(Integer prevPost, Integer nextPos) {
+        return nextPos < prevPost;
+    }
+
 
     /// not for every Special tile, only for easy ones.
     /// the ones with complex logic should have dedicated Handler
