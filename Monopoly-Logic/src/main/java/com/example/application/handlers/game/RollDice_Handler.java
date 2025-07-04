@@ -66,7 +66,7 @@ public class RollDice_Handler implements GameActionHandler {
 
         player.setPlayerState(PlayerState.AWAITING_DECISION);
         player.setPosition(newPosition);
-        player.setBalance(steppedOnSpecialTile(player));
+        //player.setBalance(steppedOnSpecialTile(player));
 
         List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
                 .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
@@ -91,18 +91,18 @@ public class RollDice_Handler implements GameActionHandler {
 
     /// not for every Special tile, only for easy ones.
     /// the ones with complex logic should have dedicated Handler
-    private Integer steppedOnSpecialTile(PlayerDTO player) {
-        var property = PropertyData.ofPos(player.getPosition());
-        if (property.cost() == 0) {
-            if (property.boardPosition() == 0) { //Start Tile
-                player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
-            }
-//            if (property.boardPosition() == 4) { //Income Tax
-//                player.setBalance(player.getBalance() - GameConfig.INCOME_TAX);
+//    private Integer steppedOnSpecialTile(PlayerDTO player) {
+//        var property = PropertyData.ofPos(player.getPosition());
+//        if (property.cost() == 0) {
+//            if (property.boardPosition() == 0) { //Start Tile
+//                player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
 //            }
-        }
-        return player.getBalance();
-    }
+////            if (property.boardPosition() == 4) { //Income Tax
+////                player.setBalance(player.getBalance() - GameConfig.INCOME_TAX);
+////            }
+//        }
+//        return player.getBalance();
+//    }
 
     private PropertyData steppedOnAnotherPlayerField(UUID gameId, Integer playerPos) {
         var properties = gameService.findAllProperties(gameId);

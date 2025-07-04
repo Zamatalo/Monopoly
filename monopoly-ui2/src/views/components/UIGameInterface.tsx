@@ -40,7 +40,7 @@ const UIGameInterface: React.FC = () => {
                     playerId: currentPlayerSingleton?.playerId
                 }
             });
-            showNotification(`Special effect: \n ${specialEffect.resolveSpecialTile.toString()}`);
+            showNotification(specialEffect.resolveSpecialTile.text);
         } catch (e) {
             console.error(e);
         }

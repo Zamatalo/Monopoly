@@ -13,16 +13,16 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
             new SpecialTileData("Chest_1", SpecialTileEffect.MOVE_TO_GO_AND_COLLECT, 200),
             new SpecialTileData("Chest_2", SpecialTileEffect.COLLECT, 200),
             new SpecialTileData("Chest_3", SpecialTileEffect.PAY, 50),
-            new SpecialTileData("Chest_4", SpecialTileEffect.COLLECT, 50),
+            new SpecialTileData("Chest_4", SpecialTileEffect.COLLECT, 45),
             // new SpecialTileData("Get Out of Jail Free. Keep until needed.",ChestEffect.GET_OUT_OF_JAIL_FREE),
             new SpecialTileData("Chest_5", SpecialTileEffect.GO_TO_JAIL, 0),
             new SpecialTileData("Chest_6", SpecialTileEffect.COLLECT_FROM_EACH_PLAYER, 50),
             new SpecialTileData("Chest_7", SpecialTileEffect.COLLECT, 100),
             new SpecialTileData("Chest_8", SpecialTileEffect.COLLECT, 20),
-            new SpecialTileData("Chest_9", SpecialTileEffect.COLLECT_FROM_EACH_PLAYER, 10),
+            //new SpecialTileData("Chest_9", SpecialTileEffect.COLLECT_FROM_EACH_PLAYER, 10),
             new SpecialTileData("Chest_10", SpecialTileEffect.COLLECT, 100),
-            new SpecialTileData("Chest_11", SpecialTileEffect.PAY, 50),
-            new SpecialTileData("Chest_12", SpecialTileEffect.PAY, 50),
+            new SpecialTileData("Chest_11", SpecialTileEffect.PAY, 150),
+            new SpecialTileData("Chest_12", SpecialTileEffect.PAY, 100),
             new SpecialTileData("Chest_13", SpecialTileEffect.COLLECT, 25),
             new SpecialTileData("Chest_14", SpecialTileEffect.COLLECT, 10),
             new SpecialTileData("Chest_15", SpecialTileEffect.COLLECT, 100)
@@ -51,6 +51,11 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
 
     public static final SpecialTileData LUXURY_TAX =
             new SpecialTileData("Luxury_tax", SpecialTileEffect.PAY, 200);
+
     public static final SpecialTileData JAIL =
             new SpecialTileData("Jail", SpecialTileEffect.GO_TO_JAIL, 0);
+
+    public static final SpecialTileData START =
+            new SpecialTileData("Start",SpecialTileEffect.COLLECT,GameConfig.START_PAYOUT);
+
 }
