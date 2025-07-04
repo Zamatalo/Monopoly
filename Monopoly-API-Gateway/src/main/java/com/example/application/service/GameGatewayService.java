@@ -31,12 +31,12 @@ public class GameGatewayService {
         Map<String, String> body = new HashMap<>(args);
         body.put("correlationId", correlationId);
         body.put("action", action);
-        StringRecord record = StreamRecords.string(body).withStreamKey("game.request");
+        StringRecord record = StreamRecords
+                .string(body)
+                .withStreamKey("game.request");
 
         var javaType = objectMapper.getTypeFactory().constructType(clazz);
-
         redisTemplate.opsForStream().add(record);
-
         return responseHandler.register(correlationId, javaType);
     }
 

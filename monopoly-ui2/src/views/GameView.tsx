@@ -103,7 +103,7 @@ export const GameView = () => {
             if (container && container.children.length > 0) {
                 container.remove();
             }
-            //resetGameEnvironment();
+            resetGameEnvironment();
         };
     }, []);
     const renderGameUI = () => {

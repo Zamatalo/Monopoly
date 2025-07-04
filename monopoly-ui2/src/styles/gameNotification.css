@@ -1,7 +1,7 @@
 .notification {
     position: absolute;
     top: 15px;
-    left: 45%;
+    left: 35%;
     font-family: 'Segoe UI', sans-serif;
     padding: 12px;
     background-color: rgba(255, 255, 255, 0.98);
@@ -21,7 +21,9 @@
 }
 
 .notification-content {
-    padding: 10px;
     white-space: pre-line;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    max-width: 500px;
+    max-height: 500px;
+    object-fit: fill;
 }

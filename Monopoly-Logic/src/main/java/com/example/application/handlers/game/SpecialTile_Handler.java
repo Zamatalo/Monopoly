@@ -6,6 +6,7 @@ import com.example.application.services.RedisService;
 import com.example.application.services.TurnService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
+import config.GameConfig;
 import data.SpecialTileData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
@@ -140,14 +141,23 @@ public class SpecialTile_Handler implements GameActionHandler {
                 player.setPosition(10);
                 player.setInJail_Turns(4);
             }
+
             if (position.equals(4)) {
                 data = SpecialTileData.TAX;
                 player.setBalance(player.getBalance() - data.amount());
             }
+
             if (position.equals(38)) {
                 data = SpecialTileData.LUXURY_TAX;
                 player.setBalance(player.getBalance() - data.amount());
             }
+
+            if (position.equals(0)) {
+                data = SpecialTileData.START;
+                player.setBalance(player.getBalance());
+            }
+
+
             List<PlayerDTO> updatedPlayers = gameDTO.getPlayers().stream()
                     .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
                     .toList();
