@@ -1,12 +1,11 @@
 package com.example.application.handlers.game;
 
-import com.example.application.services.GameService;
-import com.example.application.services.PlayerService;
-import com.example.application.services.RedisService;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.imperative.PlayerService;
+import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.services.TurnService;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
-import config.GameConfig;
 import data.SpecialTileData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
@@ -14,6 +13,7 @@ import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -25,8 +25,8 @@ import java.util.UUID;
 public class SpecialTile_Handler implements GameActionHandler {
     private final PlayerService playerService;
     private final TurnService turnService;
-    private final RedisService redisService;
-    private final GameService gameService;
+    private final RedisService_Mono redisService;
+    private final GameService_Mono gameService;
     private final SecureRandom random = new SecureRandom();
 
     @Override
@@ -35,11 +35,11 @@ public class SpecialTile_Handler implements GameActionHandler {
     }
 
     @Override
-    public void handle(RequestContextRedis ctx) {
+    public Mono<Void> handle(RequestContextRedis ctx) {
         try {
             var gameId = UUID.fromString(ctx.body().get("gameId"));
             var playerId = UUID.fromString(ctx.body().get("playerId"));
-            GameDTO gameDTO = gameService.findById(gameId);
+            GameDTO gameDTO = gameService.findById_Mono(gameId);
             PlayerDTO player = playerService.findById(playerId);
 
             SpecialTileData data = null;
@@ -163,7 +163,7 @@ public class SpecialTile_Handler implements GameActionHandler {
                     .toList();
             gameDTO.setPlayers(updatedPlayers);
 
-            gameService.save(GameMapper.INSTANCE.GameDTOtoGame(gameDTO));
+            gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(gameDTO));
             turnService.endTurn(gameId);
 
             if (!isFromBot(ctx)) {

@@ -1,16 +1,22 @@
 package com.example.application.redis;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.SmartLifecycle;
-import org.springframework.data.redis.connection.stream.*;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.stream.StreamMessageListenerContainer;
+import org.springframework.data.redis.connection.stream.Consumer;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ReadOffset;
+import org.springframework.data.redis.connection.stream.StreamOffset;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.time.Duration;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,7 +24,7 @@ import java.util.concurrent.Executors;
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
-public class Game_StreamResponseListener implements SmartLifecycle {
+public class Game_StreamResponseListener {
     @Value("${spring.data.redis.gameRequestStream}")
     private String REQUEST_STREAM;
     @Value("${spring.data.redis.gameResponseStream}")
@@ -30,61 +36,41 @@ public class Game_StreamResponseListener implements SmartLifecycle {
     private static final String CONSUMER_NAME = "gateway-1";
 
     private final Game_StreamRequest responseHandler;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
     private final ExecutorService scheduler = Executors.newSingleThreadExecutor();
-    private StreamMessageListenerContainer<String, MapRecord<String, String, String>> container;
-    private boolean running = false;
+    private final StreamReceiver<String, MapRecord<String, String, String>> streamReceiver;
 
-    @Override
-    public void start() {
-        running = true;
-        initializeContainer();
+    @PostConstruct
+    public void init() {
+        createGroupIfNotExists(REQUEST_STREAM, BACKEND_GROUP).subscribe();
+        createGroupIfNotExists(RESPONSE_STREAM, GATEWAY_GROUP).subscribe();
+
+        startReactiveStreamListener().subscribe();
+
     }
 
-    private void initializeContainer() {
-        try {
-            createConsumerGroup(REQUEST_STREAM, BACKEND_GROUP);
-            createConsumerGroup(RESPONSE_STREAM, GATEWAY_GROUP);
-
-            StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, MapRecord<String, String, String>> options =
-                    StreamMessageListenerContainer.StreamMessageListenerContainerOptions
-                            .builder()
-                            .pollTimeout(Duration.ofSeconds(1))
-                            .build();
-
-            assert redisTemplate.getConnectionFactory() != null;
-            container = StreamMessageListenerContainer.create(
-                    redisTemplate.getConnectionFactory(),
-                    options
-            );
-
-            container.receive(
-                    Consumer.from(GATEWAY_GROUP, CONSUMER_NAME),
-                    StreamOffset.create(RESPONSE_STREAM, ReadOffset.lastConsumed()),
-                    this::handleMessage
-            );
-
-            container.start();
-            log.info("Started listening to Redis stream: {}", RESPONSE_STREAM);
-        } catch (Exception e) {
-            log.error("Failed to initialize Redis stream container", e);
-            restartWithDelay();
-        }
+    private Flux<?> startReactiveStreamListener() {
+        return streamReceiver
+                .receive(Consumer.from(BACKEND_GROUP, CONSUMER_NAME),
+                        StreamOffset.create(REQUEST_STREAM, ReadOffset.lastConsumed()))
+                .flatMap(this::handleMessage);
     }
 
-    private void createConsumerGroup(String stream, String group) {
-        try {
-            redisTemplate.opsForStream()
-                    .createGroup(stream, ReadOffset.latest(), group);
-        } catch (Exception e) {
-            if (!e.getMessage().contains("BUSYGROUP")) {
-                System.out.println("Group exist already. Skipping");
-            } else {
-                System.out.println("Creating Redis group");
-            }
-        }
+    private Mono<?> createGroupIfNotExists(String stream, String group) {
+        return reactiveRedisTemplate.getConnectionFactory().getReactiveConnection()
+                .streamCommands()
+                .xGroupCreate(ByteBuffer.wrap(stream.getBytes(StandardCharsets.UTF_8)), group, ReadOffset.latest(), true)
+                .doOnSuccess(v -> log.info("Created consumer group '{}'", group))
+                .onErrorResume(e -> {
+                    if (e.getMessage().contains("BUSYGROUP")) {
+                        log.info("Consumer group '{}' already exists", group);
+                        return Mono.empty();
+                    }
+                    return Mono.error(e);
+                });
     }
-    private void handleMessage(MapRecord<String, String, String> message) {
+
+    private Mono<?> handleMessage(MapRecord<String, String, String> message) {
         try {
             Map<String, String> body = message.getValue();
             String correlationId = body.get("correlationId");
@@ -97,47 +83,16 @@ public class Game_StreamResponseListener implements SmartLifecycle {
 
             if (correlationId == null) {
                 log.warn("Received message without correlationId: {}", payload);
-                return;
+                return Mono.error(new RuntimeException("CorrelationId is null"));
             }
 
             responseHandler.complete(correlationId, payload);
         } catch (Exception e) {
             log.error("Error processing Redis stream message", e);
-        } finally {
-            redisTemplate.opsForStream().acknowledge(RESPONSE_STREAM, GATEWAY_GROUP, message.getId());
+            return Mono.error(new RuntimeException("CorrelationId is null"));
         }
-    }
-
-    private void restartWithDelay() {
-        stopContainer();
-        scheduler.execute(() -> {
-            try {
-                Thread.sleep(5000);
-                if (running) {
-                    log.info("Attempting to restart Redis stream container...");
-                    initializeContainer();
-                }
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            }
-        });
-    }
-
-    @Override
-    public void stop() {
-        running = false;
-        stopContainer();
-        scheduler.shutdownNow();
-    }
-
-    private void stopContainer() {
-        if (container != null && container.isRunning()) {
-            container.stop();
-        }
-    }
-
-    @Override
-    public boolean isRunning() {
-        return running;
+        return reactiveRedisTemplate
+                .opsForStream()
+                .acknowledge(RESPONSE_STREAM, GATEWAY_GROUP, message.getId());
     }
 }

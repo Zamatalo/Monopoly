@@ -1,8 +1,8 @@
 package com.example.application.handlers.lobby;
 
 import com.example.application.components.GameActionResolver;
-import com.example.application.services.GameService;
-import com.example.application.services.PlayerService;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.imperative.PlayerService;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GetPlayer_Handler implements GameActionHandler {
     private final PlayerService playerService;
-    private final GameService gameService;
+    private final GameService_Mono gameService;
 
     @Override
     public String getAction() {
@@ -29,7 +29,7 @@ public class GetPlayer_Handler implements GameActionHandler {
         try {
             var playerId = ctx.body().get("playerId");
             var player = playerService.findById(UUID.fromString(playerId));
-            var game = gameService.findGameByPlayerId(UUID.fromString(playerId));
+            var game = gameService.findGameByPlayerId_Mono(UUID.fromString(playerId));
             player.setPlayerActions(GameActionResolver.resolvePlayerActions(game.get(),player));
 
             ctx.respond(player);

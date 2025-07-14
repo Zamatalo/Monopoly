@@ -1,8 +1,10 @@
 package com.example.application.utility;
 
+import reactor.core.publisher.Mono;
+
 public interface GameActionHandler {
     String getAction();
 
-    void handle(RequestContextRedis ctx);
+    Mono<Void> handle(RequestContextRedis ctx);
 
 }

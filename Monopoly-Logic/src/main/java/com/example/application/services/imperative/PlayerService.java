@@ -1,4 +1,4 @@
-package com.example.application.services;
+package com.example.application.services.imperative;
 
 
 import com.example.application.entity.Player;

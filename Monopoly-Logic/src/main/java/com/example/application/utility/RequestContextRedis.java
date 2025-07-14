@@ -1,5 +1,6 @@
 package com.example.application.utility;
 
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import util.exceptions.RedisResponseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +16,12 @@ public record RequestContextRedis(
         String correlationId,
         Map<String, String> body,
         MapRecord<String, String, String> rawRecord,
-        RedisOperations<String, Object> redisOp,
+        ReactiveRedisTemplate<String, Object> redisOp,
         ObjectMapper objectMapper
 ) {
-    private static final String RESPONSE_STREAM = "game.response";
 
     public void respond(Object payload) {
+
         try {
             Map<String, String> body = new HashMap<>();
             String payloadJson = objectMapper.writeValueAsString(payload);
@@ -39,4 +40,5 @@ public record RequestContextRedis(
             throw new RedisResponseException("Failed to send response to Redis", e);
         }
     }
+
 }

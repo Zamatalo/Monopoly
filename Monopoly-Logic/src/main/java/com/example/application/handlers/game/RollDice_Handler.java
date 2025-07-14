@@ -1,7 +1,11 @@
 package com.example.application.handlers.game;
 
+import com.example.application.services.imperative.PlayerService;
+import com.example.application.services.reactive.BotService_Mono;
+import com.example.application.services.reactive.DiceService_Mono;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.reactive.RedisService_Mono;
 import config.GameConfig;
-import com.example.application.services.*;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerDTO;
 import com.example.application.types.PlayerState;
@@ -21,11 +25,11 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 @Slf4j
 public class RollDice_Handler implements GameActionHandler {
-    private final DiceService diceService;
-    private final GameService gameService;
+    private final DiceService_Mono diceService;
+    private final GameService_Mono gameService;
     private final PlayerService playerService;
-    private final RedisService redisService;
-    private final BotService botService;
+    private final RedisService_Mono redisService;
+    private final BotService_Mono botService;
 
     @Override
     public String getAction() {
@@ -38,7 +42,7 @@ public class RollDice_Handler implements GameActionHandler {
         var playerId = UUID.fromString(ctx.body().get("playerId"));
         CompletableFuture<Integer> future = diceService.rollDice(gameId.toString());
         var rolledResult = future.join();
-        GameDTO game = gameService.findById(gameId);
+        GameDTO game = gameService.findById_Mono(gameId);
         PlayerDTO player = playerService.findById(playerId);
 
         if (player.getInJail_Turns()>0){
@@ -73,13 +77,13 @@ public class RollDice_Handler implements GameActionHandler {
                 .toList();
         game.setPlayers(updatedPlayers);
 
-        gameService.save(GameMapper.INSTANCE.GameDTOtoGame(game));
-        redisService.publishGameUpd(gameService.findById(gameId));
+        gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(game));
+        redisService.publishGameUpd(gameService.findById_Mono(gameId));
 
         if (!isFromBot(ctx)) {
             ctx.respond(rolledResult);
         }else{
-            GameDTO updatedGame = gameService.findById(gameId);
+            GameDTO updatedGame = gameService.findById_Mono(gameId);
             botService.handelAfterRollAction(updatedGame);
         }
     }
@@ -105,7 +109,7 @@ public class RollDice_Handler implements GameActionHandler {
 //    }
 
     private PropertyData steppedOnAnotherPlayerField(UUID gameId, Integer playerPos) {
-        var properties = gameService.findAllProperties(gameId);
+        var properties = gameService.findAllProperties_Mono(gameId);
         return properties.stream()
                 .filter(propertyData -> propertyData.boardPosition() == playerPos)
                 .findFirst()

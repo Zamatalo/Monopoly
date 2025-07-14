@@ -1,7 +1,7 @@
 package com.example.application.handlers.lobby;
 
-import com.example.application.services.GameService;
-import com.example.application.services.RedisService;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.services.TurnService;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
@@ -16,8 +16,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EndTurn_Handler implements GameActionHandler {
     private final TurnService turnService;
-    private final GameService gameService;
-    private final RedisService redisService;
+    private final GameService_Mono gameService;
+    private final RedisService_Mono redisService;
 
     @Override
     public String getAction() {
@@ -30,7 +30,7 @@ public class EndTurn_Handler implements GameActionHandler {
             UUID gameId = UUID.fromString(ctx.body().get("gameId"));
 
 
-            var updatedGame = gameService.findById(gameId);
+            var updatedGame = gameService.findById_Mono(gameId);
             redisService.publishGameUpd(updatedGame);
             turnService.endTurn(gameId);
             ctx.respond(updatedGame);
