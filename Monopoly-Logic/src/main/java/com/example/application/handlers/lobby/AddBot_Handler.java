@@ -1,8 +1,8 @@
 package com.example.application.handlers.lobby;
 
 import com.example.application.entity.Player;
-import com.example.application.services.GameService;
-import com.example.application.services.RedisService;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.types.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RandomNameGenerator;
@@ -19,8 +19,8 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 public class AddBot_Handler implements GameActionHandler {
-    private final GameService gameService;
-    private final RedisService redisService;
+    private final GameService_Mono gameService;
+    private final RedisService_Mono redisService;
 
     @Override
     public String getAction() {
@@ -31,7 +31,7 @@ public class AddBot_Handler implements GameActionHandler {
     public void handle(RequestContextRedis ctx) {
         try {
             var gameId = ctx.body().get("gameId");
-            var game = gameService.findById(UUID.fromString(gameId));
+            var game = gameService.findById_Mono(UUID.fromString(gameId));
 
             var allColors = PlayerColors.values();
             var usedColors = new ArrayList<PlayerColors>();
@@ -52,8 +52,8 @@ public class AddBot_Handler implements GameActionHandler {
             bot.setIsBot(true);
             bot.setColor(com.example.application.util.enums.PlayerColors.valueOf(color.get().toString()));
 
-            var gameDTO = gameService.addPlayerToGame(bot, UUID.fromString(gameId));
-            redisService.publishGameUpd(gameService.findById(UUID.fromString(gameId)));
+            var gameDTO = gameService.addPlayerToGame_Mono(bot, UUID.fromString(gameId));
+            redisService.publishGameUpd(gameService.findById_Mono(UUID.fromString(gameId)));
             ctx.respond(gameDTO);
         } catch (Exception e) {
             ctx.respond("Internal Server Error");

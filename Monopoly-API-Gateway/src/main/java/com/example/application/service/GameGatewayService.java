@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.connection.stream.StringRecord;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class GameGatewayService {
-    private final RedisTemplate<String, String> redisTemplate;
+    private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final Game_StreamRequest responseHandler;
     private final ObjectMapper objectMapper;
 
@@ -28,6 +28,7 @@ public class GameGatewayService {
     /// @param clazz specifies response class. (it will be later mapped in RedisStreamResponseHandler.complete())
     public <T> CompletableFuture<T> sendAction(String action, Map<String, String> args, Class<T> clazz) {
         String correlationId = UUID.randomUUID().toString();
+
         Map<String, String> body = new HashMap<>(args);
         body.put("correlationId", correlationId);
         body.put("action", action);
@@ -36,7 +37,10 @@ public class GameGatewayService {
                 .withStreamKey("game.request");
 
         var javaType = objectMapper.getTypeFactory().constructType(clazz);
-        redisTemplate.opsForStream().add(record);
+        redisTemplate
+                .opsForStream()
+                .add(record)
+                .subscribe();
         return responseHandler.register(correlationId, javaType);
     }
 

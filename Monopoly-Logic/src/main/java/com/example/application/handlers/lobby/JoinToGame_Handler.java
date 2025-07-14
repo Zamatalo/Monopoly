@@ -1,9 +1,9 @@
 package com.example.application.handlers.lobby;
 
 import com.example.application.entity.Player;
-import com.example.application.services.GameService;
-import com.example.application.services.PlayerService;
-import com.example.application.services.RedisService;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.imperative.PlayerService;
+import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.util.enums.PlayerColors;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
@@ -17,9 +17,9 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 public class JoinToGame_Handler implements GameActionHandler {
-    private final GameService gameService;
+    private final GameService_Mono gameService;
     private final PlayerService playerService;
-    private final RedisService redisService;
+    private final RedisService_Mono redisService;
 
     @Override
     public String getAction() {
@@ -40,9 +40,9 @@ public class JoinToGame_Handler implements GameActionHandler {
                 newPlayer.setPlayerName(playerName);
                 newPlayer.setColor(playerColor);
 
-                var updatedGame = gameService.addPlayerToGame(newPlayer, gameId);
+                var updatedGame = gameService.addPlayerToGame_Mono(newPlayer, gameId);
 
-                redisService.publishGameUpd(gameService.findById(gameId));
+                redisService.publishGameUpd(gameService.findById_Mono(gameId));
                 ctx.respond(updatedGame);
                 return;
             }

@@ -1,10 +1,8 @@
 package com.example.application.handlers.lobby;
 
-import com.example.application.services.GameService;
-import com.example.application.services.PlayerService;
+import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class FindGame_ByPlayerId_Handler implements GameActionHandler {
-    private final GameService gameService;
+    private final GameService_Mono gameService;
 
     @Override
     public String getAction() {
@@ -27,7 +25,7 @@ public class FindGame_ByPlayerId_Handler implements GameActionHandler {
     public void handle(RequestContextRedis ctx) {
         try {
             var playerId = ctx.body().get("playerId");
-            var game = gameService.findGameByPlayerId(UUID.fromString(playerId));
+            var game = gameService.findGameByPlayerId_Mono(UUID.fromString(playerId));
 
             ctx.respond(game);
         } catch (Exception e) {

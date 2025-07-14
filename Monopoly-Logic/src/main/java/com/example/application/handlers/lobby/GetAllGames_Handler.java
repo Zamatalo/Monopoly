@@ -1,9 +1,8 @@
 package com.example.application.handlers.lobby;
 
-import com.example.application.services.GameService;
+import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class GetAllGames_Handler implements GameActionHandler {
-    private final GameService gameService;
+    private final GameService_Mono gameService;
 
     @Override
     public String getAction() {
@@ -23,7 +22,7 @@ public class GetAllGames_Handler implements GameActionHandler {
     @Override
     public void handle(RequestContextRedis ctx) {
         try {
-            var games = gameService.findAll();
+            var games = gameService.findAll_Mono();
             ctx.respond(games);
         } catch (Exception e) {
             ctx.respond("Internal Server Error");
