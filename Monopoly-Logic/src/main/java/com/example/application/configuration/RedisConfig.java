@@ -4,18 +4,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStreamOperations;
 import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.stream.StreamReceiver;
+
+import java.time.Duration;
+import java.util.Map;
 
 
 @Configuration
@@ -48,13 +50,21 @@ public class RedisConfig {
     }
 
     @Bean
-    public ReactiveStreamOperations<String, String, Object> reactiveStreamOperations(ReactiveRedisTemplate<String, Object> redisTemplate) {
+    public ReactiveStreamOperations<String, String, String> reactiveStreamOperations(ReactiveRedisTemplate<String, Object> redisTemplate) {
         return redisTemplate.opsForStream();
     }
 //    @Bean
 //    public StreamReceiver<String, MapRecord<String, String, String>> streamReceiver(ReactiveRedisConnectionFactory connectionFactory) {
 //        return StreamReceiver.create(connectionFactory);
 //    }
+    @Bean
+    public StreamReceiver<String, MapRecord<String, String,String>> streamReceiver(ReactiveRedisConnectionFactory factory) {
+        StreamReceiver.StreamReceiverOptions<String, MapRecord<String, String, String>> options =
+                StreamReceiver.StreamReceiverOptions.builder()
+                        .pollTimeout(Duration.ofMillis(100))
+                        .build();
+        return StreamReceiver.create(factory, options);
+    }
 
     @Bean
     public ReactiveRedisMessageListenerContainer redisListenerContainer(ReactiveRedisConnectionFactory connectionFactory) {

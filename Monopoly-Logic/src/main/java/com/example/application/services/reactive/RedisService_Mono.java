@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class RedisService_Mono {
     private final ReactiveRedisTemplate<String, Object> redisTemplate;
-    private final ReactiveStreamOperations<String, String, Object> reactiveStreamOperations;
+    private final ReactiveStreamOperations<String, String, String> reactiveStreamOperations;
 
     @Value("${spring.data.redis.gameResponseStream}")
     private String responseStream;

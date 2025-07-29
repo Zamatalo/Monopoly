@@ -21,34 +21,35 @@ public class TurnService {
     private final RedisService_Mono redisService;
     private final BotService_Mono botService;
 
-    public void endTurn(UUID gameId) {
-        GameDTO game = gameService.findById_Mono(gameId);
-        PlayerDTO currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
+    public Mono<Void> endTurn(UUID gameId) {
+        return gameService.findById_Mono(gameId)
+                .flatMap(game -> {
+                    PlayerDTO currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
 
-        //If in jail
-        if (currentPlayer.getInJail_Turns() > 0) {
-            currentPlayer.setInJail_Turns(currentPlayer.getInJail_Turns() - 1);
-        }
+                    // If in jail
+                    if (currentPlayer.getInJail_Turns() > 0) {
+                        currentPlayer.setInJail_Turns(currentPlayer.getInJail_Turns() - 1);
+                    }
 
-        int nextPlayerIndex = (game.getCurrentPlayerIndex() + 1) % game.getPlayers().size();
-        game.setCurrentPlayerIndex(nextPlayerIndex);
+                    int nextPlayerIndex = (game.getCurrentPlayerIndex() + 1) % game.getPlayers().size();
+                    game.setCurrentPlayerIndex(nextPlayerIndex);
 
-        currentPlayer.setPlayerState(PlayerState.IDLE);
+                    currentPlayer.setPlayerState(PlayerState.IDLE);
 
-        List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
-                .map(p -> p.getPlayerId().equals(currentPlayer.getPlayerId()) ? currentPlayer : p)
-                .toList();
-        game.setPlayers(updatedPlayers);
+                    List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
+                            .map(p -> p.getPlayerId().equals(currentPlayer.getPlayerId()) ? currentPlayer : p)
+                            .toList();
+                    game.setPlayers(updatedPlayers);
 
-
-        gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(game));
-        redisService.publishTurnEnd(gameService.findById_Mono(gameId));
-
-        /// check if the next player is bot
-        var nextPlayer = game.getPlayers().get(nextPlayerIndex);
-        if (Boolean.TRUE.equals(nextPlayer.getIsBot())) {
-            Mono.fromCallable(()-> botService.startBotTurn(gameId));
-        }
+                    return gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(game))
+                            .then(redisService.publishTurnEnd(game))
+                            .then(Mono.defer(() -> {
+                                PlayerDTO nextPlayer = game.getPlayers().get(nextPlayerIndex);
+                                if (Boolean.TRUE.equals(nextPlayer.getIsBot())) {
+                                    return botService.startBotTurn(gameId).then();
+                                }
+                                return Mono.empty();
+                            }));
+                });
     }
-
 }

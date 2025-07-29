@@ -9,7 +9,7 @@ import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
 import org.springframework.data.redis.connection.stream.StreamOffset;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveStreamOperations;
 import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -18,8 +18,6 @@ import reactor.core.publisher.Mono;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Component
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -33,12 +31,11 @@ public class Game_StreamResponseListener {
     private String BACKEND_GROUP;
     @Value("${spring.data.redis.gatewayGroup}")
     private String GATEWAY_GROUP;
-    private static final String CONSUMER_NAME = "gateway-1";
+    private static final String CONSUMER_NAME = "gateway";
 
     private final Game_StreamRequest responseHandler;
-    private final ReactiveRedisTemplate<String, Object> reactiveRedisTemplate;
-    private final ExecutorService scheduler = Executors.newSingleThreadExecutor();
     private final StreamReceiver<String, MapRecord<String, String, String>> streamReceiver;
+    private final ReactiveStreamOperations<String,String,String> operations;
 
     @PostConstruct
     public void init() {
@@ -50,16 +47,14 @@ public class Game_StreamResponseListener {
     }
 
     private Flux<?> startReactiveStreamListener() {
-        return streamReceiver
-                .receive(Consumer.from(BACKEND_GROUP, CONSUMER_NAME),
+        return streamReceiver.receive(Consumer.from(GATEWAY_GROUP, CONSUMER_NAME),
                         StreamOffset.create(REQUEST_STREAM, ReadOffset.lastConsumed()))
                 .flatMap(this::handleMessage);
     }
 
     private Mono<?> createGroupIfNotExists(String stream, String group) {
-        return reactiveRedisTemplate.getConnectionFactory().getReactiveConnection()
-                .streamCommands()
-                .xGroupCreate(ByteBuffer.wrap(stream.getBytes(StandardCharsets.UTF_8)), group, ReadOffset.latest(), true)
+        return operations
+                .createGroup(stream,group)
                 .doOnSuccess(v -> log.info("Created consumer group '{}'", group))
                 .onErrorResume(e -> {
                     if (e.getMessage().contains("BUSYGROUP")) {
@@ -68,10 +63,10 @@ public class Game_StreamResponseListener {
                     }
                     return Mono.error(e);
                 });
+
     }
 
     private Mono<?> handleMessage(MapRecord<String, String, String> message) {
-        try {
             Map<String, String> body = message.getValue();
             String correlationId = body.get("correlationId");
             if (correlationId != null) {
@@ -87,12 +82,7 @@ public class Game_StreamResponseListener {
             }
 
             responseHandler.complete(correlationId, payload);
-        } catch (Exception e) {
-            log.error("Error processing Redis stream message", e);
-            return Mono.error(new RuntimeException("CorrelationId is null"));
-        }
-        return reactiveRedisTemplate
-                .opsForStream()
+        return operations
                 .acknowledge(RESPONSE_STREAM, GATEWAY_GROUP, message.getId());
     }
 }

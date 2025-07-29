@@ -8,6 +8,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveStreamOperations;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -48,6 +49,10 @@ public class RedisConfig {
     public StreamReceiver<String, MapRecord<String, String, String>> streamReceiver(
             ReactiveRedisConnectionFactory connectionFactory) {
         return StreamReceiver.create(connectionFactory);
+    }
+    @Bean
+    public ReactiveStreamOperations<String, String, String> reactiveStreamOperations(ReactiveRedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForStream();
     }
 }
 
