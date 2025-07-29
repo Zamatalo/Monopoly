@@ -1,7 +1,7 @@
 package com.example.application.handlers.game;
 
 import com.example.application.services.reactive.GameService_Mono;
-import com.example.application.services.imperative.PlayerService;
+import com.example.application.services.reactive.PlayerService_Mono;
 import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.services.TurnService;
 import com.example.application.util.data.PropertyData;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @Slf4j
 public class BuyProperty_Handler implements GameActionHandler {
     private final GameService_Mono gameService;
-    private final PlayerService playerService;
+    private final PlayerService_Mono playerService;
     private final RedisService_Mono redisService;
     private final TurnService turnService;
 
@@ -33,7 +33,7 @@ public class BuyProperty_Handler implements GameActionHandler {
         UUID gameId = UUID.fromString(ctx.body().get("gameId"));
         UUID playerId = UUID.fromString(ctx.body().get("playerId"));
 
-        return playerService.findByIdMono(playerId)
+        return playerService.findById(playerId)
                 .flatMap(player -> {
                     PropertyData currentProperty = PropertyData.ofPos(player.getPosition());
                     return isPropertyAlreadyBought(gameId, currentProperty)
@@ -43,7 +43,7 @@ public class BuyProperty_Handler implements GameActionHandler {
                                     return Mono.error(new IllegalArgumentException("Property already bought"));
                                 }
 
-                                return playerService.addPropertyToPlayerMono(playerId, currentProperty)
+                                return playerService.addPropertyToPlayer(playerId, currentProperty)
                                         .then(gameService.findById_Mono(gameId))
                                         .flatMap(redisService::publishGameUpd) // publishGameUpd should return Mono<Void>
                                         .then(isFromBot(ctx))
@@ -51,7 +51,7 @@ public class BuyProperty_Handler implements GameActionHandler {
                                             if (!fromBot) {
                                                 ctx.respond(currentProperty);
                                             }
-                                            return turnService.endTurnMono(gameId); // <-- this also should return Mono<Void>
+                                            return turnService.endTurn(gameId); // <-- this also should return Mono<Void>
                                         });
                             });
                 })
