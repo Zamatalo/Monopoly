@@ -26,11 +26,11 @@ public class GameService_Mono {
 
     @Transactional(readOnly = true)
     public Mono<List<GameDTO>> findAll_Mono() {
-        return Mono.fromCallable(() ->
-                gameRepo.findAll()
-                .stream()
-                .map(this::toEnrichedGameDTO)
-                        .toList());
+        return Mono.fromCallable(() -> {
+            List<Game> games = gameRepo.findAll();
+            return games.stream().map(this::toEnrichedGameDTO).toList();
+        }).subscribeOn(Schedulers.boundedElastic());
+
     }
 
     @Transactional(readOnly = true)
