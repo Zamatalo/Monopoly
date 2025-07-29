@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Creates Completable-future with dice result.
@@ -26,11 +26,11 @@ public class DiceService_Mono {
     private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
     private final ReactiveRedisMessageListenerContainer listenerContainer;
     private final ObjectMapper objectMapper;
-
     private final Map<String, Mono<Integer>> activeRolls = new ConcurrentHashMap<>();
 
     public Mono<Integer> rollDice(String gameId) {
         String diceResultChannel = "game:diceResult";
+        String diceRollChannel = "game:+"+ gameId +":dice-roll-action";
 
         if (activeRolls.containsKey(gameId)) {
             return activeRolls.get(gameId);
@@ -46,7 +46,7 @@ public class DiceService_Mono {
                 .next()
                 .timeout(Duration.ofSeconds(10))
                 .doOnError(e -> log.warn("Dice roll failed or timed out: {}", e.getMessage()))
-                .doFinally(sig -> activeRolls.remove(gameId));
+                .doFinally(_ -> activeRolls.remove(gameId));
 
         activeRolls.put(gameId, diceMono);
         return diceMono;

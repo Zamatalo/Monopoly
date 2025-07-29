@@ -1,38 +1,38 @@
-package com.example.application.handlers.lobby;
-
-import com.example.application.services.reactive.GameService_Mono;
-import com.example.application.services.reactive.RedisService_Mono;
-import com.example.application.types.GameDTO;
-import com.example.application.utility.GameActionHandler;
-import com.example.application.utility.RequestContextRedis;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.util.UUID;
-
-@Component
-@RequiredArgsConstructor
-@Slf4j
-public class StartGame_Handler implements GameActionHandler {
-    private final GameService_Mono gameService;
-    private final RedisService_Mono redisService;
-
-    @Override
-    public String getAction() {
-        return "START_GAME";
-    }
-
-    @Override
-    public void handle(RequestContextRedis ctx) {
-        try {
-            UUID gameId = UUID.fromString(ctx.body().get("gameId"));
-            GameDTO game = gameService.startGame_Mono(gameId);
-            redisService.publishGameUpd(gameService.findById_Mono(gameId));
-            ctx.respond(game);
-        } catch (Exception e) {
-            ctx.respond("Internal Server Error");
-            log.error(e.getMessage());
-        }
-    }
-}
+//package com.example.application.handlers.lobby;
+//
+//import com.example.application.services.reactive.GameService_Mono;
+//import com.example.application.services.reactive.RedisService_Mono;
+//import com.example.application.types.GameDTO;
+//import com.example.application.utility.GameActionHandler;
+//import com.example.application.utility.RequestContextRedis;
+//import lombok.RequiredArgsConstructor;
+//import lombok.extern.slf4j.Slf4j;
+//import org.springframework.stereotype.Component;
+//
+//import java.util.UUID;
+//
+//@Component
+//@RequiredArgsConstructor
+//@Slf4j
+//public class StartGame_Handler implements GameActionHandler {
+//    private final GameService_Mono gameService;
+//    private final RedisService_Mono redisService;
+//
+//    @Override
+//    public String getAction() {
+//        return "START_GAME";
+//    }
+//
+//    @Override
+//    public void handle(RequestContextRedis ctx) {
+//        try {
+//            UUID gameId = UUID.fromString(ctx.body().get("gameId"));
+//            GameDTO game = gameService.startGame_Mono(gameId);
+//            redisService.publishGameUpd(gameService.findById_Mono(gameId));
+//            ctx.respond(game);
+//        } catch (Exception e) {
+//            ctx.respond("Internal Server Error");
+//            log.error(e.getMessage());
+//        }
+//    }
+//}
