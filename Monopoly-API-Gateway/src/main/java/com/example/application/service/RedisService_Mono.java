@@ -1,4 +1,4 @@
-package com.example.application.services.reactive;
+package com.example.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,18 +18,18 @@ import java.util.Map;
 @Slf4j
 public class RedisService_Mono {
     private final ReactiveRedisTemplate<String, String> redisTemplate;
-    private final StreamReceiver<String,MapRecord<String,String,String>> streamReceiver;
+    private final StreamReceiver<String, MapRecord<String,String,String>> streamReceiver;
 
     @Value("${spring.data.redis.gameRequestStream}")
     private String REQUEST_STREAM;
     @Value("${spring.data.redis.gameResponseStream}")
     private String RESPONSE_STREAM;
-    @Value("${spring.data.redis.backendGroup}")
-    private String BACKEND_GROUP;
+    @Value("${spring.data.redis.gatewayGroup}")
+    private String GATEWAY_GROUP;
 
-    private final String CONSUMER_NAME = "backend-0";
+    private final String CONSUMER_NAME = "gateway-0";
 
-    public Mono<RecordId> publishToRequestStream(Map<String, Object> payload) {
+    public Mono<RecordId> publishToRequestStream(Map<String, String> payload) {
         return redisTemplate.opsForStream()
                 .add(REQUEST_STREAM, payload)
                 .doOnSuccess(r -> log.debug("Response sent for correlationId: {}", payload))
@@ -47,21 +47,20 @@ public class RedisService_Mono {
 
     public Mono<Void> ensureConsumerGroupExists() {
         return redisTemplate.opsForStream()
-                .createGroup(REQUEST_STREAM, BACKEND_GROUP)
+                .createGroup(RESPONSE_STREAM, GATEWAY_GROUP)
                 .onErrorResume(_ -> Mono.empty())
                 .then();
     }
 
     public Mono<Void> acknowledgeMessage(RecordId recordId) {
-        return redisTemplate
-                .opsForStream()
-                .acknowledge(REQUEST_STREAM, BACKEND_GROUP, recordId).then();
+        return redisTemplate.opsForStream()
+                .acknowledge(RESPONSE_STREAM, GATEWAY_GROUP, recordId).then();
     }
 
     public Flux<MapRecord<String, String, String>> listenToStream() {
         return streamReceiver.receive(
-                Consumer.from(BACKEND_GROUP, CONSUMER_NAME),
-                StreamOffset.create(REQUEST_STREAM, ReadOffset.lastConsumed())
+                Consumer.from(GATEWAY_GROUP, CONSUMER_NAME),
+                StreamOffset.create(RESPONSE_STREAM, ReadOffset.lastConsumed())
         );
     }
 

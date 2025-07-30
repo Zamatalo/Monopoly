@@ -41,8 +41,7 @@ public class Game_StreamRequest {
         }
 
         try {
-            var json = objectMapper.readTree(response).asText();
-            var object = objectMapper.readValue(json, wrapper.javaType);
+            var object = objectMapper.readValue(response,wrapper.javaType);
             CompletableFuture<Object> future = (CompletableFuture<Object>) wrapper.future;
             future.complete(object);
         } catch (Exception e) {

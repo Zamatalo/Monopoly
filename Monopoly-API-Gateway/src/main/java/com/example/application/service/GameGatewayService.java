@@ -3,9 +3,6 @@ package com.example.application.service;
 import com.example.application.redis.Game_StreamRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.connection.stream.StreamRecords;
-import org.springframework.data.redis.connection.stream.StringRecord;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -16,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class GameGatewayService {
-    private final ReactiveRedisTemplate<String, String> redisTemplate;
+    private final RedisService_Mono redisService;
     private final Game_StreamRequest responseHandler;
     private final ObjectMapper objectMapper;
 
@@ -32,14 +29,9 @@ public class GameGatewayService {
         Map<String, String> body = new HashMap<>(args);
         body.put("correlationId", correlationId);
         body.put("action", action);
-        StringRecord record = StreamRecords
-                .string(body)
-                .withStreamKey("game.request");
 
         var javaType = objectMapper.getTypeFactory().constructType(clazz);
-        redisTemplate
-                .opsForStream()
-                .add(record)
+        redisService.publishToRequestStream(body)
                 .subscribe();
         return responseHandler.register(correlationId, javaType);
     }
