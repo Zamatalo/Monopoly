@@ -1,88 +1,74 @@
 package com.example.application.redis;
 
+import com.example.application.service.RedisService_Mono;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.ReadOffset;
-import org.springframework.data.redis.connection.stream.StreamOffset;
-import org.springframework.data.redis.core.ReactiveStreamOperations;
-import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Flux;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-@Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class Game_StreamResponseListener {
-    @Value("${spring.data.redis.gameRequestStream}")
-    private String REQUEST_STREAM;
-    @Value("${spring.data.redis.gameResponseStream}")
-    private String RESPONSE_STREAM;
-    @Value("${spring.data.redis.backendGroup}")
-    private String BACKEND_GROUP;
-    @Value("${spring.data.redis.gatewayGroup}")
-    private String GATEWAY_GROUP;
-    private static final String CONSUMER_NAME = "gateway";
-
+    private final RedisService_Mono redisService;
     private final Game_StreamRequest responseHandler;
-    private final StreamReceiver<String, MapRecord<String, String, String>> streamReceiver;
-    private final ReactiveStreamOperations<String,String,String> operations;
+    private Disposable subscription;
 
     @PostConstruct
-    public void init() {
-        createGroupIfNotExists(REQUEST_STREAM, BACKEND_GROUP).subscribe();
-        createGroupIfNotExists(RESPONSE_STREAM, GATEWAY_GROUP).subscribe();
-
-        startReactiveStreamListener().subscribe();
-
+    public void initialize() {
+        redisService.ensureConsumerGroupExists()
+                .doOnSuccess(v -> log.info("Consumer group ensured, starting listener"))
+                .thenMany(redisService.listenToStream()
+                        .flatMap(this::processResponse)
+                        .doOnError(e -> log.error("Error in stream listener", e))
+                )
+                .subscribe();
     }
 
-    private Flux<?> startReactiveStreamListener() {
-        return streamReceiver.receive(Consumer.from(GATEWAY_GROUP, CONSUMER_NAME),
-                        StreamOffset.create(REQUEST_STREAM, ReadOffset.lastConsumed()))
-                .flatMap(this::handleMessage);
-    }
 
-    private Mono<?> createGroupIfNotExists(String stream, String group) {
-        return operations
-                .createGroup(stream,group)
-                .doOnSuccess(v -> log.info("Created consumer group '{}'", group))
-                .onErrorResume(e -> {
-                    if (e.getMessage().contains("BUSYGROUP")) {
-                        log.info("Consumer group '{}' already exists", group);
-                        return Mono.empty();
-                    }
-                    return Mono.error(e);
-                });
 
-    }
-
-    private Mono<?> handleMessage(MapRecord<String, String, String> message) {
+    private Mono<Void> processResponse(MapRecord<String, String, String> message) {
+        return Mono.defer(() -> {
             Map<String, String> body = message.getValue();
             String correlationId = body.get("correlationId");
-            if (correlationId != null) {
-                correlationId = correlationId.replace("\"", "");
-            }
-            String payload = body.get("payload");
-
-            log.debug("Received message from Redis stream, correlationId: {}", correlationId);
 
             if (correlationId == null) {
-                log.warn("Received message without correlationId: {}", payload);
-                return Mono.error(new RuntimeException("CorrelationId is null"));
+                log.warn("Received response without correlationId");
+                return acknowledge(message);
             }
+            if (body.get("payload")==null || body.get("payload").isEmpty()) {
+                log.warn("Received response without payload");
+                return acknowledge(message);
+            }
+            if (body.get("error")!=null) {
+                log.warn("Received error response: {}", body.get("error"));
+                return acknowledge(message);
+            }
+            try {
+                responseHandler.complete(correlationId, body.get("payload"));
+                return acknowledge(message);
+            } catch (Exception e) {
+                log.error("Error processing response", e);
+                return acknowledge(message);
+            }
+        });
+    }
 
-            responseHandler.complete(correlationId, payload);
-        return operations
-                .acknowledge(RESPONSE_STREAM, GATEWAY_GROUP, message.getId());
+    private Mono<Void> acknowledge(MapRecord<String, String, String> message) {
+        return redisService.acknowledgeMessage(message.getId()).then();
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+            log.info("Stopped listening to responses stream");
+        }
     }
 }

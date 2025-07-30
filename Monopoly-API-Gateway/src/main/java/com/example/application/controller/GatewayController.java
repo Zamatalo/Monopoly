@@ -2,7 +2,10 @@ package com.example.application.controller;
 
 
 import com.example.application.service.GameGatewayService;
-import com.example.application.types.*;
+import com.example.application.types.GameDTO;
+import com.example.application.types.PlayerColors;
+import com.example.application.types.PlayerDTO;
+import com.example.application.types.PropertyDTO;
 import data.SpecialTileData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -10,6 +13,7 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -28,8 +32,10 @@ public class GatewayController {
 
     @QueryMapping
     public List<GameDTO> getAllGames() {
-        return List.of(redisRequestReplyService.sendAction("getAllGames", GameDTO[].class).join());
+        GameDTO[] games = redisRequestReplyService.sendAction("getAllGames", GameDTO[].class).join();
+        return Arrays.asList(games);
     }
+
 
     @QueryMapping
     public GameDTO findGameByPlayerId(@Argument("playerId") UUID playerId) {

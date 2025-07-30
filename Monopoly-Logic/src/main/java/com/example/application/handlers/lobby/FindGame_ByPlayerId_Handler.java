@@ -25,7 +25,7 @@ public class FindGame_ByPlayerId_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         String playerIdRaw = ctx.body().get("playerId");
-        if (playerIdRaw == null || playerIdRaw.isBlank()) {
+        if (playerIdRaw.isBlank()) {
             return ctx.respond("Missing playerId");
         }
         UUID playerId = UUID.fromString(playerIdRaw);
