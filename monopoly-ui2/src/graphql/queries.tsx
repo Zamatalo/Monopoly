@@ -29,8 +29,8 @@ export const GET_ACTIVE_GAMES = gql`
  * Get PlayerDTO from playerID
  */
 export const GET_PLAYER = gql`
-    query GetPlayer($playerId: ID!) {
-        getPlayer(playerId: $playerId) {
+    query GetPlayer($playerId: ID!, $gameId: ID!) {
+        getPlayer(playerId: $playerId, gameId: $gameId) {
             playerId
             playerName
             color
@@ -236,7 +236,7 @@ export const BUY_PROPERTY_MUTATION = gql`
     mutation BuyPropertyForPlayer($gameId: ID!,$playerId: ID!) {
         buyPropertyForPlayer(gameId: $gameId,playerId: $playerId) {
             displayName
-            isOwned
+            ownerId
             boardPosition
             upgradable
         }
@@ -293,7 +293,7 @@ export const ADD_BOT = gql`
                 ownedProperties {
                     displayName
                     boardPosition
-                    isOwned
+                    ownerId
                     cost
                     upgradable
                 }

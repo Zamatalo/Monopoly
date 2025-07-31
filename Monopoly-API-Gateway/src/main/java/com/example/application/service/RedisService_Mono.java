@@ -9,7 +9,7 @@ import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import util.exceptions.RedisResponseException;
+import com.example.application.util.exceptions.RedisResponseException;
 
 import java.util.Map;
 
@@ -32,7 +32,7 @@ public class RedisService_Mono {
     public Mono<RecordId> publishToRequestStream(Map<String, String> payload) {
         return redisTemplate.opsForStream()
                 .add(REQUEST_STREAM, payload)
-                .doOnSuccess(r -> log.debug("Response sent for correlationId: {}", payload))
+                .doOnSuccess(_ -> log.debug("Response sent for correlationId: {}", payload))
                 .doOnError(e -> log.error("Failed to send response for correlationId: {}", payload, e))
                 .onErrorMap(e -> new RedisResponseException("Failed to send response", e));
     }
@@ -40,7 +40,7 @@ public class RedisService_Mono {
     public Mono<RecordId> publishToResponseStream(Map<String, String> payload) {
         return redisTemplate.opsForStream()
                 .add(RESPONSE_STREAM, payload)
-                .doOnSuccess(r -> log.debug("Response sent for correlationId: {}", payload))
+                .doOnSuccess(_ -> log.debug("Response sent for correlationId: {}", payload))
                 .doOnError(e -> log.error("Failed to send response for correlationId: {}", payload, e))
                 .onErrorMap(e -> new RedisResponseException("Failed to send response", e));
     }

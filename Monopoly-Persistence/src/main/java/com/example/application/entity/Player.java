@@ -1,8 +1,8 @@
 package com.example.application.entity;
 
+import com.example.application.types.PlayerColors;
+import com.example.application.types.PlayerState;
 import com.example.application.util.data.PropertyData;
-import com.example.application.util.enums.PlayerColors;
-import com.example.application.util.enums.PlayerState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

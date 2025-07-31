@@ -4,12 +4,14 @@ import {PlayerColor, positions} from "../utils/constants";
 
 export class PropertyDTO {
     displayName: string;
+    ownerId: string;
     boardPosition: number;
     cost: number;
     upgradable: boolean;
 
     constructor(data: PropertyDTO) {
         this.displayName = data.displayName;
+        this.ownerId = data.ownerId;
         this.boardPosition = data.boardPosition;
         this.cost = data.cost;
         this.upgradable = data.upgradable;

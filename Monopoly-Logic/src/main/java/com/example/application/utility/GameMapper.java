@@ -28,12 +28,12 @@ public interface GameMapper {
     @Mapping(target = "createdTime", ignore = true)
     Player dtoToPlayer(PlayerDTO playerDTO);
 
-//    @AfterMapping
-//    default void linkPlayers(@MappingTarget Game game) {
-//        if (game.getPlayers() != null) {
-//            for (Player player : game.getPlayers()) {
-//                player.setGame(game);
-//            }
-//        }
-//    }
+    @AfterMapping
+    default void linkPlayers(@MappingTarget Game game) {
+        if (game.getPlayers() != null) {
+            for (Player player : game.getPlayers()) {
+                player.setGame(game);
+            }
+        }
+    }
 }

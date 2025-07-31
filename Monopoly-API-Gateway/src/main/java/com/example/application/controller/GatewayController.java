@@ -1,12 +1,9 @@
 package com.example.application.controller;
 
 
+import com.example.application.data.SpecialTileData;
 import com.example.application.service.GameGatewayService;
-import com.example.application.types.GameDTO;
-import com.example.application.types.PlayerColors;
-import com.example.application.types.PlayerDTO;
-import com.example.application.types.PropertyDTO;
-import data.SpecialTileData;
+import com.example.application.types.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -27,12 +24,17 @@ public class GatewayController {
 
     @MutationMapping
     public GameDTO createNewGame() {
-        return redisRequestReplyService.sendAction("CREATE_GAME", GameDTO.class).join();
+        return redisRequestReplyService.sendAction(
+                GameActions.CREATE_GAME.name(),
+                        GameDTO.class)
+                .join();
     }
 
     @QueryMapping
     public List<GameDTO> getAllGames() {
-        GameDTO[] games = redisRequestReplyService.sendAction("getAllGames", GameDTO[].class).join();
+        GameDTO[] games = redisRequestReplyService.sendAction(
+                GameActions.GET_ALL_GAMES.name(),
+                GameDTO[].class).join();
         return Arrays.asList(games);
     }
 
@@ -40,7 +42,7 @@ public class GatewayController {
     @QueryMapping
     public GameDTO findGameByPlayerId(@Argument("playerId") UUID playerId) {
         return redisRequestReplyService.sendAction(
-                        "findGameByPlayerId",
+                        GameActions.FIND_GAME_PLAYER_ID.name(),
                         Map.of("playerId", playerId.toString()),
                         GameDTO.class)
                 .join();
@@ -49,7 +51,7 @@ public class GatewayController {
     @QueryMapping
     public GameDTO findGameById(@Argument("gameId") UUID gameId) {
         return redisRequestReplyService.sendAction(
-                        "findGameById",
+                        GameActions.FIND_GAME_BY_ID.name(),
                         Map.of("gameId", gameId.toString()),
                         GameDTO.class)
                 .join();
@@ -63,7 +65,7 @@ public class GatewayController {
                               @Argument("playerId") UUID playerId) {
 
         return redisRequestReplyService.sendAction(
-                        "JOIN_TO_GAME",
+                        GameActions.JOIN_TO_GAME.name(),
                         Map.of("gameId", gameId.toString(),
                                 "playerName", playerName,
                                 "playerColor", playerColor.toString(),
@@ -75,17 +77,19 @@ public class GatewayController {
     @MutationMapping
     public GameDTO addBotToGame(@Argument("gameId") UUID gameId) {
         return redisRequestReplyService.sendAction(
-                        "ADD_BOT",
+                        GameActions.ADD_BOT.name(),
                         Map.of("gameId", gameId.toString()),
                         GameDTO.class)
                 .join();
     }
 
     @QueryMapping
-    public PlayerDTO getPlayer(@Argument("playerId") UUID playerId) {
+    public PlayerDTO getPlayer(@Argument("playerId") UUID playerId, @Argument("gameId") UUID gameId) {
         return redisRequestReplyService.sendAction(
-                        "getPlayer",
-                        Map.of("playerId", playerId.toString()),
+                        GameActions.GET_PLAYER.name(),
+                        Map.of("playerId", playerId.toString(),
+                                "gameId", gameId.toString()
+                        ),
                         PlayerDTO.class)
                 .join();
 
@@ -94,7 +98,7 @@ public class GatewayController {
     @MutationMapping
     public GameDTO startGame(@Argument("gameId") UUID gameId) {
         return redisRequestReplyService.sendAction(
-                        "START_GAME",
+                        GameActions.START_GAME.name(),
                         Map.of("gameId", gameId.toString()),
                         GameDTO.class)
                 .join();
@@ -105,7 +109,7 @@ public class GatewayController {
             @Argument("gameId") UUID gameId,
             @Argument("playerId") UUID playerId) {
         return redisRequestReplyService.sendAction(
-                        "ROLL_DICE",
+                        PlayerActions.ROLL_DICE.name(),
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
                         Integer.class)
@@ -115,7 +119,7 @@ public class GatewayController {
     @MutationMapping
     public PropertyDTO buyPropertyForPlayer(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId){
         return redisRequestReplyService.sendAction(
-                        "BUY_PROPERTY",
+                        PlayerActions.BUY_PROPERTY.name(),
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
                         PropertyDTO.class)
@@ -125,7 +129,7 @@ public class GatewayController {
     @MutationMapping
     public GameDTO endTurn(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId) {
         return redisRequestReplyService.sendAction(
-                        "END_TURN",
+                        PlayerActions.END_TURN.name(),
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
                         GameDTO.class)
@@ -135,7 +139,7 @@ public class GatewayController {
     @MutationMapping
     public SpecialTileData resolveSpecialTile(@Argument("gameId") UUID gameId, @Argument("playerId") UUID playerId) {
         return redisRequestReplyService.sendAction(
-                        "SPECIAL_TILE",
+                        PlayerActions.SPECIAL_TILE_EFFECT.name(),
                         Map.of("gameId", gameId.toString(),
                                 "playerId", playerId.toString()),
                         SpecialTileData.class)

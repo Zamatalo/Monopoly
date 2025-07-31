@@ -19,16 +19,9 @@ export class PlayerDTO {
     ownedProperties: PropertyDTO[];
 
     constructor({
-                    playerId,
-                    color,
-                    inJail_Turns,
-                    balance,
-                    position,
-                    ownedProperties,
-                    playerName,
-                    isBot,
-                    playerState,
-                    playerActions
+                    playerId,color,inJail_Turns,
+                    balance,position,ownedProperties,
+                    playerName,isBot,playerState,playerActions
                 }: PlayerDTO) {
         this.playerId = playerId;
         this.color = color;

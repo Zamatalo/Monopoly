@@ -1,6 +1,7 @@
 package com.example.application.handlers.lobby;
 
 import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.types.GameActions;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
@@ -19,22 +20,26 @@ public class FindGame_ByPlayerId_Handler implements GameActionHandler {
 
     @Override
     public String getAction() {
-        return "findGameByPlayerId";
+        return GameActions.FIND_GAME_PLAYER_ID.name();
     }
 
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
-        String playerIdRaw = ctx.body().get("playerId");
-        if (playerIdRaw.isBlank()) {
-            return ctx.respond("Missing playerId");
-        }
-        UUID playerId = UUID.fromString(playerIdRaw);
+        try {
+            UUID playerId = UUID.fromString(ctx.body().get("playerId"));
 
-        return gameService.findGameByPlayerId_Mono(playerId)
-                .flatMap(ctx::respond)
-                .onErrorResume(e -> {
-                    log.error("Error in findGameByPlayerId handler", e);
-                    return ctx.respond("Internal Server Error");
-                });
+            return gameService.findGameByPlayerId_Mono(playerId)
+                    .flatMap(e-> e==null
+                            ?ctx.respond("Internal Server Error")
+                            :ctx.respond(e)
+                    )
+                    .onErrorResume(e -> {
+                        log.error("Error in handle(): {}", e.getMessage(), e);
+                        return ctx.respond("Internal Server Error");
+                    });
+        } catch (Exception e) {
+            log.error("Error in handle(): {}", e.getMessage(), e);
+            return ctx.respond("Internal Server Error");
+        }
     }
 }

@@ -20,7 +20,7 @@ public class GameGatewayService {
     public <T> CompletableFuture<T> sendAction(String action, Class<T> clazz) {
         return sendAction(action, new HashMap<>(), clazz);
     }
-    /// @param action will be sent via redis to game.request channel
+    /// @param action will be sent via redis streams to game.request channel
     /// @param args additional info like playerId or gameId
     /// @param clazz specifies response class. (it will be later mapped in RedisStreamResponseHandler.complete())
     public <T> CompletableFuture<T> sendAction(String action, Map<String, String> args, Class<T> clazz) {

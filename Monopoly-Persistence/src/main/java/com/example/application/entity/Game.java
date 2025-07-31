@@ -1,6 +1,6 @@
 package com.example.application.entity;
 
-import com.example.application.util.enums.GameState;
+import com.example.application.types.GameState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

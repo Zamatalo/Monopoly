@@ -22,8 +22,8 @@ public class Game_StreamResponseListener {
 
     @PostConstruct
     public void initialize() {
-        redisService.ensureConsumerGroupExists()
-                .doOnSuccess(v -> log.info("Consumer group ensured, starting listener"))
+       subscription = redisService.ensureConsumerGroupExists()
+                .doOnSuccess(_ -> log.info("Consumer group ensured, starting listener"))
                 .thenMany(redisService.listenToStream()
                         .flatMap(this::processResponse)
                         .doOnError(e -> log.error("Error in stream listener", e))
@@ -50,6 +50,8 @@ public class Game_StreamResponseListener {
                 log.warn("Received error response: {}", body.get("error"));
                 return acknowledge(message);
             }
+
+
             try {
                 responseHandler.complete(correlationId, body.get("payload"));
                 return acknowledge(message);

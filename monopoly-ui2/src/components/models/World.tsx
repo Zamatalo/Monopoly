@@ -57,29 +57,6 @@ export class World {
         this.renderer.setAnimationLoop(this.animate);
     }
 
-    // private setupLighting() {
-    //     let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    //     this.scene.add(ambientLight);
-    //
-    //     // const color = 0xFFCC33;
-    //     // const intensity2 = 75000;
-    //     // const light2 = new THREE.PointLight(color, intensity2);
-    //     // light2.castShadow = true;
-    //     // light2.position.set(100, 100, -260);
-    //     // light2.shadow.bias = -0.001;
-    //     // light2.shadow.mapSize.width = 1024;
-    //     // light2.shadow.mapSize.height = 1024;
-    //     const color = 0xFFCC33;
-    //     const dirLight = new THREE.DirectionalLight(color, 1.5);
-    //     dirLight.castShadow = true;
-    //     dirLight.shadow.bias = -0.001;
-    //     dirLight.shadow.mapSize.width = 1024;
-    //     dirLight.shadow.mapSize.height = 1024;
-    //     dirLight.position.set(50, 50, -100);
-    //     this.scene.add(dirLight);
-    //
-    //     this.scene.add(dirLight);
-    // }
     private setupLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
         this.scene.add(ambientLight);

@@ -1,57 +1,72 @@
-//package com.example.application.handlers.lobby;
-//
-//import com.example.application.entity.Player;
-//import com.example.application.services.reactive.GameService_Mono;
-//import com.example.application.services.imperative.PlayerService;
-//import com.example.application.services.reactive.RedisService_Mono;
-//import com.example.application.util.enums.PlayerColors;
-//import com.example.application.utility.GameActionHandler;
-//import com.example.application.utility.RequestContextRedis;
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.stereotype.Component;
-//
-//import java.util.UUID;
-//
-//@Component
-//@Slf4j
-//@RequiredArgsConstructor
-//public class JoinToGame_Handler implements GameActionHandler {
-//    private final GameService_Mono gameService;
-//    private final PlayerService playerService;
-//    private final RedisService_Mono redisService;
-//
-//    @Override
-//    public String getAction() {
-//        return "JOIN_TO_GAME";
-//    }
-//
-//    @Override
-//    public void handle(RequestContextRedis ctx) {
-//        try {
-//            var gameId = UUID.fromString(ctx.body().get("gameId"));
-//            var playerId = UUID.fromString(ctx.body().get("playerId"));
-//            var playerName = ctx.body().get("playerName");
-//            var playerColor = PlayerColors.valueOf(ctx.body().get("playerColor"));
-//
-//            if (!playerService.existsById(playerId)) {
-//                Player newPlayer = new Player();
-//                newPlayer.setPlayerId(playerId);
-//                newPlayer.setPlayerName(playerName);
-//                newPlayer.setColor(playerColor);
-//
-//                var updatedGame = gameService.addPlayerToGame_Mono(newPlayer, gameId);
-//
-//                redisService.publishGameUpd(gameService.findById_Mono(gameId));
-//                ctx.respond(updatedGame);
-//                return;
-//            }
-//
-//            ctx.respond("Player already exists.");
-//        } catch (Exception e) {
-//            ctx.respond("Internal Server Error");
-//            log.error("Error in handle(): {}", e.getMessage(), e);
-//        }
-//    }
-//
-//}
+package com.example.application.handlers.lobby;
+
+import com.example.application.entity.Player;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.reactive.PlayerService_Mono;
+import com.example.application.types.GameActions;
+import com.example.application.types.PlayerColors;
+import com.example.application.utility.GameActionHandler;
+import com.example.application.utility.RequestContextRedis;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class JoinToGame_Handler implements GameActionHandler {
+    private final GameService_Mono gameService;
+    private final PlayerService_Mono playerService;
+
+    @Override
+    public String getAction() {
+        return GameActions.JOIN_TO_GAME.toString();
+    }
+
+    @Override
+    public Mono<Void> handle(RequestContextRedis ctx) {
+        try {
+            var gameIdStr = ctx.body().get("gameId");
+            var playerIdStr = ctx.body().get("playerId");
+            var playerName = ctx.body().get("playerName");
+            var playerColorStr = ctx.body().get("playerColor");
+
+            if (gameIdStr == null || playerIdStr == null || playerName == null || playerColorStr == null) {
+                return ctx.respond("Missing gameId, playerId, playerName, or playerColor");
+            }
+
+            UUID gameId = UUID.fromString(gameIdStr);
+            UUID playerId = UUID.fromString(playerIdStr);
+            PlayerColors playerColor = PlayerColors.valueOf(playerColorStr);
+
+            Player newPlayer = new Player();
+            newPlayer.setPlayerId(playerId);
+            newPlayer.setPlayerName(playerName);
+            newPlayer.setColor(playerColor);
+
+            return playerService.existsById(playerId)
+                    .flatMap(exists -> {
+                        if (exists) {
+                            log.warn("Player with id {} already exists", playerId);
+                            return ctx.respond("Internal Server Error");
+                        } else {
+                            return gameService.addPlayerToGame_Mono(newPlayer, gameId)
+                                    .flatMap(ctx::respond);
+                        }
+                    })
+                    .onErrorResume(e -> {
+                        log.error("Error in handle(): {}", e.getMessage(), e);
+                        return ctx.respond("Internal Server Error");
+                    });
+
+        } catch (Exception e) {
+            log.error("Error in handle(): {}", e.getMessage(), e);
+            return ctx.respond("Invalid input format.");
+        }
+    }
+
+
+}

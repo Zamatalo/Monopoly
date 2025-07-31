@@ -9,6 +9,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.stream.StreamReceiver;
@@ -30,7 +31,7 @@ public class RedisConfig {
 
     @Bean
     @Primary
-    public ReactiveRedisTemplate<String, String> ReactiveRedisTemplate(ReactiveRedisConnectionFactory connectionFactory) {
+    public ReactiveRedisTemplate<String, String> redisTemplate_String(ReactiveRedisConnectionFactory connectionFactory) {
         StringRedisSerializer serializer = new StringRedisSerializer();
 
         RedisSerializationContext.RedisSerializationContextBuilder<String, String> builder =
@@ -44,7 +45,20 @@ public class RedisConfig {
 
         return new ReactiveRedisTemplate<>(connectionFactory, context);
     }
+    @Bean
+    public ReactiveRedisTemplate<String, Object> redisTemplate_object(ReactiveRedisConnectionFactory connectionFactory) {
+        StringRedisSerializer keySerializer = new StringRedisSerializer();
+        GenericJackson2JsonRedisSerializer valueSerializer = new GenericJackson2JsonRedisSerializer();
 
+        RedisSerializationContext<String, Object> context = RedisSerializationContext
+                .<String, Object>newSerializationContext(keySerializer)
+                .value(valueSerializer)
+                .hashKey(keySerializer)
+                .hashValue(valueSerializer)
+                .build();
+
+        return new ReactiveRedisTemplate<>(connectionFactory, context);
+    }
 
     @Bean
     public StreamReceiver<String, MapRecord<String, String, String>> streamReceiver(ReactiveRedisConnectionFactory factory) {
