@@ -74,7 +74,7 @@ public class GameActionResolver {
             if (canBuy(player, game)) {
                 actions.add(PlayerActions.BUY_PROPERTY);
             } else if (steppedOnUniqueTile(player.getPosition())) {
-                actions.add(PlayerActions.SPECIAL_TILE);
+                actions.add(PlayerActions.SPECIAL_TILE_EFFECT);
                 return actions;
             }
             actions.add(PlayerActions.END_TURN);

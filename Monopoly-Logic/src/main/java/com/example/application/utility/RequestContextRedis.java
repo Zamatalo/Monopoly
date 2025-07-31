@@ -26,8 +26,11 @@ public record RequestContextRedis(
             String payloadJson = responseData == null
                     ? ""
                     : objectMapper.writeValueAsString(responseData);
+            String correlation = correlationId == null
+                    ? ""
+                    : correlationId;
             return Map.of(
-                    "correlationId", correlationId,
+                    "correlationId", correlation,
                     "payload", payloadJson
             );
         });

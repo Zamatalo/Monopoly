@@ -2,7 +2,7 @@ type Query {
     findGameById(gameId:ID!): GameDTO!
     getAllGames:[GameDTO!]
     findGameByPlayerId(playerId:ID!):GameDTO
-    getPlayer(playerId:ID!):PlayerDTO
+    getPlayer(playerId:ID!,gameId:ID!):PlayerDTO
 #    getGameActions(gameId:ID!):[GameActions]
 #    getPlayerActions(gameId:ID!,playerId:ID!):[PlayerActions]
 }

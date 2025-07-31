@@ -1,6 +1,7 @@
 package com.example.application.handlers.lobby;
 
 import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.types.GameActions;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class GetAllGames_Handler implements GameActionHandler {
 
     @Override
     public String getAction() {
-        return "getAllGames";
+        return GameActions.GET_ALL_GAMES.name();
     }
 
     @Override
@@ -25,7 +26,7 @@ public class GetAllGames_Handler implements GameActionHandler {
         return gameService.findAll_Mono()
                 .flatMap(ctx::respond)
                 .onErrorResume(e -> {
-                    log.error("Error in getAllGames handler", e);
+                    log.error("Error in handle(): {}", e.getMessage(), e);
                     return ctx.respond("Internal Server Error");
                 });
     }

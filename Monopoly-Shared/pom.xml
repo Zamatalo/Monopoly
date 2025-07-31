@@ -9,52 +9,12 @@
     <artifactId>Monopoly-Shared</artifactId>
     <packaging>jar</packaging>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>io.github.deweyjose</groupId>
-                <artifactId>graphqlcodegen-maven-plugin</artifactId>
-                <version>1.61.5</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <schemaPaths>
-                        <path>src/main/resources/schema/graphql/schema.graphqls</path>
-                        <path>src/main/resources/schema/graphql/inputs.graphqls</path>
-                        <path>src/main/resources/schema/graphql/mutation.graphqls</path>
-                        <path>src/main/resources/schema/graphql/query.graphqls</path>
-                        <path>src/main/resources/schema/graphql/subscription.graphqls</path>
-                        <path>src/main/resources/schema/graphql/enums.graphqls</path>
-                    </schemaPaths>
-                    <generateDocs>true</generateDocs>
-                    <packageName>com.example.application</packageName>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+    <dependencies>
+        <dependency>
+            <groupId>com.example.application</groupId>
+            <artifactId>Monopoly-Graphql-Module</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
 </project>

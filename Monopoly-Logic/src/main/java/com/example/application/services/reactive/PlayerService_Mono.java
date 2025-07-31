@@ -4,8 +4,8 @@ package com.example.application.services.reactive;
 import com.example.application.entity.Player;
 import com.example.application.repo.PlayerRepo;
 import com.example.application.types.PlayerDTO;
+import com.example.application.types.PlayerState;
 import com.example.application.util.data.PropertyData;
-import com.example.application.util.enums.PlayerState;
 import com.example.application.utility.GameMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -43,8 +43,9 @@ public class PlayerService_Mono {
             Player player = playerRepository
                     .findById(playerId)
                     .orElseThrow(EntityNotFoundException::new);
+            PropertyData property = new PropertyData(propertyData.displayName(),propertyData.boardPosition(),propertyData.cost(),propertyData.upgradable(),player.getPlayerId());
 
-            player.addProperty(propertyData);
+            player.addProperty(property);
             player.setPlayerState(PlayerState.IDLE);
             player.setBalance(player.getBalance() - propertyData.cost());
 
@@ -62,4 +63,5 @@ public class PlayerService_Mono {
             return GameMapper.INSTANCE.playerToDto(player);
         }).subscribeOn(Schedulers.boundedElastic());
     }
+
 }

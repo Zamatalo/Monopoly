@@ -1,4 +1,4 @@
-package config;
+package com.example.application.config;
 
 public class GameConfig {
     public static final Integer START_PAYOUT = 200;

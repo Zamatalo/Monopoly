@@ -5,8 +5,8 @@ import com.example.application.entity.Game;
 import com.example.application.entity.Player;
 import com.example.application.repo.GameRepo;
 import com.example.application.types.GameDTO;
+import com.example.application.types.GameState;
 import com.example.application.util.data.PropertyData;
-import com.example.application.util.enums.GameState;
 import com.example.application.utility.GameMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,6 @@ public class GameService_Mono {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
-
     @Transactional
     public Mono<GameDTO> save_Mono(Game game) {
         return Mono.fromCallable(() -> {
@@ -62,7 +61,6 @@ public class GameService_Mono {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(this::save_Mono);
     }
-
 
     @Transactional
     public Mono<GameDTO> startGame_Mono(UUID gameId) {
@@ -84,7 +82,7 @@ public class GameService_Mono {
         return Mono.fromCallable(() ->
                         gameRepo.findGameByPlayerId(playerId)
                                 .map(this::toEnrichedGameDTO)
-                                .orElseThrow(EntityNotFoundException::new))
+                                .orElse(null))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -102,7 +100,6 @@ public class GameService_Mono {
             return allProperties;
         }).subscribeOn(Schedulers.boundedElastic());
     }
-
 
     private GameDTO toEnrichedGameDTO(Game game) {
         GameDTO dto = GameMapper.INSTANCE.GameToGameDTO(game);

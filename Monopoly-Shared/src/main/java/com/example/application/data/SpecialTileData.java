@@ -1,8 +1,8 @@
-package data;
+package com.example.application.data;
 
 
-import config.GameConfig;
-import util.enums.SpecialTileEffect;
+import com.example.application.config.GameConfig;
+import com.example.application.types.SpecialTileEffect;
 
 import java.util.List;
 
@@ -57,5 +57,6 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
 
     public static final SpecialTileData START =
             new SpecialTileData("Start",SpecialTileEffect.COLLECT,GameConfig.START_PAYOUT);
-
+    public static final SpecialTileData NONE =
+            new SpecialTileData("None",SpecialTileEffect.NONE,0);
 }

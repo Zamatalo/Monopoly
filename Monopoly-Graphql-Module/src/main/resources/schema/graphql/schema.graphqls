@@ -23,7 +23,7 @@ type PlayerDTO {
 type PropertyDTO {
     displayName: String
     boardPosition: Int
-    isOwned:Boolean
+    ownerId:ID
     cost: Int
     upgradable: Boolean
 }

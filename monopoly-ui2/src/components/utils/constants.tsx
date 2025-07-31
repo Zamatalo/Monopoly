@@ -40,7 +40,7 @@ export enum PlayerActions{
     BUY_PROPERTY=`BUY_PROPERTY`,
     END_TURN= 'END_TURN',
     START_GAME = `START_GAME`,
-    SPECIAL_TILE = `SPECIAL_TILE`
+    SPECIAL_TILE_EFFECT = `SPECIAL_TILE_EFFECT`
 }
 export enum GameActions {
     START_GAME="START_GAME",

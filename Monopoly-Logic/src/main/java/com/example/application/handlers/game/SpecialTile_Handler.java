@@ -1,184 +1,155 @@
-//package com.example.application.handlers.game;
-//
-//import com.example.application.services.reactive.GameService_Mono;
-//import com.example.application.services.imperative.PlayerService;
-//import com.example.application.services.reactive.RedisService_Mono;
-//import com.example.application.services.TurnService;
-//import com.example.application.types.GameDTO;
-//import com.example.application.types.PlayerDTO;
-//import data.SpecialTileData;
-//import com.example.application.utility.GameActionHandler;
-//import com.example.application.utility.GameMapper;
-//import com.example.application.utility.RequestContextRedis;
-//import lombok.RequiredArgsConstructor;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.stereotype.Component;
-//import reactor.core.publisher.Mono;
-//
-//import java.security.SecureRandom;
-//import java.util.List;
-//import java.util.UUID;
-//
-//@Component
-//@RequiredArgsConstructor
-//@Slf4j
-//public class SpecialTile_Handler implements GameActionHandler {
-//    private final PlayerService playerService;
-//    private final TurnService turnService;
-//    private final RedisService_Mono redisService;
-//    private final GameService_Mono gameService;
-//    private final SecureRandom random = new SecureRandom();
-//
-//    @Override
-//    public String getAction() {
-//        return "SPECIAL_TILE";
-//    }
-//
-//    @Override
-//    public Mono<Void> handle(RequestContextRedis ctx) {
-//        try {
-//            var gameId = UUID.fromString(ctx.body().get("gameId"));
-//            var playerId = UUID.fromString(ctx.body().get("playerId"));
-//            GameDTO gameDTO = gameService.findById_Mono(gameId);
-//            PlayerDTO player = playerService.findById(playerId);
-//
-//            SpecialTileData data = null;
-//            var position = player.getPosition();
-//            if (position.equals(2) || position.equals(17) || position.equals(33)) { //Chest
-//                data = SpecialTileData.CHEST_CARDS.get(random.nextInt(SpecialTileData.CHEST_CARDS.size()));
-//
-//                switch (data.effect()) {
-//                    case MOVE_TO_GO_AND_COLLECT: {
-//                        player.setPosition(0);
-//                        player.setBalance(data.amount());
-//                        break;
-//                    }
-//                    case PAY: {
-//                        player.setBalance(player.getBalance() - data.amount());
-//                        break;
-//                    }
-//                    case COLLECT_FROM_EACH_PLAYER: {
-//                        player.setBalance(player.getBalance() + data.amount());
-//                        var amountForOne = data.amount() / gameDTO.getPlayers().size();
-//                        gameDTO.getPlayers().forEach(e -> e.setBalance(e.getBalance() - amountForOne));
-//                        break;
-//                    }
-//                    case GO_TO_JAIL: {
-//                        player.setPosition(10);
-//                        player.setInJail_Turns(4);
-//                        break;
-//                    }
-//                    case COLLECT: {
-//                        player.setBalance(player.getBalance() + data.amount());
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            if (position.equals(7) || position.equals(22) || position.equals(36)) { //Chance
-//                data = SpecialTileData.CHANCE_CARDS.get(random.nextInt(SpecialTileData.CHANCE_CARDS.size()));
-//                switch (data.effect()) {
-//                    case MOVE_TO_GO_AND_COLLECT: {
-//                        player.setPosition(0);
-//                        player.setBalance(data.amount());
-//                        break;
-//                    }
-////                    case MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO: {
-////                        var randomTile = PropertyData.ALL.values().stream().filter(e -> e.cost() != 0).findAny();
-////                        var currentPos = player.getPosition();
-////                        assert randomTile.isPresent();
-////
-////                        boolean passedGo = randomTile.get().boardPosition() <= currentPos;
-////                        if (passedGo) {
-////                            player.setBalance(player.getBalance() + GameConfig.START_PAYOUT);
-////                        }
-////                        player.setPosition(randomTile.get().boardPosition());
-////                        break;
-////                    }
-////                    case MOVE_TO_NEAREST_UTILITY: {
-////
-////                    }
-////                    case MOVE_TO_NEAREST_RAILROAD: {
-////
-////                    }
-//                    case COLLECT: {
-//                        player.setBalance(player.getBalance() + data.amount());
-//                        break;
-//                    }
-//                    case GET_OUT_OF_JAIL_FREE: {
-//                        player.setInJail_Turns(0);
-//                        break;
-//                    }
-////                    case MOVE_BACKWARD: {
-////                        player.
-////                    }
-//                    case GO_TO_JAIL: {
-//                        player.setPosition(10);
-//                        player.setInJail_Turns(4);
-//                        break;
-//                    }
-//                    case PAY: {
-//                        player.setBalance(player.getBalance() - data.amount());
-//                        break;
-//                    }
-//                    case PAY_EACH_PLAYER: {
-//                        var amountForOne = data.amount() / gameDTO.getPlayers().size() - 1;
-//                        gameDTO.getPlayers().forEach(e -> {
-//
-//                            if (!e.getPlayerId().equals(player.getPlayerId())) {
-//                                e.setBalance(e.getBalance() + amountForOne); //other players
-//                            } else {
-//                                e.setBalance(e.getBalance() - amountForOne); //curr player
-//                            }
-//                        });
-//                        break;
-//                    }
-//                }
-//            }
-//
-//            if (position.equals(30)) { //Go to jail
-//                data = SpecialTileData.JAIL;
-//                player.setPosition(10);
-//                player.setInJail_Turns(4);
-//            }
-//
-//            if (position.equals(4)) {
-//                data = SpecialTileData.TAX;
-//                player.setBalance(player.getBalance() - data.amount());
-//            }
-//
-//            if (position.equals(38)) {
-//                data = SpecialTileData.LUXURY_TAX;
-//                player.setBalance(player.getBalance() - data.amount());
-//            }
-//
-//            if (position.equals(0)) {
-//                data = SpecialTileData.START;
-//                player.setBalance(player.getBalance());
-//            }
-//
-//
-//            List<PlayerDTO> updatedPlayers = gameDTO.getPlayers().stream()
-//                    .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
-//                    .toList();
-//            gameDTO.setPlayers(updatedPlayers);
-//
-//            gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(gameDTO));
-//            turnService.endTurn(gameId);
-//
-//            if (!isFromBot(ctx)) {
-//                assert data != null;
-//                log.info(data.toString());
-//                ctx.respond(data);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    /// if its from bot, record should be ack
-//    public boolean isFromBot(RequestContextRedis ctx) {
-//        var a = ctx.body().get("isFromBot");
-//        return a != null && a.equals("true");
-//    }
-//}
+package com.example.application.handlers.game;
+
+import com.example.application.data.SpecialTileData;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.reactive.PlayerService_Mono;
+import com.example.application.services.reactive.TurnService_Mono;
+import com.example.application.types.GameDTO;
+import com.example.application.types.PlayerActions;
+import com.example.application.types.PlayerDTO;
+import com.example.application.utility.GameActionHandler;
+import com.example.application.utility.GameMapper;
+import com.example.application.utility.RequestContextRedis;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+import java.security.SecureRandom;
+import java.util.List;
+import java.util.UUID;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class SpecialTile_Handler implements GameActionHandler {
+    private final PlayerService_Mono playerService;
+    private final TurnService_Mono turnService;
+    private final GameService_Mono gameService;
+    private final SecureRandom random = new SecureRandom();
+
+    @Override
+    public String getAction() {
+        return PlayerActions.SPECIAL_TILE_EFFECT.name();
+    }
+
+    @Override
+    public Mono<Void> handle(RequestContextRedis ctx) {
+        try {
+            var gameId = UUID.fromString(ctx.body().get("gameId"));
+            var playerId = UUID.fromString(ctx.body().get("playerId"));
+
+            return Mono.zip(
+                    gameService.findById_Mono(gameId),
+                    playerService.findById(playerId)
+            ).flatMap(tuple -> {
+                GameDTO gameDTO = tuple.getT1();
+                PlayerDTO player = tuple.getT2();
+
+                int position = player.getPosition();
+                SpecialTileData data = SpecialTileData.NONE;
+
+                // CHEST
+                if (position == 2 || position == 17 || position == 33) {
+                    data = SpecialTileData.CHEST_CARDS.get(random.nextInt(SpecialTileData.CHEST_CARDS.size()));
+                    applyEffect(data, player, gameDTO);
+                }
+
+                // CHANCE
+                else if (position == 7 || position == 22 || position == 36) {
+                    data = SpecialTileData.CHANCE_CARDS.get(random.nextInt(SpecialTileData.CHANCE_CARDS.size()));
+                    applyEffect(data, player, gameDTO);
+                }
+
+                // GO TO JAIL TILE
+                else if (position == 30) {
+                    data = SpecialTileData.JAIL;
+                    player.setPosition(10);
+                    player.setInJail_Turns(4);
+                }
+                // TAX TILE
+                else if (position == 4) {
+                    data = SpecialTileData.TAX;
+                    player.setBalance(player.getBalance() - data.amount());
+                }
+
+                // LUXURY TAX TILE
+                else if (position == 38) {
+                    data = SpecialTileData.LUXURY_TAX;
+                    player.setBalance(player.getBalance() - data.amount());
+                }
+
+                // START TILE ()
+                else if (position == 0) {
+                    data = SpecialTileData.START;
+                }
+
+                // Update game state
+                List<PlayerDTO> updatedPlayers = gameDTO.getPlayers().stream()
+                        .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
+                        .toList();
+                gameDTO.setPlayers(updatedPlayers);
+
+                return gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(gameDTO))
+                        .thenReturn(data);
+
+            }).flatMap(data -> {
+                if (!isFromBot(ctx)) {
+                    log.info("Special tile effect: {}", data);
+                    return ctx.respond(data)
+                            .then(turnService.endTurn(gameId));
+                } else {
+                    return turnService.endTurn(gameId); // ack for botww
+                }
+            }).onErrorResume(e -> {
+                log.error("Error in SpecialTile_Handler: {}", e.getMessage(), e);
+                return ctx.respond("Internal server error.");
+            });
+
+        } catch (Exception e) {
+            log.error("Parsing error in SpecialTile_Handler", e);
+            return ctx.respond("Invalid input format.");
+        }
+    }
+
+    private void applyEffect(SpecialTileData data, PlayerDTO player, GameDTO gameDTO) {
+        switch (data.effect()) {
+            case MOVE_TO_GO_AND_COLLECT -> {
+                player.setPosition(0);
+                player.setBalance(player.getBalance() + data.amount());
+            }
+            case PAY -> player.setBalance(player.getBalance() - data.amount());
+
+            case COLLECT_FROM_EACH_PLAYER -> {
+                int total = data.amount();
+                int perPlayer = total / gameDTO.getPlayers().size();
+                player.setBalance(player.getBalance() + total);
+                gameDTO.getPlayers().forEach(p -> p.setBalance(p.getBalance() - perPlayer));
+            }
+            case GO_TO_JAIL -> {
+                player.setPosition(10);
+                player.setInJail_Turns(4);
+            }
+            case COLLECT -> player.setBalance(player.getBalance() + data.amount());
+
+            case GET_OUT_OF_JAIL_FREE -> player.setInJail_Turns(0);
+
+            case PAY_EACH_PLAYER -> {
+                int total = data.amount();
+                int perPlayer = total / (gameDTO.getPlayers().size() - 1);
+
+                gameDTO.getPlayers().forEach(p -> {
+                    if (!p.getPlayerId().equals(player.getPlayerId())) {
+                        p.setBalance(p.getBalance() + perPlayer);
+                    } else {
+                        p.setBalance(p.getBalance() - total);
+                    }
+                });
+            }
+        }
+    }
+
+    public boolean isFromBot(RequestContextRedis ctx) {
+        return "true".equals(ctx.body().get("sentFromBot"));
+    }
+}

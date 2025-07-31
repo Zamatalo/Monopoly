@@ -4,7 +4,7 @@ import {useMutation} from "@apollo/client";
 import {BUY_PROPERTY_MUTATION, END_TURN, ROLL_DICE, SPECIAL_TILE} from "../../graphql/queries";
 import {PlayerDTO} from "../../components/models/PlayerDTO";
 import CurrentPlayerSingleton from "../../stores/singletons/CurrentPlayerSingleton";
-import {ColorHexMap, GameState, PlayerActions} from "../../components/utils/constants";
+import {ColorHexMap, PlayerActions} from "../../components/utils/constants";
 import '../../styles/gameInterface.css'
 import {useNotification} from "./NotificationContextType";
 
@@ -140,7 +140,7 @@ const UIGameInterface: React.FC = () => {
                 </button>
                 <button onClick={handleSpecialTile}
                         className="btn special-tile"
-                        disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.SPECIAL_TILE)}
+                        disabled={!currentPlayerSingleton?.playerActions?.includes(PlayerActions.SPECIAL_TILE_EFFECT)}
                 >
                     Special Tile
                 </button>

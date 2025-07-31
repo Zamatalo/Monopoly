@@ -6,6 +6,8 @@ input GameDTOInput {
     createdTime:String!
 }
 
+
+
 input PlayerDTOInput {
     playerId: ID
     playerName:String

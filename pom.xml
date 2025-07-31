@@ -13,6 +13,7 @@
         <module>Monopoly-Persistence</module>
         <module>Monopoly-Shared</module>
         <module>Monopoly-API-Gateway</module>
+        <module>Monopoly-Graphql-Module</module>
     </modules>
 
     <properties>
@@ -33,6 +34,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -204,7 +204,7 @@ class DiceGame {
 
             const pos_2 = this.dice_2.translation();
             const rot_2 = this.dice_2.rotation();
-            pub.publish(`game:diceUpdate`, JSON.stringify({
+            pub.publish(`game.diceUpdate`, JSON.stringify({
                 gameId: this.gameId,
                 pos_dice1: { x: pos_1.x, y: pos_1.y, z: pos_1.z },
                 rot_dice1: { x: rot_1.x, y: rot_1.y, z: rot_1.z, w: rot_1.w },
@@ -214,7 +214,7 @@ class DiceGame {
         } else if (!this.resultSent) {
             const topFace1 = this.getTopFaceFromQuaternion(this.dice_1.rotation());
             const topFace2 = this.getTopFaceFromQuaternion(this.dice_2.rotation());
-            pub.publish(`game:diceResult`, JSON.stringify({
+            pub.publish(`game.diceResult`, JSON.stringify({
                 gameId: this.gameId,
                 diceResult: topFace1+topFace2
             }));
