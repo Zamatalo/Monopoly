@@ -1,6 +1,6 @@
 package com.example.application.utility;
 
-import com.example.application.services.reactive.RedisService_Mono;
+import com.example.application.config.RedisService_Mono;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;

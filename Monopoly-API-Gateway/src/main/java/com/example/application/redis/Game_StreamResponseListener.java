@@ -1,6 +1,7 @@
 package com.example.application.redis;
 
-import com.example.application.service.RedisService_Mono;
+
+import com.example.application.config.RedisService_Mono;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,6 @@ public class Game_StreamResponseListener {
                 log.warn("Received error response: {}", body.get("error"));
                 return acknowledge(message);
             }
-
 
             try {
                 responseHandler.complete(correlationId, body.get("payload"));

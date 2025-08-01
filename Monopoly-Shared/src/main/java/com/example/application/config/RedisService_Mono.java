@@ -1,5 +1,7 @@
-package com.example.application.service;
+package com.example.application.config;
 
+import com.example.application.types.GameDTO;
+import com.example.application.util.exceptions.RedisResponseException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +11,6 @@ import org.springframework.data.redis.stream.StreamReceiver;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import com.example.application.util.exceptions.RedisResponseException;
 
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 public class RedisService_Mono {
     private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final StreamReceiver<String, MapRecord<String,String,String>> streamReceiver;
+    private final ReactiveRedisTemplate<String,Object> redisTemplate_forObjects;
 
     @Value("${spring.data.redis.gameRequestStream}")
     private String REQUEST_STREAM;
@@ -26,8 +28,8 @@ public class RedisService_Mono {
     private String RESPONSE_STREAM;
     @Value("${spring.data.redis.gatewayGroup}")
     private String GATEWAY_GROUP;
-
-    private final String CONSUMER_NAME = "gateway-0";
+    @Value("${spring.data.redis.gameUpdateChannel}")
+    private String GAME_UPDATE_CHANNEL;
 
     public Mono<RecordId> publishToRequestStream(Map<String, String> payload) {
         return redisTemplate.opsForStream()
@@ -57,11 +59,20 @@ public class RedisService_Mono {
                 .acknowledge(RESPONSE_STREAM, GATEWAY_GROUP, recordId).then();
     }
 
-    public Flux<MapRecord<String, String, String>> listenToStream() {
+    public Flux<MapRecord<String, String, String>> listenToStream(String consumerName) {
         return streamReceiver.receive(
-                Consumer.from(GATEWAY_GROUP, CONSUMER_NAME),
+                Consumer.from(GATEWAY_GROUP, consumerName),
                 StreamOffset.create(RESPONSE_STREAM, ReadOffset.lastConsumed())
         );
     }
-
+        public Mono<Void> publishGameUpd(GameDTO gameDTO) {
+        try {
+            return redisTemplate_forObjects
+                    .convertAndSend(GAME_UPDATE_CHANNEL,gameDTO)
+                    .then();
+        }catch (Exception e){
+            log.error("Error when publishing Game Update: {}",e.getMessage());
+           return Mono.error(e);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.application.configuration;
+package com.example.application.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +9,6 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -70,8 +69,5 @@ public class RedisConfig {
         return StreamReceiver.create(factory, options);
     }
 
-    @Bean
-    public ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer(ReactiveRedisConnectionFactory factory) {
-        return new ReactiveRedisMessageListenerContainer(factory);
-    }
+
 }

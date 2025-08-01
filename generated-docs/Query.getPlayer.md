@@ -4,11 +4,12 @@
 | Name | Description | Required | Type |
 | :--- | :---------- | :------: | :--: |
 | playerId |  | ✅ | ID! |
+| gameId |  | ✅ | ID! |
             
 ## Example
 ```graphql
 {
-  getPlayer(playerId: "random12345") {
+  getPlayer(playerId: "random12345", gameId: "random12345") {
     playerId
     playerName
     color
