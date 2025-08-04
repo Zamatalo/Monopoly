@@ -5,9 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-@SpringBootApplication(scanBasePackages = {
-        "com.example.application.config"
-})
+@SpringBootApplication
 @EntityScan(basePackages = {"com.example.application.entity"})
 @EnableJpaRepositories(basePackages = "com.example.application.repo")
 public class LogicApplication {

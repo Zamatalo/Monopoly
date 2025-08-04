@@ -14,8 +14,6 @@ public class GameConfig {
     public static String GAME_UPDATE_CHANNEL;
     public static String BACKEND_GROUP;
     public static String DICE_UPDATE_CHANNEL;
-    public static String GET_HOST;
-    public static int GET_PORT;
 
     static {
         try (InputStream input = GameConfig.class.getClassLoader()
@@ -33,8 +31,6 @@ public class GameConfig {
             GAME_UPDATE_CHANNEL = prop.getProperty("spring.data.redis.gameUpdateChannel");
             BACKEND_GROUP = prop.getProperty("spring.data.redis.backendGroup");
             DICE_UPDATE_CHANNEL = prop.getProperty("spring.data.redis.diceUpdateChannel");
-            GET_HOST = prop.getProperty("spring.data.redis.host");
-            GET_PORT = Integer.parseInt(prop.getProperty("spring.data.redis.port"));
         } catch (IOException ex) {
             ex.printStackTrace();
         }

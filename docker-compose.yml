@@ -26,6 +26,7 @@ services:
          condition: service_healthy
     environment:
       SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATASOURCE_URL: "jdbc:postgresql://database:5432/postgres"
     networks:
       - app-net
@@ -38,9 +39,11 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - redis
+      redis:
+          condition: service_healthy
     environment:
       SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
     networks:
       - app-net
 
