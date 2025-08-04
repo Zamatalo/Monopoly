@@ -5,7 +5,7 @@ import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.services.reactive.PlayerService_Mono;
 import com.example.application.types.GameActions;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.utility.RequestContextRedis;
+import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +29,8 @@ public class GetPlayer_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            var playerId = UUID.fromString(ctx.body().get("playerId"));
-            var gameId = UUID.fromString(ctx.body().get("gameId"));
+            var playerId = UUID.fromString(ctx.getBody().get("playerId"));
+            var gameId = UUID.fromString(ctx.getBody().get("gameId"));
 
             return playerService.findById(playerId)
                     .flatMap(playerDTO ->

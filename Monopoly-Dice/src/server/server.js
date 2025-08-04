@@ -47,7 +47,7 @@ class DiceGame {
         this.hasThrown = false;
         this.lastUpdateTime = 0;
         this.world = new RAPIER.World(gravity);
-        this.UPDATE_INTERVAL_MS = 22;
+        this.UPDATE_INTERVAL_MS = 16;
         this.setupPhysics();
 
         setInterval(() => this.physicsLoop(), 12);

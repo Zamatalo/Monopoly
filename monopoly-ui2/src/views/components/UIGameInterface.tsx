@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import GameSingleton from "../../stores/singletons/GameSingleton";
 import {useMutation} from "@apollo/client";
 import {BUY_PROPERTY_MUTATION, END_TURN, ROLL_DICE, SPECIAL_TILE} from "../../graphql/queries";
@@ -17,10 +17,11 @@ const UIGameInterface: React.FC = () => {
     const [specialTile] = useMutation(SPECIAL_TILE);
     const [currentPlayer, setCurrentPlayer] = useState<PlayerDTO | null>(null);
     const [currentPlayerSingleton, setCurrentPlayerSingleton] = useState<PlayerDTO | null>(null);
-
+    const [isAnimation, setIsAnimation] = useState(false);
 
     useEffect(() => {
         setCurrentPlayerSingleton(CurrentPlayerSingleton.getInstance());
+        setIsAnimation(true);
     }, [game]);
 
     useEffect(() => {
@@ -105,9 +106,6 @@ const UIGameInterface: React.FC = () => {
     return (
         <div className="game-interface compact">
             <div className="current-player">
-                <span
-                    style={{color: "red"}}>DEBUG_POSSIBLE_ACTIONS: {JSON.stringify(currentPlayerSingleton?.playerActions)}
-                </span>
                 <div className="player-info">
                     <span className="name">Name: {currentPlayerSingleton?.playerName}</span>
                     <span className="balance">${currentPlayerSingleton?.balance.toLocaleString()}</span>

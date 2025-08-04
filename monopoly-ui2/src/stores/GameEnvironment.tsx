@@ -38,8 +38,41 @@ export function updateGame(newGameRaw: GameDTO) {
 
     if (!oldGame || !world) return;
     const newGame = GameDTO.fromRaw(newGameRaw);
-    const oldPlayersColors = new Set(oldGame.players.map(p => p.color));
 
+    const newPlayersColors = new Set(newGame.players.map(p => p.color));
+    const removedPlayers = oldGame.players.filter(p => !newPlayersColors.has(p.color));
+    removedPlayers.forEach(removedPlayer => {
+        const modelToRemove = world.scene.children.find(
+            (child) => child.userData.color === removedPlayer.color
+        );
+        if (modelToRemove) {
+            world.scene.remove(modelToRemove);
+        }
+    });
+
+    const oldBuildingNames = new Set(
+        world.scene.children
+            .filter(e => e.userData.isBuilding)
+            .map(b => b.userData.buildingName)
+    );
+    const newBuildingNames = new Set(
+        newGame.players.flatMap(player =>
+            player.ownedProperties.map(prop => prop.displayName)
+        )
+    );
+    const removedBuildings = Array.from(oldBuildingNames).filter(
+        name => !newBuildingNames.has(name)
+    );
+    removedBuildings.forEach(buildingName => {
+        const buildingToRemove = world.scene.children.find(
+            child => child.userData.isBuilding && child.userData.buildingName === buildingName
+        );
+        if (buildingToRemove) {
+            world.scene.remove(buildingToRemove);
+        }
+    });
+
+    const oldPlayersColors = new Set(oldGame.players.map(p => p.color));
     newGame.players.forEach((newPlayer) => {
         if (!oldPlayersColors.has(newPlayer.color)) {
             newPlayer.loadPlayerModel(loader);
@@ -55,7 +88,6 @@ export function updateGame(newGameRaw: GameDTO) {
                 oldPlayer.animatePlayerMovement(newPlayer.position, model);
             }
         }
-
     });
 
     newGame.players.forEach(player => {
@@ -66,7 +98,6 @@ export function updateGame(newGameRaw: GameDTO) {
         });
     });
 
-    console.log(world.scene.children);
     GameSingleton.update(newGame);
     const currentPlayer: PlayerDTO | undefined = newGame.players.find(
         p => p.playerId === CurrentPlayerSingleton.getInstance()?.playerId
@@ -76,6 +107,7 @@ export function updateGame(newGameRaw: GameDTO) {
         CurrentPlayerSingleton.update(currentPlayer);
     }
 }
+
 
 export const diceUpdate = (() => {
     const queue: any[] = [];
@@ -110,7 +142,7 @@ export const diceUpdate = (() => {
 
             const update = queue.shift();
             applyUpdate(update);
-        }, 30);
+        }, 16);
     }
 
     return function enqueue(update: any) {

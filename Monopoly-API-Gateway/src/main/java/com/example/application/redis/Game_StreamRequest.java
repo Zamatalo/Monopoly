@@ -17,7 +17,6 @@ public class Game_StreamRequest {
     private final Map<String, FutureWrapper<?>> futures = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
 
-
     public <T> CompletableFuture<T> register(String correlationId, JavaType javaType) {
         FutureWrapper<T> wrapper = new FutureWrapper<>(javaType);
         futures.put(correlationId, wrapper);

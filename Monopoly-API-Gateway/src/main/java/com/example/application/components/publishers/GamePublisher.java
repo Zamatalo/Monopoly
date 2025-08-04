@@ -1,13 +1,11 @@
 package com.example.application.components.publishers;
 
+import com.example.application.redis.RedisService_Mono;
 import com.example.application.types.GameDTO;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -16,26 +14,21 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.example.application.config.GameConfig.GAME_UPDATE_CHANNEL;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class GamePublisher {
     private final Map<String, Sinks.Many<GameDTO>> sinksMap = new ConcurrentHashMap<>();
-    private final ReactiveRedisTemplate<String, Object> redisTemplate;
+    private final RedisService_Mono redisService;
     private volatile boolean isActive = true;
-
-    @Value("${spring.data.redis.gameUpdateChannel}")
-    private String GAME_UPDATE_CHANNEL;
 
     @PostConstruct
     public void init() {
-        Flux.merge(redisTemplate.listenTo(ChannelTopic.of(GAME_UPDATE_CHANNEL)),
-                        redisTemplate.listenTo(ChannelTopic.of("game:turnEnd")))
-                .doOnNext(stringObjectMessage -> {
-                    var message = stringObjectMessage.getMessage();
-                    publish((GameDTO) message);
-                })
-                .doOnError(e -> log.error("Redis subscription error", e))
+        redisService.listenToChannel_Object(GAME_UPDATE_CHANNEL, GameDTO.class)
+                .doOnNext(this::publish)
+                .onErrorContinue((throwable, _) ->  log.error("Error processing message: {}", throwable.getMessage()))
                 .subscribe();
     }
 

@@ -1,6 +1,5 @@
 package com.example.application.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -9,6 +8,7 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -16,17 +16,18 @@ import org.springframework.data.redis.stream.StreamReceiver;
 
 import java.time.Duration;
 
+import static com.example.application.config.GameConfig.GET_HOST;
+import static com.example.application.config.GameConfig.GET_PORT;
+
 @Configuration
 public class RedisConfig {
-    @Value("${spring.data.redis.host}")
-    private String redisHost;
 
-    @Value("${spring.data.redis.port}")
-    private int redisPort;
 
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration(redisHost, redisPort));
+        return new LettuceConnectionFactory(
+                new RedisStandaloneConfiguration(GET_HOST, GET_PORT)
+        );
     }
 
     @Bean
@@ -69,5 +70,8 @@ public class RedisConfig {
         return StreamReceiver.create(factory, options);
     }
 
-
+    @Bean
+    public ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer(ReactiveRedisConnectionFactory factory) {
+        return new ReactiveRedisMessageListenerContainer(factory);
+    }
 }

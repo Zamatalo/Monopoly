@@ -1,17 +1,20 @@
 package com.example.application.redis;
 
 
-import com.example.application.config.RedisService_Mono;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+
+import static com.example.application.config.GameConfig.GATEWAY_GROUP;
+import static com.example.application.config.GameConfig.RESPONSE_STREAM;
 
 @Slf4j
 @Component
@@ -23,15 +26,13 @@ public class Game_StreamResponseListener {
 
     @PostConstruct
     public void initialize() {
-       subscription = redisService.ensureConsumerGroupExists()
+        subscription = redisService.ensureConsumerGroupExists()
                 .doOnSuccess(_ -> log.info("Consumer group ensured, starting listener"))
-                .thenMany(redisService.listenToStream()
-                        .flatMap(this::processResponse)
-                        .doOnError(e -> log.error("Error in stream listener", e))
-                )
-                .subscribe();
+                .thenMany(redisService.listenToStream(
+                        RESPONSE_STREAM, GATEWAY_GROUP, "gateway-0")
+                                .flatMap(this::processResponse)
+                        .doOnError(e -> log.error("Error in stream listener", e))).subscribe();
     }
-
 
 
     private Mono<Void> processResponse(MapRecord<String, String, String> message) {
@@ -41,29 +42,31 @@ public class Game_StreamResponseListener {
 
             if (correlationId == null) {
                 log.warn("Received response without correlationId");
-                return acknowledge(message);
+                return acknowledgeMessage(message.getStream(), message.getId());
             }
-            if (body.get("payload")==null || body.get("payload").isEmpty()) {
+            if (body.get("payload") == null || body.get("payload").isEmpty()) {
                 log.warn("Received response without payload");
-                return acknowledge(message);
+                return acknowledgeMessage(message.getStream(), message.getId());
+
             }
-            if (body.get("error")!=null) {
+            if (body.get("error") != null) {
                 log.warn("Received error response: {}", body.get("error"));
-                return acknowledge(message);
+                return acknowledgeMessage(message.getStream(), message.getId());
             }
 
             try {
                 responseHandler.complete(correlationId, body.get("payload"));
-                return acknowledge(message);
+                return acknowledgeMessage(message.getStream(), message.getId());
+
             } catch (Exception e) {
                 log.error("Error processing response", e);
-                return acknowledge(message);
+                return acknowledgeMessage(message.getStream(), message.getId());
             }
         });
     }
 
-    private Mono<Void> acknowledge(MapRecord<String, String, String> message) {
-        return redisService.acknowledgeMessage(message.getId()).then();
+    private Mono<Void> acknowledgeMessage(String stream, RecordId id) {
+        return redisService.acknowledgeMessage(stream, GATEWAY_GROUP, id);
     }
 
     @PreDestroy

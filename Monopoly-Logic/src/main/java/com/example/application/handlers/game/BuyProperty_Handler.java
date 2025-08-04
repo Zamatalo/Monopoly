@@ -1,13 +1,13 @@
 package com.example.application.handlers.game;
 
+import com.example.application.redis.RedisService_Mono;
 import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.services.reactive.PlayerService_Mono;
-import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.services.reactive.TurnService_Mono;
 import com.example.application.types.PlayerActions;
 import com.example.application.util.data.PropertyData;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.utility.RequestContextRedis;
+import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,13 +31,14 @@ public class BuyProperty_Handler implements GameActionHandler {
 
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
-
         try {
-            UUID gameId = UUID.fromString(ctx.body().get("gameId"));
-            UUID playerId = UUID.fromString(ctx.body().get("playerId"));
+            UUID gameId = UUID.fromString(ctx.getBody().get("gameId"));
+            UUID playerId = UUID.fromString(ctx.getBody().get("playerId"));
+
             return playerService.findById(playerId)
                     .flatMap(player -> {
                         PropertyData currentProperty = PropertyData.ofPos(player.getPosition());
+
                         return isPropertyAlreadyBought(gameId, currentProperty)
                                 .flatMap(alreadyBought -> {
                                     if (alreadyBought) {
@@ -46,33 +47,19 @@ public class BuyProperty_Handler implements GameActionHandler {
 
                                     return playerService.addPropertyToPlayer(playerId, currentProperty)
                                             .then(gameService.findById_Mono(gameId))
-                                            .flatMap(redisService::publishGameUpd)
-                                            .then(isFromBot(ctx))
-                                            .flatMap(fromBot -> {
-                                                if (!fromBot) {
-                                                    return ctx.respond(currentProperty);
-                                                } else {
-                                                    return Mono.empty();
-                                                }
-                                            })
-                                            .then(turnService.endTurn(gameId));
+                                            .flatMap(e -> redisService.publishGameUpd(e)
+                                                    .then(ctx.respond(currentProperty))
+                                                    .then(turnService.endTurn(gameId)));
                                 });
                     })
                     .onErrorResume(e -> {
                         log.error("Error during BuyProperty_Handler:", e);
-                        return ctx.respond("Internal server error during property purchase.");
+                        return ctx.respond("Internal server error");
                     });
         } catch (Exception e) {
             log.error("Invalid UUID format", e);
             return ctx.respond("Invalid gameId or playerId format.");
         }
-
-
-    }
-
-    private Mono<Boolean> isFromBot(RequestContextRedis ctx) {
-        String flag = ctx.body().get("sentFromBot");
-        return Mono.just("true".equals(flag));
     }
 
     private Mono<Boolean> isPropertyAlreadyBought(UUID gameId, PropertyData property) {

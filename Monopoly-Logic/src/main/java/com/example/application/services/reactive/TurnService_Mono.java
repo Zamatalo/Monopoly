@@ -1,6 +1,6 @@
 package com.example.application.services.reactive;
 
-import com.example.application.config.RedisService_Mono;
+import com.example.application.redis.RedisService_Mono;
 import com.example.application.types.PlayerDTO;
 import com.example.application.types.PlayerState;
 import com.example.application.utility.GameMapper;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class TurnService_Mono {
     private final GameService_Mono gameService;
     private final RedisService_Mono redisService;
-    private final BotService_Mono botService;
+    private Random random = new Random();
 
     public Mono<Void> endTurn(UUID gameId) {
         return gameService.findById_Mono(gameId)
@@ -29,23 +30,27 @@ public class TurnService_Mono {
                     }
                     int nextPlayerIndex = (game.getCurrentPlayerIndex() + 1) % game.getPlayers().size();
                     game.setCurrentPlayerIndex(nextPlayerIndex);
-
                     currentPlayer.setPlayerState(PlayerState.IDLE);
+
+                    //check if enough money to play
+                    if (currentPlayer.getBalance() <= 0) {
+                        if (!currentPlayer.getOwnedProperties().isEmpty()){ //if player has property then remove random one
+                            var property = currentPlayer.getOwnedProperties()
+                                    .remove(random.nextInt(currentPlayer.getOwnedProperties().size()));
+                            currentPlayer.setBalance(property.getCost()/2);
+                        }else {
+                            game.getPlayers().remove(currentPlayer); // if not, then remove player from game
+                        }
+
+                    }
+
                     List<PlayerDTO> updatedPlayers = game.getPlayers().stream()
                             .map(p -> p.getPlayerId().equals(currentPlayer.getPlayerId()) ? currentPlayer : p)
                             .toList();
                     game.setPlayers(updatedPlayers);
 
-
                     return gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(game))
-                            .flatMap(gameUpdated -> {
-                                PlayerDTO currentPlayerUpd = gameUpdated.getPlayers().get(gameUpdated.getCurrentPlayerIndex());
-                                if (Boolean.TRUE.equals(currentPlayerUpd.getIsBot())) {
-                                    return botService.startBotTurn(gameId)
-                                            .then(redisService.publishGameUpd(gameUpdated));
-                                }
-                                return redisService.publishGameUpd(gameUpdated);
-                            });
+                            .flatMap(redisService::publishGameUpd);
                 });
     }
 }

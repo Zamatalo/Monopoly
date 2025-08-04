@@ -5,7 +5,6 @@ import {PropertyDTO} from "./PropertyDTO";
 import {Object3D} from "three";
 import WorldSingleton from "../../stores/singletons/WorldSingleton";
 
-let animating = false;
 export class PlayerDTO {
     playerId: string;
     playerName: string;
@@ -17,6 +16,8 @@ export class PlayerDTO {
     playerState: PlayerState;
     playerActions: PlayerActions;
     ownedProperties: PropertyDTO[];
+    animating:boolean = false;
+
 
     constructor({
                     playerId,color,inJail_Turns,
@@ -107,7 +108,7 @@ export class PlayerDTO {
         this.animationQueue.push(() => {
             const { xOffset, zOffset } = this.helperSwitch(this.color);
             let currentStep = this.position;
-            animating = true;
+            this.animating = true;
 
             const moveNext = () => {
                 if (currentStep !== targetPosition) {
@@ -136,7 +137,7 @@ export class PlayerDTO {
                     });
                 } else {
                     this.position = targetPosition;
-                   animating = false;
+                    this.animating = false;
                     callback();
                     this.runNextAnimation();
                 }
@@ -145,7 +146,7 @@ export class PlayerDTO {
             moveNext();
         });
 
-        if (!animating) {
+        if (!this.animating) {
             this.runNextAnimation();
         }
     }

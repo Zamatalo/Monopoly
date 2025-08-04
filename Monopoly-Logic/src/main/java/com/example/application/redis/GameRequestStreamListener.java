@@ -3,11 +3,10 @@ package com.example.application.redis;
 import com.example.application.components.GameActionResolver;
 import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.services.reactive.PlayerService_Mono;
-import com.example.application.services.reactive.RedisService_Mono;
 import com.example.application.types.GameActions;
 import com.example.application.types.PlayerActions;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.utility.RequestContextRedis;
+import com.example.application.components.RequestContextRedis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -23,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static com.example.application.config.GameConfig.*;
 
 @Slf4j
 @Component
@@ -47,7 +48,7 @@ public class GameRequestStreamListener {
                             log.error("Error creating consumer group", e);
                             return Mono.empty();
                         })
-                        .thenMany(redisService.listenToStream())
+                        .thenMany(redisService.listenToStream(REQUEST_STREAM,BACKEND_GROUP,"backend-0"))
                         .flatMap(msg -> processMessage(msg, handlerMap))
                         .doOnError(e -> log.error("Error in stream listener", e))
                         .subscribe();
@@ -89,12 +90,14 @@ public class GameRequestStreamListener {
         Map<String, String> response = new HashMap<>();
         response.put("correlationId", correlationId);
         response.put("error", message);
-        return redisService.publishToResponseStream(response).then();
+        return redisService.publishToStream(RESPONSE_STREAM,response)
+                .then();
     }
 
     private Mono<Void> acknowledge(MapRecord<String, String, String> msg) {
-        return redisService.acknowledgeMessage(msg.getId());
+        return redisService.acknowledgeMessage(msg.getStream(),BACKEND_GROUP,msg.getId());
     }
+
     private Mono<Boolean> isActionValid(String action, Map<String, String> body) {
         if (GameActions.GET_ALL_GAMES.toString().equals(action) ||
                 GameActions.CREATE_GAME.toString().equals(action) ||

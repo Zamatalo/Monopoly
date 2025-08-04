@@ -33,7 +33,7 @@ enum PlayerActions{
     BUY_PROPERTY,
     END_TURN,
     SPECIAL_TILE_EFFECT,
-
+    SELL_PROPERTY
 }
 
 enum PropertyNames {

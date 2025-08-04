@@ -1,15 +1,12 @@
 package com.example.application.components.publishers;
 
+import com.example.application.redis.RedisService_Mono;
 import com.example.application.types.DicePosition;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Sinks;
 
@@ -17,32 +14,22 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.example.application.config.GameConfig.DICE_UPDATE_CHANNEL;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class DicePublisher {
     private final Map<String, Sinks.Many<DicePosition>> sinksMap = new ConcurrentHashMap<>();
-    private final ReactiveRedisTemplate<String, String> redisTemplate;
-    private final ObjectMapper objectMapper;
+    private final RedisService_Mono redisService;
     private volatile boolean isActive = true;
-
-//    @Value("${spring.data.redis.gameUpdateChannel}")
-//    private String GAME_UPDATE_CHANNEL;
 
     @PostConstruct
     public void init() {
-        redisTemplate.listenTo(ChannelTopic.of("game.diceUpdate"))
-                .doOnNext(stringObjectMessage -> {
-                    try {
-                        var dicePosition = objectMapper.readValue(stringObjectMessage.getMessage(), DicePosition.class);
-                        publish(dicePosition);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+        redisService.listenToChannel_Object(DICE_UPDATE_CHANNEL, DicePosition.class)
+                .doOnNext(this::publish)
                 .doOnError(e -> log.error("Redis subscription error", e))
                 .subscribe();
-
     }
 
     public void publish(DicePosition dicePosition) {

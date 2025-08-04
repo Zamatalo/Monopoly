@@ -9,7 +9,7 @@ import com.example.application.types.PlayerActions;
 import com.example.application.types.PlayerDTO;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
-import com.example.application.utility.RequestContextRedis;
+import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -36,79 +36,73 @@ public class SpecialTile_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            var gameId = UUID.fromString(ctx.body().get("gameId"));
-            var playerId = UUID.fromString(ctx.body().get("playerId"));
+            var gameId = UUID.fromString(ctx.getBody().get("gameId"));
+            var playerId = UUID.fromString(ctx.getBody().get("playerId"));
 
             return Mono.zip(
-                    gameService.findById_Mono(gameId),
-                    playerService.findById(playerId)
-            ).flatMap(tuple -> {
-                GameDTO gameDTO = tuple.getT1();
-                PlayerDTO player = tuple.getT2();
+                            gameService.findById_Mono(gameId),
+                            playerService.findById(playerId)
+                    ).flatMap(tuple -> {
+                        GameDTO gameDTO = tuple.getT1();
+                        PlayerDTO player = tuple.getT2();
 
-                int position = player.getPosition();
-                SpecialTileData data = SpecialTileData.NONE;
+                        int position = player.getPosition();
+                        SpecialTileData data = SpecialTileData.NONE;
 
-                // CHEST
-                if (position == 2 || position == 17 || position == 33) {
-                    data = SpecialTileData.CHEST_CARDS.get(random.nextInt(SpecialTileData.CHEST_CARDS.size()));
-                    applyEffect(data, player, gameDTO);
-                }
+                        // CHEST
+                        if (position == 2 || position == 17 || position == 33) {
+                            data = SpecialTileData.CHEST_CARDS.get(random.nextInt(SpecialTileData.CHEST_CARDS.size()));
+                            applyEffect(data, player, gameDTO);
+                        }
 
-                // CHANCE
-                else if (position == 7 || position == 22 || position == 36) {
-                    data = SpecialTileData.CHANCE_CARDS.get(random.nextInt(SpecialTileData.CHANCE_CARDS.size()));
-                    applyEffect(data, player, gameDTO);
-                }
+                        // CHANCE
+                        else if (position == 7 || position == 22 || position == 36) {
+                            data = SpecialTileData.CHANCE_CARDS.get(random.nextInt(SpecialTileData.CHANCE_CARDS.size()));
+                            applyEffect(data, player, gameDTO);
+                        }
 
-                // GO TO JAIL TILE
-                else if (position == 30) {
-                    data = SpecialTileData.JAIL;
-                    player.setPosition(10);
-                    player.setInJail_Turns(4);
-                }
-                // TAX TILE
-                else if (position == 4) {
-                    data = SpecialTileData.TAX;
-                    player.setBalance(player.getBalance() - data.amount());
-                }
+                        // GO TO JAIL TILE
+                        else if (position == 30) {
+                            data = SpecialTileData.JAIL;
+                            player.setPosition(10);
+                            player.setInJail_Turns(4);
+                        }
+                        // TAX TILE
+                        else if (position == 4) {
+                            data = SpecialTileData.TAX;
+                            player.setBalance(player.getBalance() - data.amount());
+                        }
 
-                // LUXURY TAX TILE
-                else if (position == 38) {
-                    data = SpecialTileData.LUXURY_TAX;
-                    player.setBalance(player.getBalance() - data.amount());
-                }
+                        // LUXURY TAX TILE
+                        else if (position == 38) {
+                            data = SpecialTileData.LUXURY_TAX;
+                            player.setBalance(player.getBalance() - data.amount());
+                        }
 
-                // START TILE ()
-                else if (position == 0) {
-                    data = SpecialTileData.START;
-                }
+                        // START TILE ()
+                        else if (position == 0) {
+                            data = SpecialTileData.START;
+                        }
 
-                // Update game state
-                List<PlayerDTO> updatedPlayers = gameDTO.getPlayers().stream()
-                        .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
-                        .toList();
-                gameDTO.setPlayers(updatedPlayers);
+                        // Update game state
+                        List<PlayerDTO> updatedPlayers = gameDTO.getPlayers().stream()
+                                .map(p -> p.getPlayerId().equals(player.getPlayerId()) ? player : p)
+                                .toList();
+                        gameDTO.setPlayers(updatedPlayers);
 
-                return gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(gameDTO))
-                        .thenReturn(data);
+                        return gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(gameDTO))
+                                .thenReturn(data);
 
-            }).flatMap(data -> {
-                if (!isFromBot(ctx)) {
-                    log.info("Special tile effect: {}", data);
-                    return ctx.respond(data)
-                            .then(turnService.endTurn(gameId));
-                } else {
-                    return turnService.endTurn(gameId); // ack for botww
-                }
-            }).onErrorResume(e -> {
-                log.error("Error in SpecialTile_Handler: {}", e.getMessage(), e);
-                return ctx.respond("Internal server error.");
-            });
+                    }).flatMap(data -> ctx.respond(data)
+                            .then(turnService.endTurn(gameId)))
+                    .onErrorResume(e -> {
+                        log.error("Error in SpecialTile_Handler: {}", e.getMessage(), e);
+                        return ctx.respond("Internal server error.");
+                    });
 
         } catch (Exception e) {
             log.error("Parsing error in SpecialTile_Handler", e);
-            return ctx.respond("Invalid input format.");
+            return ctx.respond("Internal Server Error");
         }
     }
 
@@ -149,7 +143,4 @@ public class SpecialTile_Handler implements GameActionHandler {
         }
     }
 
-    public boolean isFromBot(RequestContextRedis ctx) {
-        return "true".equals(ctx.body().get("sentFromBot"));
-    }
 }

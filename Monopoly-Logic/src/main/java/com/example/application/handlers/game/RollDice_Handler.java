@@ -1,7 +1,10 @@
 package com.example.application.handlers.game;
 
 import com.example.application.config.GameConfig;
-import com.example.application.services.reactive.*;
+import com.example.application.redis.RedisService_Mono;
+import com.example.application.services.reactive.DiceService_Mono;
+import com.example.application.services.reactive.GameService_Mono;
+import com.example.application.services.reactive.PlayerService_Mono;
 import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerActions;
 import com.example.application.types.PlayerDTO;
@@ -9,7 +12,7 @@ import com.example.application.types.PlayerState;
 import com.example.application.util.data.PropertyData;
 import com.example.application.utility.GameActionHandler;
 import com.example.application.utility.GameMapper;
-import com.example.application.utility.RequestContextRedis;
+import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,7 +30,6 @@ public class RollDice_Handler implements GameActionHandler {
     private final GameService_Mono gameService;
     private final PlayerService_Mono playerService;
     private final RedisService_Mono redisService;
-    private final BotService_Mono botService;
 
     @Override
     public String getAction() {
@@ -36,8 +38,8 @@ public class RollDice_Handler implements GameActionHandler {
 
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
-        UUID gameId = UUID.fromString(ctx.body().get("gameId"));
-        UUID playerId = UUID.fromString(ctx.body().get("playerId"));
+        UUID gameId = UUID.fromString(ctx.getBody().get("gameId"));
+        UUID playerId = UUID.fromString(ctx.getBody().get("playerId"));
 
         /// sending request to diceserver and waiting for response
         return diceService.rollDice(gameId.toString())
@@ -90,7 +92,7 @@ public class RollDice_Handler implements GameActionHandler {
                         updatedGame.setPlayers(updatedPlayers);
                         return gameService.save_Mono(GameMapper.INSTANCE.GameDTOtoGame(updatedGame))
                                 .flatMap(savedGame -> redisService.publishGameUpd(savedGame)
-                                        .then(respondToClient(savedGame, ctx,rolledResult)));
+                                        .then(ctx.respond(rolledResult)));
                     });
         });
     }
@@ -105,15 +107,6 @@ public class RollDice_Handler implements GameActionHandler {
                                 .orElse(null)
                 ));
     }
-
-    private Mono<Void> respondToClient(GameDTO game, RequestContextRedis ctx,int rolledResult) {
-        if ("true".equals(ctx.body().get("sentFromBot"))) {
-            return botService.handleAfterRollAction(game);
-        }
-        return ctx.respond(rolledResult)
-                .then(redisService.publishGameUpd(game));
-    }
-
     private boolean passedGo(Integer prevPos, Integer nextPos) {
         return nextPos < prevPos;
     }

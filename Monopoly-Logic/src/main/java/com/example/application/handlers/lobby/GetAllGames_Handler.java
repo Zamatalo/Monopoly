@@ -3,7 +3,7 @@ package com.example.application.handlers.lobby;
 import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.types.GameActions;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.utility.RequestContextRedis;
+import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
