@@ -18,7 +18,32 @@ import reactor.core.publisher.Mono;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
-
+/**
+ *  Handler responsible for processing the {@link PlayerActions#SPECIAL_TILE_EFFECT} game action.
+ *
+ * <p>This includes logic for Chance cards, Chest cards, Tax tiles, Jail, Start, and others,
+ * as defined in {@link SpecialTileData}. The actual tile type and effect are determined based on
+ * the player’s current position.
+ *
+ * <p><b>Main logic:</b>
+ * <ol>
+ *     <li>Retrieves the game and player from the database.</li>
+ *     <li>Determines the special tile effect based on the player's position.</li>
+ *     <li>Applies that effect to the player and possibly other players (e.g., for collective payouts).</li>
+ *     <li>Updates the game state and saves it.</li>
+ *     <li>Returns the result to the client and ends the turn via {@link TurnService_Mono#endTurn(UUID)}.</li>
+ * </ol>
+ *
+ * <p><b>Supported special tiles:</b>
+ * <ul>
+ *     <li>Chance cards — tiles: 7, 22, 36 → Random effect from {@link SpecialTileData#CHANCE_CARDS}</li>
+ *     <li>Chest cards — tiles: 2, 17, 33 → Random effect from {@link SpecialTileData#CHEST_CARDS}</li>
+ *     <li>Tax — tile 4</li>
+ *     <li>Luxury Tax — tile 38</li>
+ *     <li>Go to Jail — tile 30</li>
+ *     <li>Start — tile 0</li>
+ * </ul>
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -36,8 +61,8 @@ public class SpecialTile_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            var gameId = UUID.fromString(ctx.getBody().get("gameId"));
-            var playerId = UUID.fromString(ctx.getBody().get("playerId"));
+            var gameId = UUID.fromString(ctx.body().get("gameId"));
+            var playerId = UUID.fromString(ctx.body().get("playerId"));
 
             return Mono.zip(
                             gameService.findById_Mono(gameId),

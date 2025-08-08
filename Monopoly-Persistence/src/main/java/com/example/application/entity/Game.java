@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -36,11 +37,11 @@ public class Game {
     @ToString.Exclude
     private List<Player> players = new ArrayList<>();
 
-    private int currentPlayerIndex = 0;
+    private Integer currentPlayerIndex = 0;
 
     @Column(updatable = false)
     @CreationTimestamp
-    private String createdTime;
+    private LocalDateTime createdTime;
 
     public void addPlayer(Player player) {
         if (player == null) return;

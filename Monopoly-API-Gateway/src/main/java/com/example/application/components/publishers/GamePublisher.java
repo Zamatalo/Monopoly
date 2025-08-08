@@ -16,6 +16,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.example.application.config.GameConfig.GAME_UPDATE_CHANNEL;
 
+/**
+ * Publisher component that listens to Redis channel for game updates
+ * and publishes them to reactive subscribers using Reactor {@link Sinks.Many}.
+ * <p>
+ * Maintains a map of sinks per gameId to support multiple independent streams
+ * to clients interested in updates of specific games.
+ * </p>
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -28,7 +36,7 @@ public class GamePublisher {
     public void init() {
         redisService.listenToChannel_Object(GAME_UPDATE_CHANNEL, GameDTO.class)
                 .doOnNext(this::publish)
-                .onErrorContinue((throwable, _) ->  log.error("Error processing message: {}", throwable.getMessage()))
+                .onErrorContinue((throwable, _) -> log.error("Error processing message: {}", throwable.getMessage()))
                 .subscribe();
     }
 
@@ -55,7 +63,12 @@ public class GamePublisher {
     }
 
     public Flux<GameDTO> getPublisherForGame(String gameId) {
-        return sinksMap.computeIfAbsent(gameId, _ -> Sinks.many().replay().limit(1, Duration.ofMinutes(10))).asFlux().doOnCancel(() -> cleanupSink(gameId)).doOnTerminate(() -> cleanupSink(gameId));
+        return sinksMap.computeIfAbsent(gameId, _ -> Sinks.many()
+                    .replay()
+                    .limit(1, Duration.ofMinutes(10)))
+                .asFlux()
+                .doOnCancel(() -> cleanupSink(gameId))
+                .doOnTerminate(() -> cleanupSink(gameId));
     }
 
     private void cleanupSink(String gameId) {

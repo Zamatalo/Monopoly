@@ -15,6 +15,25 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+
+/**
+ * Handler responsible for processing the {@link PlayerActions#BUY_PROPERTY} game action.
+ * <p>
+ * This handler performs the following sequence of operations:
+ * <ol>
+ *     <li>Retrieves the {@code playerId} and {@code gameId} from the request context.</li>
+ *     <li>Determines which property the player is currently on (based on position).</li>
+ *     <li>Checks if the property is already owned by another player.</li>
+ *     <li>If the property is available, adds it to the player's property list, updates the game state,
+ *         and publishes the update via Redis.</li>
+ *     <li>Finally, ends the player's turn by delegating to {@link TurnService_Mono#endTurn(UUID)}.</li>
+ * </ol>
+ *
+ * <p>In case of an error (e.g., invalid UUID, property already bought, DB failure), it responds
+ * with an Internal Server Error message via the Redis context.</p>
+ *
+ * @see TurnService_Mono#endTurn(UUID)
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -32,8 +51,8 @@ public class BuyProperty_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            UUID gameId = UUID.fromString(ctx.getBody().get("gameId"));
-            UUID playerId = UUID.fromString(ctx.getBody().get("playerId"));
+            UUID gameId = UUID.fromString(ctx.body().get("gameId"));
+            UUID playerId = UUID.fromString(ctx.body().get("playerId"));
 
             return playerService.findById(playerId)
                     .flatMap(player -> {
@@ -58,7 +77,7 @@ public class BuyProperty_Handler implements GameActionHandler {
                     });
         } catch (Exception e) {
             log.error("Invalid UUID format", e);
-            return ctx.respond("Invalid gameId or playerId format.");
+            return ctx.respond("Internal server error");
         }
     }
 

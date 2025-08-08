@@ -16,6 +16,13 @@ import java.util.Map;
 import static com.example.application.config.GameConfig.GATEWAY_GROUP;
 import static com.example.application.config.GameConfig.RESPONSE_STREAM;
 
+/**
+ * Listens to Redis stream responses on the configured response stream and consumer group.
+ * <p>
+ * Processes incoming messages, matches them with registered requests by correlation ID,
+ * completes corresponding futures, and acknowledges processed messages.
+ * </p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -24,8 +31,13 @@ public class Game_StreamResponseListener {
     private final Game_StreamRequest responseHandler;
     private Disposable subscription;
 
+
+    /**
+     * Initializes the listener by ensuring the Redis consumer group exists,
+     * then subscribes to the response stream to process incoming messages.
+     */
     @PostConstruct
-    public void initialize() {
+    public void init() {
         subscription = redisService.ensureConsumerGroupExists()
                 .doOnSuccess(_ -> log.info("Consumer group ensured, starting listener"))
                 .thenMany(redisService.listenToStream(
@@ -34,7 +46,13 @@ public class Game_StreamResponseListener {
                         .doOnError(e -> log.error("Error in stream listener", e))).subscribe();
     }
 
-
+    /**
+     * Processes a single Redis stream message, completes the matching future if applicable,
+     * and acknowledges the message.
+     *
+     * @param message the Redis stream record containing response data
+     * @return a {@link Mono} signaling completion of processing
+     */
     private Mono<Void> processResponse(MapRecord<String, String, String> message) {
         return Mono.defer(() -> {
             Map<String, String> body = message.getValue();

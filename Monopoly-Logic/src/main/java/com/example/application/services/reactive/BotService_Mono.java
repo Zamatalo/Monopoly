@@ -7,6 +7,7 @@ import com.example.application.types.GameDTO;
 import com.example.application.types.PlayerActions;
 import com.example.application.types.PlayerDTO;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,7 +24,14 @@ import java.util.Random;
 
 import static com.example.application.config.GameConfig.*;
 
-
+/**
+ * Service managing automated bot players within games.
+ * <p>
+ * Listens to game updates and triggers bot actions on their turns
+ * with a configurable delay, simulating bot behavior.
+ * Periodically checks for stuck bot turns and attempts to resolve them.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -92,5 +100,13 @@ public class BotService_Mono {
                     return Mono.empty();
                 })
                 .then();
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        if (subscribe != null && !subscribe.isDisposed()) {
+            subscribe.dispose();
+            log.info("Stopped listening to responses stream");
+        }
     }
 }

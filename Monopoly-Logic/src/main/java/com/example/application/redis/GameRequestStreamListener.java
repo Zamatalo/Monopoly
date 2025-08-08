@@ -24,7 +24,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.application.config.GameConfig.*;
-
+/**
+ * Listener for incoming game-related requests from a Redis stream.
+ * <p>
+ * This component subscribes to the Redis stream {@code REQUEST_STREAM}, reads messages from it,
+ * resolves appropriate {@link GameActionHandler}, and processes the message accordingly.
+ * Responses are sent back to the {@code RESPONSE_STREAM} using the correlation ID from the request.
+ * </p>
+ *
+ * @see com.example.application.components.RequestContextRedis
+ * @see com.example.application.redis.RedisService_Mono
+ *
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -36,9 +47,12 @@ public class GameRequestStreamListener {
     private final List<GameActionHandler> handlers;
     private Disposable subscription;
 
+    /**
+     * Initializes the Redis consumer group and starts listening to the request stream.
+     */
     @PostConstruct
     public void init() {
-        //populating list with all available handlers
+        //populating map with all available handlers
         Map<String, GameActionHandler> handlerMap = handlers.stream()
                 .collect(Collectors.toMap(GameActionHandler::getAction, h -> h));
 
@@ -55,6 +69,14 @@ public class GameRequestStreamListener {
 
     }
 
+    /**
+     * Processes an individual Redis stream message by resolving the handler for the requested action,
+     * checking if the action is valid in the current context, and invoking the handler logic.
+     *
+     * @param msg        the Redis stream record containing the action and payload
+     * @param handlerMap map of available action handlers, keyed by action string
+     * @return a {@link Mono} that completes after handling and acknowledging the message
+     */
     private Mono<Void> processMessage(MapRecord<String, String, String> msg,
                                       Map<String, GameActionHandler> handlerMap) {
         return Mono.defer(() -> {
@@ -98,6 +120,15 @@ public class GameRequestStreamListener {
         return redisService.acknowledgeMessage(msg.getStream(),BACKEND_GROUP,msg.getId());
     }
 
+    /**
+     * Validates whether the specified action is allowed in the current context.
+     * This includes checking if the game exists and whether the action is currently
+     * allowed for the game or the player involved.
+     *
+     * @param action the action string
+     * @param body   the request body map
+     * @return {@code true} if the action is valid; {@code false} otherwise
+     */
     private Mono<Boolean> isActionValid(String action, Map<String, String> body) {
         if (GameActions.GET_ALL_GAMES.toString().equals(action) ||
                 GameActions.CREATE_GAME.toString().equals(action) ||

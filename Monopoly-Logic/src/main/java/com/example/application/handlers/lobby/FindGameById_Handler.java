@@ -1,16 +1,18 @@
 package com.example.application.handlers.lobby;
 
+import com.example.application.components.RequestContextRedis;
 import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.types.GameActions;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
-
+/**
+ *Handler responsible for processing the {@link GameActions#FIND_GAME_BY_ID} game action.
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +27,7 @@ public class FindGameById_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            var gameId = UUID.fromString(ctx.getBody().get("gameId"));
+            var gameId = UUID.fromString(ctx.body().get("gameId"));
 
             return gameService.findById_Mono(gameId)
                     .flatMap(ctx::respond)

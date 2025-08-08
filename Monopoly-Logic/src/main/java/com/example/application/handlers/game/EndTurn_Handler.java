@@ -12,6 +12,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
+/**
+ *Handler responsible for processing the {@link PlayerActions#END_TURN} game action.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class EndTurn_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            UUID gameId = UUID.fromString(ctx.getBody().get("gameId"));
+            UUID gameId = UUID.fromString(ctx.body().get("gameId"));
 
             return turnService.endTurn(gameId)
                     .then(ctx.respond(

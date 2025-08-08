@@ -3,36 +3,36 @@ import {GraphQLWsLink} from '@apollo/client/link/subscriptions';
 import {createClient} from 'graphql-ws';
 import {getMainDefinition} from '@apollo/client/utilities';
 
-// // @ts-ignore
-// const gatewayHost = (typeof process !== 'undefined' && process.env?.REDIS_HOST) ? process.env.REDIS_HOST : 'localhost';
-//
-// const httpLink = new HttpLink({
-//     uri: "http://" + gatewayHost + ":8083/api/v1/graphql",
-//     // headers: {
-//     //     'Content-Type': 'application/json',
-//     // }
-// });
-//
-// const wsLink = new GraphQLWsLink(
-//     createClient({
-//         url: "ws://" + gatewayHost + ":8083/api/v1/graphql",
-//         // connectionParams: {}, // No auth params needed
-//         // retryAttempts: 5,
-//         // shouldRetry: () => true,
-//         // connectionAckWaitTimeout: 5000, // 5 seconds
-//     })
-// );
-const host = window.location.host;
+// @ts-ignore
+const gatewayHost = (typeof process !== 'undefined' && process.env?.REDIS_HOST) ? process.env.REDIS_HOST : 'localhost';
 
 const httpLink = new HttpLink({
-    uri: `http://${host}/api/v1/graphql`,
+    uri: "http://" + gatewayHost + ":8083/api/v1/graphql",
+    // headers: {
+    //     'Content-Type': 'application/json',
+    // }
 });
 
 const wsLink = new GraphQLWsLink(
     createClient({
-        url: `ws://${host}/api/v1/graphql`,
+        url: "ws://" + gatewayHost + ":8083/api/v1/graphql",
+        // connectionParams: {}, // No auth params needed
+        // retryAttempts: 5,
+        // shouldRetry: () => true,
+        // connectionAckWaitTimeout: 5000, // 5 seconds
     })
 );
+// const host = window.location.host;
+//
+// const httpLink = new HttpLink({
+//     uri: `http://${host}/api/v1/graphql`,
+// });
+//
+// const wsLink = new GraphQLWsLink(
+//     createClient({
+//         url: `ws://${host}/api/v1/graphql`,
+//     })
+// );
 
 const splitLink = split(
     ({ query }) => {

@@ -15,6 +15,7 @@ public class GameConfig {
     public static String BACKEND_GROUP;
     public static String DICE_UPDATE_CHANNEL;
 
+    //because @Value can't write into static param
     static {
         try (InputStream input = GameConfig.class.getClassLoader()
                 .getResourceAsStream("application.properties")

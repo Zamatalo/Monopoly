@@ -29,7 +29,6 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
 
     );
     public static final List<SpecialTileData> CHANCE_CARDS = List.of(
-            //Chance
             new SpecialTileData("Chance_1", SpecialTileEffect.MOVE_TO_GO_AND_COLLECT, 200),
             //new SpecialTileData("Chance_2", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
             //new SpecialTileData("Chance_3", SpecialTileEffect.MOVE_TO_TILE_AND_COLLECT_IF_PASS_GO, 200),
@@ -57,6 +56,7 @@ public record SpecialTileData(String text, SpecialTileEffect effect, Integer amo
 
     public static final SpecialTileData START =
             new SpecialTileData("Start",SpecialTileEffect.COLLECT,GameConfig.START_PAYOUT);
+
     public static final SpecialTileData NONE =
             new SpecialTileData("None",SpecialTileEffect.NONE,0);
 }

@@ -16,8 +16,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Creates Completable-future with dice result.
- * Sends request via redis channel to Monopoly-Dice service.
+ * Service responsible for interacting with the Monopoly-Dice microservice over Redis.
+ * <p>
+ * This service sends a dice roll request to a Redis pub/sub channel and listens
+ * for the asynchronous response with the result of the dice roll.
+ * <p>
+ * It uses {@link ReactiveRedisTemplate} to send messages and {@link ReactiveRedisMessageListenerContainer}
+ * to receive responses. Responses are expected to be in JSON format and include the game ID and dice value.
+ *
+ * <p><strong>Redis Channels Used:</strong>
+ * <ul>
+ *     <li><code>game:{gameId}:dice-roll-action</code> – to trigger a dice roll.</li>
+ *     <li><code>game.diceResult</code> – to receive dice roll results.</li>
+ * </ul>
  */
 @Slf4j
 @Service

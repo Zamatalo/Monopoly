@@ -1,19 +1,21 @@
 package com.example.application.handlers.lobby;
 
+import com.example.application.components.RequestContextRedis;
 import com.example.application.entity.Player;
 import com.example.application.services.reactive.GameService_Mono;
 import com.example.application.services.reactive.PlayerService_Mono;
 import com.example.application.types.GameActions;
 import com.example.application.types.PlayerColors;
 import com.example.application.utility.GameActionHandler;
-import com.example.application.components.RequestContextRedis;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
-
+/**
+ *Handler responsible for processing the {@link GameActions#JOIN_TO_GAME} game action.
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -29,10 +31,10 @@ public class JoinToGame_Handler implements GameActionHandler {
     @Override
     public Mono<Void> handle(RequestContextRedis ctx) {
         try {
-            var gameIdStr = ctx.getBody().get("gameId");
-            var playerIdStr = ctx.getBody().get("playerId");
-            var playerName = ctx.getBody().get("playerName");
-            var playerColorStr = ctx.getBody().get("playerColor");
+            var gameIdStr = ctx.body().get("gameId");
+            var playerIdStr = ctx.body().get("playerId");
+            var playerName = ctx.body().get("playerName");
+            var playerColorStr = ctx.body().get("playerColor");
 
             if (gameIdStr == null || playerIdStr == null || playerName == null || playerColorStr == null) {
                 return ctx.respond("Missing gameId, playerId, playerName, or playerColor");

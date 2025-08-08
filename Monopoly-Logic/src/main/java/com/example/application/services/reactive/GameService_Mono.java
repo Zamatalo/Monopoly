@@ -101,6 +101,13 @@ public class GameService_Mono {
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
+    /**
+     * Converts a Game entity into an enriched GameDTO that includes
+     * the available game-level and player-level actions.
+     *
+     * @param game the Game entity
+     * @return enriched GameDTO
+     */
     private GameDTO toEnrichedGameDTO(Game game) {
         GameDTO dto = GameMapper.INSTANCE.GameToGameDTO(game);
         dto.setGameActions(GameActionResolver.resolveGameActions(dto));

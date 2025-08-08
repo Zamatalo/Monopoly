@@ -16,6 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.example.application.config.GameConfig.DICE_UPDATE_CHANNEL;
 
+/**
+ * Publisher component that listens to Redis channel for dice position updates
+ * and publishes them reactively to subscribers interested in dice updates for specific games.
+ * <p>
+ * Maintains a map of sinks keyed by gameId, each sink streams {@link DicePosition} events.
+ * </p>
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -48,7 +55,19 @@ public class DicePublisher {
             return sink;
         });
     }
-
+    /**
+     * Returns a reactive {@link Publisher} emitting dice position updates for the specified gameId.
+     * <p>
+     * Creates a new sink if none exists for the gameId, and replays the last emitted update
+     * for up to 10 minutes for new subscribers.
+     * </p>
+     * <p>
+     * Cleans up sinks when subscribers cancel or the stream terminates.
+     * </p>
+     *
+     * @param gameId the ID of the game to subscribe to dice updates
+     * @return a {@link Publisher} of {@link DicePosition} updates
+     */
     public Publisher<DicePosition> getPublisherForDice(String gameId) {
         return sinksMap.computeIfAbsent(gameId, _ ->
                         Sinks.many()
@@ -58,7 +77,6 @@ public class DicePublisher {
                 .doOnCancel(() -> cleanupSink(gameId))
                 .doOnTerminate(() -> cleanupSink(gameId));
     }
-
 
     private void cleanupSink(String gameId) {
         if (!isActive) return;

@@ -6,8 +6,21 @@ import com.example.application.util.data.PropertyData;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameActionResolver {
 
+/**
+ * Resolves the available game and player actions based on the current game and player state.
+ * <p>
+ * This class provides static methods to determine which actions can be performed
+ * by the game or a specific player at a given point in time.
+ * </p>
+ */
+public class GameActionResolver {
+    /**
+     * Determines the list of available game-level actions based on the current state of the game.
+     *
+     * @param game the game data transfer object containing the current game state and players
+     * @return a list of {@link GameActions} that are valid for the current game state
+     */
     public static List<GameActions> resolveGameActions(GameDTO game) {
         List<GameActions> actions = new ArrayList<>();
 
@@ -39,7 +52,13 @@ public class GameActionResolver {
 
         return actions;
     }
-
+    /**
+     * Determines the list of available player-level actions based on the current state of the game and the player.
+     *
+     * @param game   the game data transfer object containing the current game state and players
+     * @param player the player data transfer object for whom actions are being resolved
+     * @return a list of {@link PlayerActions} that the player is allowed to perform at this point in the game
+     */
     public static List<PlayerActions> resolvePlayerActions(GameDTO game, PlayerDTO player) {
         List<PlayerActions> actions = new ArrayList<>();
         var currentPlayer = game.getPlayers().get(game.getCurrentPlayerIndex());
@@ -90,7 +109,7 @@ public class GameActionResolver {
 
     private static boolean canBuy(PlayerDTO playerDTO, GameDTO game) {
         List<Integer> allPositions = getAllOwnedPropertyPositions(game);
-        var playerPos=  playerDTO.getPosition();
+        var playerPos = playerDTO.getPosition();
         var property = PropertyData.ofPos(playerPos);
         return !allPositions.contains(playerPos) && property.cost() != 0 && playerDTO.getBalance() > property.cost();
     }

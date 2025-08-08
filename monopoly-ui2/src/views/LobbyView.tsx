@@ -88,7 +88,6 @@ export const LobbyView = () => {
         navigate(`/game/${gameToJoin.gameId}`);
     };
 
-
     if (gamesLoading ) {
         return (
             <div className="centered">
@@ -96,7 +95,6 @@ export const LobbyView = () => {
             </div>
         );
     }
-
 
     if (gamesError) {
         return <div className="error-alert">Error: {gamesError.message}</div>;

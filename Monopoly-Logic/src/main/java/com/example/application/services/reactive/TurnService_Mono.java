@@ -11,13 +11,21 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-
+/**
+ * Service responsible for handling player turns in a game.
+ * <p>
+ * It manages player state transitions such as jail time, balance checks,
+ * property loss, and turn advancement. After processing the turn logic,
+ * the updated game state is saved and published via Redis.
+ * </p>
+ *
+ */
 @Service
 @RequiredArgsConstructor
 public class TurnService_Mono {
     private final GameService_Mono gameService;
     private final RedisService_Mono redisService;
-    private Random random = new Random();
+    private final Random random = new Random();
 
     public Mono<Void> endTurn(UUID gameId) {
         return gameService.findById_Mono(gameId)
