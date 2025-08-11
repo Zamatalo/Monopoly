@@ -2,6 +2,8 @@
 
 This is a real-time online Monopoly game for up to **4 players** featuring a **3D board**, **lobby system**, and a **microservice-based backend**. The architecture is asynchronous, event-driven, and built using **Redis Streams**, **GraphQL**, and **Webflux**.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Zamatalo/Monopoly)
+
 ## Architecture Overview
 
 The system is split into **six main services**:

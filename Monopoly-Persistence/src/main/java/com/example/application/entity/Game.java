@@ -55,11 +55,4 @@ public class Game {
             this.players.add(player);
         }
     }
-
-    public Player getCurrentPlayer() {
-        if (players == null || players.isEmpty()) {
-            return null;
-        }
-        return players.get(currentPlayerIndex);
-    }
 }
