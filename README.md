@@ -4,6 +4,7 @@ This is a real-time online Monopoly game for up to **4 players** featuring a **3
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Zamatalo/Monopoly)
 
+[![Docker image](https://img.shields.io/docker/pulls/zamatalo/monopoly-test)](https://hub.docker.com/r/zamatalo/monopoly-test)
 ## Architecture Overview
 
 The system is split into **six main services**:
